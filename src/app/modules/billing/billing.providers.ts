@@ -7,6 +7,7 @@ import { BillStore } from './presentation/stores/bill.store';
 import { LocalBillStore } from './infrastructure/stores/local-bill.store';
 import { CreateDraftBillUseCase } from './domain/usecases/create-draft-bill.usecase';
 import { SubmitNewBillUseCase } from './domain/usecases/submit-new-bill.usecase';
+import { CreateEnrichedBillUseCase } from './domain/usecases/create-enriched-bill.usecase';
 import { ClientProviderPort } from './domain/ports/client-provider.port';
 import { CrossModuleClientProviderAdapter } from './infrastructure/adapters/cross-module-client-provider.adapter';
 
@@ -29,5 +30,14 @@ export const BILLING_PROVIDERS: Provider[] = [
     useFactory: (clientProvider: ClientProviderPort, createDraft: CreateDraftBillUseCase) =>
       new SubmitNewBillUseCase(clientProvider, createDraft),
     deps: [ClientProviderPort, CreateDraftBillUseCase]
+  },
+  {
+    provide: CreateEnrichedBillUseCase,
+    useFactory: (
+      clientProvider: ClientProviderPort,
+      repository: BillRepository,
+      generator: ReferenceGeneratorService
+    ) => new CreateEnrichedBillUseCase(clientProvider, repository, generator),
+    deps: [ClientProviderPort, BillRepository, ReferenceGeneratorService]
   }
 ];

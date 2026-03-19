@@ -1,0 +1,58 @@
+import { Result, failure, success } from '../../../../core/result/result';
+import { Bill } from '../entities/bill.entity';
+import { BillRepository } from '../ports/bill.repository';
+import { ClientProviderPort } from '../ports/client-provider.port';
+import { ReferenceGeneratorService } from '../ports/reference-generator.service';
+
+export type CreateEnrichedBillInput = {
+  isNewClient: boolean;
+  clientIdOrName: string;
+  clientEmail?: string;
+  amountTTC: number;
+  dueDate: string;
+  externalInvoiceReference: string;
+  type: string;
+  paymentMode: string;
+};
+
+/**
+ * Crée une facture enrichie en validant les invariants métier du payload.
+ */
+export class CreateEnrichedBillUseCase {
+  constructor(
+    private readonly clientProvider: ClientProviderPort,
+    private readonly repository: BillRepository,
+    private readonly referenceGenerator: ReferenceGeneratorService
+  ) {}
+
+  /**
+   * Orchestrer la résolution client, la validation métier et la persistance de la facture.
+   */
+  async execute(input: CreateEnrichedBillInput): Promise<Result<Bill>> {
+    try {
+      const clientResult = await this.clientProvider.resolveClient({
+        isNewClient: input.isNewClient,
+        clientIdOrName: input.clientIdOrName,
+        clientEmail: input.clientEmail
+      });
+
+      if (!clientResult.success) {
+        return failure(clientResult.error.code, clientResult.error.message);
+      }
+
+      const reference = await this.referenceGenerator.generate();
+      const bill = new Bill(crypto.randomUUID(), reference, clientResult.data)
+        .setAmountTTC(input.amountTTC)
+        .setDueDate(input.dueDate)
+        .setExternalInvoiceReference(input.externalInvoiceReference)
+        .setType(input.type)
+        .setPaymentMode(input.paymentMode);
+
+      await this.repository.save(bill);
+      return success(bill);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Une erreur inattendue est survenue';
+      return failure('BILL_CREATION_ERROR', message);
+    }
+  }
+}
