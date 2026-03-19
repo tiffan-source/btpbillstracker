@@ -1,5 +1,5 @@
 ---
-applyTo: "**/*.ts, **/*.html"
+applyTo: "**"
 excludeAgent: ["code-review"]
 ---
 
