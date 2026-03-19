@@ -1,11 +1,11 @@
 ---
-applyTo: "**/*.html, **/*.scss, tailwind.config.*"
+applyTo: "**/*.html, **/*.scss, src/styles.css"
 excludeAgent: ["code-review"]
 ---
 
 # Instructions Copilot - Design Tokens & Tailwind Modularity
 
-Tu es un expert en Design System et en intégration Tailwind CSS. Ta mission est de garantir que nos composants UI sont "Themables" et facilement maintenables. Pour cela, nous interdisons l'utilisation de valeurs Tailwind fixes pour les éléments de branding ou de structure récurrente, au profit de "Design Tokens" définis dans le `tailwind.config.js`.
+Tu es un expert en Design System et en intégration Tailwind CSS (v4). Ta mission est de garantir que nos composants UI sont "Themables" et facilement maintenables. Pour cela, nous interdisons l'utilisation de valeurs Tailwind fixes pour les éléments de branding ou de structure récurrente, au profit de "Design Tokens" définis dans le fichier `src/styles.css` à l'aide de la directive `@theme`.
 
 ## 1. Philosophie : Sémantique > Valeur Fixe
 Le HTML ne doit pas décrire *à quoi* ressemble l'élément (ex: bleu, arrondi xl), mais *ce qu'il est* (ex: couleur primaire, carte).
@@ -15,7 +15,7 @@ Le HTML ne doit pas décrire *à quoi* ressemble l'élément (ex: bleu, arrondi 
 ## 2. Règle de Génération (Double Action)
 Lorsque tu dois générer un composant avec son style Tailwind :
 1. **Écris le HTML avec des Design Tokens.** (Même s'ils n'existent pas encore).
-2. **Propose systématiquement la mise à jour du `tailwind.config.js`** si tu as inventé un nouveau token sémantique pour répondre au besoin du design.
+2. **Propose systématiquement la mise à jour du fichier `src/styles.css` (dans le bloc `@theme`)** si tu as inventé un nouveau token sémantique pour répondre au besoin du design.
 
 ## 3. Exemple de Transformation (Avant / Après)
 
@@ -37,35 +37,37 @@ Lorsque tu dois générer un composant avec son style Tailwind :
 </div>
 ```
 
-## 4. Contrat du Tailwind Config
+## 4. Contrat du Tailwind Config via @theme
 
-Voici à quoi notre configuration cible ressemble. Appuie-toi sur cette logique pour nommer tes classes dans le HTML :
-```javascript
-// tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
-      colors: {
-        // Branding
-        primary: {
-          DEFAULT: 'var(--color-primary, #4f46e5)', // Ex: l'ancien indigo-600
-          hover: 'var(--color-primary-hover, #4338ca)',
-          content: 'var(--color-primary-content, #ffffff)',
-        },
-        // Surfaces & Backgrounds
-        background: 'var(--color-background, #f9fafb)', // Ex: l'ancien gray-50
-        surface: 'var(--color-surface, #ffffff)',       // Fond de carte
-        // Borders
-        subtle: 'var(--color-border-subtle, #f3f4f6)',
-        input: 'var(--color-border-input, #d1d5db)',
-      },
-      borderRadius: {
-        card: 'var(--radius-card, 0.75rem)',    // Ex: ancien xl
-        btn: 'var(--radius-btn, 0.375rem)',     // Ex: ancien md
-        input: 'var(--radius-input, 0.375rem)', // Ex: ancien md
-      }
-    }
-  }
+Voici à quoi notre configuration cible ressemble dans `src/styles.css`. Appuie-toi sur cette logique pour nommer tes classes dans le HTML et configurer les tokens CSS :
+```css
+/* src/styles.css */
+@import 'tailwindcss';
+
+@theme {
+  /* Branding */
+  --color-primary: #4f46e5;       /* Ex: l'ancien indigo-600 */
+  --color-primary-hover: #4338ca;
+  --color-primary-content: #ffffff;
+
+  /* Surfaces & Backgrounds */
+  --color-background: #f9fafb;    /* Ex: l'ancien gray-50 */
+  --color-surface: #ffffff;       /* Fond de carte */
+  --color-surface-hover: #f3f4f6;
+
+  /* Text & Foreground */
+  --color-foreground: #111827;
+  --color-foreground-muted: #374151;
+  --color-subtle: #6b7280;
+
+  /* Borders */
+  --color-border-subtle: #f3f4f6;
+  --color-border-input: #d1d5db;
+
+  /* Radius */
+  --radius-card: 0.75rem;         /* Ex: ancien xl */
+  --radius-btn: 0.375rem;         /* Ex: ancien md */
+  --radius-input: 0.375rem;       /* Ex: ancien md */
 }
 ```
 
@@ -74,4 +76,4 @@ module.exports = {
 Si tu traduis un design et que tu vois un bouton vert :
 - Tu ne mets pas `bg-green-500`.
 - Tu mets `bg-success` (ou `bg-primary` si c'est la couleur principale de la marque).
-- Tu ajoutes à la fin de ta réponse : "Note: N'oubliez pas d'ajouter la couleur success: '#22c55e' dans votre tailwind.config.js si elle n'y est pas déjà."
+- Tu ajoutes à la fin de ta réponse : "Note: N'oubliez pas d'ajouter la variable css `--color-success: #22c55e;` dans le bloc `@theme` de votre fichier `src/styles.css` si elle n'y est pas déjà."

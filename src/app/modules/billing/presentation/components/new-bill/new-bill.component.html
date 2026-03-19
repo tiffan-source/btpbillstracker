@@ -1,15 +1,15 @@
-<div class="min-h-screen bg-gray-50 pb-10">
+<div class="min-h-screen bg-background pb-10">
   <!-- Header de page -->
   <div class="max-w-4xl mx-auto pt-8 px-4 sm:px-6 lg:px-8">
     <div class="flex items-center gap-4 mb-2">
-      <button type="button" class="text-gray-500 hover:text-gray-700">
+      <button type="button" class="text-subtle hover:text-foreground-muted">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
       </button>
-      <h1 class="text-2xl font-bold text-gray-900">Ajouter une facture</h1>
+      <h1 class="text-2xl font-bold text-foreground">Ajouter une facture</h1>
     </div>
-    <p class="text-sm text-gray-500 ml-10">Renseignez les informations de la facture à suivre</p>
+    <p class="text-sm text-subtle ml-10">Renseignez les informations de la facture à suivre</p>
   </div>
 
   <!-- Formulaire -->
@@ -17,56 +17,56 @@
     <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
 
       <!-- CARTE 1 : Informations de la facture -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-6">Informations de la facture</h2>
+      <div class="bg-surface rounded-card shadow-sm border border-subtle p-6">
+        <h2 class="text-lg font-bold text-foreground mb-6">Informations de la facture</h2>
 
         <div class="flex flex-col gap-6">
           <!-- [Ligne 1] Client -->
           <div>
-            <label for="clientId" class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+            <label for="clientId" class="block text-sm font-medium text-foreground-muted mb-1">Client</label>
             <div class="flex gap-3">
-              <select id="clientId" formControlName="clientId" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
+              <select id="clientId" formControlName="clientId" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
                 <option value="">Sélectionner un client</option>
                 @for (client of facade.clients(); track client.id) {
                   <option [value]="client.id">{{ client.name }}</option>
                 }
               </select>
-              <button type="button" class="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 whitespace-nowrap">
+              <button type="button" class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted shadow-sm hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap">
                 + Nouveau
               </button>
             </div>
             <div class="mt-2">
-              <input type="text" formControlName="newClientName" placeholder="Ou tapez le nom directement" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border text-gray-500 italic">
+              <input type="text" formControlName="newClientName" placeholder="Ou tapez le nom directement" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border text-subtle italic">
             </div>
           </div>
 
           <!-- [Ligne 2] Chantier -->
           <div>
-            <label for="chantier" class="block text-sm font-medium text-gray-700 mb-1">Chantier</label>
-            <input type="text" id="chantier" formControlName="chantier" placeholder="Nom ou adresse du chantier" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
+            <label for="chantier" class="block text-sm font-medium text-foreground-muted mb-1">Chantier</label>
+            <input type="text" id="chantier" formControlName="chantier" placeholder="Nom ou adresse du chantier" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
           </div>
 
           <!-- [Ligne 3] Grille 2 colonnes (Montant TTC / Date d'échéance) -->
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <label for="amountTTC" class="block text-sm font-medium text-gray-700 mb-1">Montant TTC (€)</label>
-              <input type="number" id="amountTTC" formControlName="amountTTC" placeholder="0,00" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
+              <label for="amountTTC" class="block text-sm font-medium text-foreground-muted mb-1">Montant TTC (€)</label>
+              <input type="number" id="amountTTC" formControlName="amountTTC" placeholder="0,00" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
             </div>
             <div>
-              <label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">Date d'échéance</label>
-              <input type="date" id="dueDate" formControlName="dueDate" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border text-gray-500">
+              <label for="dueDate" class="block text-sm font-medium text-foreground-muted mb-1">Date d'échéance</label>
+              <input type="date" id="dueDate" formControlName="dueDate" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border text-subtle">
             </div>
           </div>
 
           <!-- [Ligne 4] Grille 2 colonnes (N° de facture / Type) -->
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
-              <label for="invoiceNumber" class="block text-sm font-medium text-gray-700 mb-1">N° de facture</label>
-              <input type="text" id="invoiceNumber" formControlName="invoiceNumber" placeholder="FAC-001" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
+              <label for="invoiceNumber" class="block text-sm font-medium text-foreground-muted mb-1">N° de facture</label>
+              <input type="text" id="invoiceNumber" formControlName="invoiceNumber" placeholder="FAC-001" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
             </div>
             <div>
-              <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select id="type" formControlName="type" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
+              <label for="type" class="block text-sm font-medium text-foreground-muted mb-1">Type</label>
+              <select id="type" formControlName="type" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
                 <option value="Situation">Situation</option>
                 <option value="Solde">Solde</option>
                 <option value="Acompte">Acompte</option>
@@ -76,8 +76,8 @@
 
           <!-- [Ligne 5] Mode de paiement -->
           <div>
-            <label for="paymentMode" class="block text-sm font-medium text-gray-700 mb-1">Mode de paiement prévu</label>
-            <select id="paymentMode" formControlName="paymentMode" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
+            <label for="paymentMode" class="block text-sm font-medium text-foreground-muted mb-1">Mode de paiement prévu</label>
+            <select id="paymentMode" formControlName="paymentMode" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
               <option value="Virement">Virement</option>
               <option value="Chèque">Chèque</option>
               <option value="Espèces">Espèces</option>
@@ -86,33 +86,33 @@
 
           <!-- [Ligne 6] PDF de la facture -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">PDF de la facture (optionnel)</label>
-            <button type="button" class="mt-1 flex w-full justify-center rounded-md border-2 border-dashed border-gray-300 px-6 pt-5 pb-6 hover:border-indigo-500 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+            <label class="block text-sm font-medium text-foreground-muted mb-1">PDF de la facture (optionnel)</label>
+            <button type="button" class="mt-1 flex w-full justify-center rounded-input border-2 border-dashed border-input px-6 pt-5 pb-6 hover:border-primary hover:bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
               <div class="space-y-1 text-center">
-                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                <svg class="mx-auto h-12 w-12 text-subtle" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                   <path d="M24 14v14m-7-7h14m-14 10h14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   <path d="M12 12h24v24H12z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
-                <div class="flex text-sm text-gray-600">
-                  <span class="relative rounded-md font-medium text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500">
+                <div class="flex text-sm text-foreground-muted">
+                  <span class="relative rounded-md font-medium text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 hover:text-primary-hover">
                     Choisir un fichier
                   </span>
                   <p class="pl-1">ou glisser-déposer</p>
                 </div>
-                <p class="text-xs text-gray-500">PDF jusqu'à 10MB</p>
+                <p class="text-xs text-subtle">PDF jusqu'à 10MB</p>
               </div>
             </button>
           </div>
         </div>
       </div>
-3
+
       <!-- CARTE 2 : Scénario de relance -->
-      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 class="text-lg font-bold text-gray-900 mb-6">Scénario de relance</h2>
+      <div class="bg-surface rounded-card shadow-sm border border-subtle p-6">
+        <h2 class="text-lg font-bold text-foreground mb-6">Scénario de relance</h2>
 
         <div>
-          <label for="scenario" class="block text-sm font-medium text-gray-700 mb-1">Scénario</label>
-          <select id="scenario" formControlName="scenario" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
+          <label for="scenario" class="block text-sm font-medium text-foreground-muted mb-1">Scénario</label>
+          <select id="scenario" formControlName="scenario" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
             @for (sc of facade.scenarios(); track sc.id) {
               <option [value]="sc.id">{{ sc.label }}</option>
             }
@@ -122,7 +122,7 @@
 
       <!-- Submit Section -->
       <div class="flex justify-end pt-4">
-        <button type="submit" [disabled]="invoiceForm.invalid || facade.isSubmitting()" class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400 disabled:cursor-not-allowed">
+        <button type="submit" [disabled]="invoiceForm.invalid || facade.isSubmitting()" class="inline-flex justify-center rounded-btn border border-transparent bg-primary px-6 py-3 text-base font-medium text-primary-content shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
           {{ facade.isSubmitting() ? 'Enregistrement...' : 'Enregistrer' }}
         </button>
       </div>
