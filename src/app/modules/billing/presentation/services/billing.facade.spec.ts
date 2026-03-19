@@ -57,8 +57,13 @@ describe('BillingFacade', () => {
     await promise;
 
     expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
-      isNewClient: false,
-      clientIdOrName: 'c-1'
+      clientMode: 'EXISTING',
+      clientId: 'c-1',
+      amountTTC: 0,
+      dueDate: '',
+      externalInvoiceReference: '',
+      type: 'Situation',
+      paymentMode: 'Virement'
     });
     expect(facade.isSubmitting()).toBe(false);
     expect(facade.error()).toBeNull();
@@ -101,8 +106,13 @@ describe('BillingFacade', () => {
     });
 
     expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
-      isNewClient: true,
-      clientIdOrName: 'Alice'
+      clientMode: 'NEW',
+      newClientName: 'Alice',
+      amountTTC: 0,
+      dueDate: '',
+      externalInvoiceReference: '',
+      type: 'Situation',
+      paymentMode: 'Virement'
     });
     expect(facade.error()).toBeNull();
     expect(mockStore.draftBill()?.clientId).toBe('new-client-id');
@@ -128,7 +138,12 @@ describe('BillingFacade', () => {
 
     await facade.createInvoice({
       clientId: 'c-1',
-      newClientName: ''
+      newClientName: '',
+      amountTTC: null,
+      dueDate: '',
+      invoiceNumber: '',
+      type: 'Situation',
+      paymentMode: 'Virement'
     });
 
     expect(facade.isSubmitting()).toBe(false);

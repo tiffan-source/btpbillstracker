@@ -3,6 +3,17 @@ import { BillStore } from '../stores/bill.store';
 import { SubmitNewBillUseCase, SubmitNewBillInput } from '../../domain/usecases/submit-new-bill.usecase';
 
 export type SubmitBillInput = SubmitNewBillInput;
+type InvoiceFormValue = {
+  clientId?: string | null;
+  newClientName?: string | null;
+  chantier?: string | null;
+  scenario?: string | null;
+  amountTTC?: number | null;
+  dueDate?: string | null;
+  invoiceNumber?: string | null;
+  type?: string | null;
+  paymentMode?: string | null;
+};
 
 @Injectable({ providedIn: 'root' })
 export class BillingFacade {
@@ -23,7 +34,7 @@ export class BillingFacade {
     { id: 'standard', label: 'Standard - J-3, J+3, J+10' }
   ]);
 
-  async createInvoice(formValue: any): Promise<void> {
+  async createInvoice(formValue: InvoiceFormValue): Promise<void> {
     this.isSubmitting.set(true);
     // Temporary implementation linking to old logic for compatibility if needed.
     // Wait for 500ms to simulate network
@@ -31,11 +42,26 @@ export class BillingFacade {
 
     console.log('Facture en cours de création', formValue);
 
-    // Attempt submitting logic if client exists or dynamically
-    const input: SubmitBillInput = {
-      isNewClient: !!formValue.newClientName,
-      clientIdOrName: formValue.newClientName || formValue.clientId || 'unknown'
-    };
+    const normalizedNewClientName = formValue.newClientName?.trim();
+    const input: SubmitBillInput = normalizedNewClientName
+      ? {
+          clientMode: 'NEW',
+          newClientName: normalizedNewClientName,
+          amountTTC: formValue.amountTTC ?? 0,
+          dueDate: formValue.dueDate ?? '',
+          externalInvoiceReference: formValue.invoiceNumber ?? '',
+          type: formValue.type ?? '',
+          paymentMode: formValue.paymentMode ?? ''
+        }
+      : {
+          clientMode: 'EXISTING',
+          clientId: formValue.clientId ?? 'unknown',
+          amountTTC: formValue.amountTTC ?? 0,
+          dueDate: formValue.dueDate ?? '',
+          externalInvoiceReference: formValue.invoiceNumber ?? '',
+          type: formValue.type ?? '',
+          paymentMode: formValue.paymentMode ?? ''
+        };
     await this.submitNewBill(input);
 
     this.isSubmitting.set(false);

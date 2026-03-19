@@ -5,7 +5,6 @@ import { ReferenceGeneratorService } from './domain/ports/reference-generator.se
 import { SimpleReferenceGenerator } from './infrastructure/simple-reference-generator.service';
 import { BillStore } from './presentation/stores/bill.store';
 import { LocalBillStore } from './infrastructure/stores/local-bill.store';
-import { CreateDraftBillUseCase } from './domain/usecases/create-draft-bill.usecase';
 import { SubmitNewBillUseCase } from './domain/usecases/submit-new-bill.usecase';
 import { CreateEnrichedBillUseCase } from './domain/usecases/create-enriched-bill.usecase';
 import { ClientProviderPort } from './domain/ports/client-provider.port';
@@ -21,15 +20,9 @@ export const BILLING_PROVIDERS: Provider[] = [
   // The Clean Arch spec states: "Le Use Case ne doit jamais utiliser le décorateur @Injectable()."
   // So we provide it here explicitly configuring its deps.
   {
-    provide: CreateDraftBillUseCase,
-    useFactory: (repo: BillRepository, gen: ReferenceGeneratorService) => new CreateDraftBillUseCase(repo, gen),
-    deps: [BillRepository, ReferenceGeneratorService]
-  },
-  {
     provide: SubmitNewBillUseCase,
-    useFactory: (clientProvider: ClientProviderPort, createDraft: CreateDraftBillUseCase) =>
-      new SubmitNewBillUseCase(clientProvider, createDraft),
-    deps: [ClientProviderPort, CreateDraftBillUseCase]
+    useFactory: (createEnriched: CreateEnrichedBillUseCase) => new SubmitNewBillUseCase(createEnriched),
+    deps: [CreateEnrichedBillUseCase]
   },
   {
     provide: CreateEnrichedBillUseCase,
