@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NewBillComponent } from './new-bill.component';
 import { BillingFacade } from '../../services/billing.facade';
-import { signal, WritableSignal } from '@angular/core';
+import { signal } from '@angular/core';
 
 describe('NewBillComponent', () => {
   let component: NewBillComponent;
@@ -13,7 +13,7 @@ describe('NewBillComponent', () => {
       isSubmitting: signal(false),
       error: signal(null),
       draftBill: signal(null),
-      createDraftBill: vitest.fn()
+      submitNewBill: vitest.fn()
     };
 
     await TestBed.configureTestingModule({
@@ -28,11 +28,22 @@ describe('NewBillComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should call createDraftBill with a hardcoded client ID when button is clicked', () => {
-    const button = fixture.nativeElement.querySelector('button');
-    button.click();
+  it('should call submitNewBill when form is populated with new client', () => {
+    component.billForm.patchValue({
+      isNewClient: true,
+      clientName: 'Alice',
+      clientEmail: 'alice@example.com'
+    });
+    
+    // Valid form
+    fixture.detectChanges();
+    component.onSubmit();
 
-    expect(mockFacade.createDraftBill).toHaveBeenCalledWith('HARDCODED-CLIENT-ID');
+    expect(mockFacade.submitNewBill).toHaveBeenCalledWith({
+      isNewClient: true,
+      clientIdOrName: 'Alice',
+      clientEmail: 'alice@example.com'
+    });
   });
 
   it('should format and show the reference when draftBill is present', () => {
