@@ -1,53 +1,55 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { CreateDraftBillUseCase } from '../../domain/usecases/create-draft-bill.usecase';
 import { BillStore } from '../stores/bill.store';
-import { CreateQuickClientUseCase, CreateQuickClientInput } from '../../../clients';
+import { SubmitNewBillUseCase, SubmitNewBillInput } from '../../domain/usecases/submit-new-bill.usecase';
 
-export type SubmitBillInput = {
-  isNewClient: boolean;
-  clientIdOrName: string;
-  clientEmail?: string;
-};
+export type SubmitBillInput = SubmitNewBillInput;
 
 @Injectable({ providedIn: 'root' })
 export class BillingFacade {
-  private readonly createDraftBillUseCase = inject(CreateDraftBillUseCase);
-  private readonly createQuickClientUseCase = inject(CreateQuickClientUseCase);
+  private readonly submitNewBillUseCase = inject(SubmitNewBillUseCase);
   private readonly store = inject(BillStore);
 
   readonly isSubmitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly draftBill = this.store.draftBill;
 
-  async submitNewBill(input: SubmitBillInput): Promise<void> {
+  // Mock data to satisfy UI blueprint
+  readonly clients = signal<{id: string, name: string}[]>([
+    { id: 'client-1', name: 'Client 1' },
+    { id: 'client-2', name: 'Client 2' }
+  ]);
+
+  readonly scenarios = signal<{id: string, label: string}[]>([
+    { id: 'standard', label: 'Standard - J-3, J+3, J+10' }
+  ]);
+
+  async createInvoice(formValue: any): Promise<void> {
     this.isSubmitting.set(true);
-    this.error.set(null);
+    // Temporary implementation linking to old logic for compatibility if needed.
+    // Wait for 500ms to simulate network
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-    let finalClientId = input.clientIdOrName;
+    console.log('Facture en cours de création', formValue);
 
-    if (input.isNewClient) {
-      const clientResult = await this.createQuickClientUseCase.execute({ 
-        name: input.clientIdOrName, 
-        email: input.clientEmail 
-      });
-
-      if (!clientResult.success) {
-        this.error.set(clientResult.error.message);
-        this.isSubmitting.set(false);
-        return;
-      }
-      finalClientId = clientResult.data.id;
-    }
-
-    const billResult = await this.createDraftBillUseCase.execute(finalClientId);
-
-    if (billResult.success) {
-      this.store.setDraftBill(billResult.data);
-    } else {
-      this.error.set(billResult.error.message);
-    }
+    // Attempt submitting logic if client exists or dynamically
+    const input: SubmitBillInput = {
+      isNewClient: !!formValue.newClientName,
+      clientIdOrName: formValue.newClientName || formValue.clientId || 'unknown'
+    };
+    await this.submitNewBill(input);
 
     this.isSubmitting.set(false);
   }
-}
 
+  async submitNewBill(input: SubmitBillInput): Promise<void> {
+    this.error.set(null);
+
+    const result = await this.submitNewBillUseCase.execute(input);
+
+    if (result.success) {
+      this.store.setDraftBill(result.data);
+    } else {
+      this.error.set(result.error.message);
+    }
+  }
+}

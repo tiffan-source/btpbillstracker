@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { ClientRepository } from '../../domain/ports/client.repository';
-import { Client } from '../../domain/entities/client.entity';
+import { ClientRepository } from '../domain/ports/client.repository';
+import { Client } from '../domain/entities/client.entity';
 
 @Injectable({ providedIn: 'root' })
 export class LocalClientRepository implements ClientRepository {
