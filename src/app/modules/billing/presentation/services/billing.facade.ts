@@ -1,8 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { BillStore } from '../stores/bill.store';
+import { BillPdfMemoryFile, BillStore } from '../stores/bill.store';
 import { SubmitNewBillUseCase, SubmitNewBillInput } from '../../domain/usecases/submit-new-bill.usecase';
 
-export type SubmitBillInput = SubmitNewBillInput;
+export type SubmitBillInput = SubmitNewBillInput & { pdfFile?: BillPdfMemoryFile | null };
 type InvoiceFormValue = {
   clientId?: string | null;
   newClientName?: string | null;
@@ -13,6 +13,7 @@ type InvoiceFormValue = {
   invoiceNumber?: string | null;
   type?: string | null;
   paymentMode?: string | null;
+  pdfFile?: BillPdfMemoryFile | null;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -51,7 +52,8 @@ export class BillingFacade {
           dueDate: formValue.dueDate ?? '',
           externalInvoiceReference: formValue.invoiceNumber ?? '',
           type: formValue.type ?? '',
-          paymentMode: formValue.paymentMode ?? ''
+          paymentMode: formValue.paymentMode ?? '',
+          pdfFile: formValue.pdfFile ?? null
         }
       : {
           clientMode: 'EXISTING',
@@ -60,7 +62,8 @@ export class BillingFacade {
           dueDate: formValue.dueDate ?? '',
           externalInvoiceReference: formValue.invoiceNumber ?? '',
           type: formValue.type ?? '',
-          paymentMode: formValue.paymentMode ?? ''
+          paymentMode: formValue.paymentMode ?? '',
+          pdfFile: formValue.pdfFile ?? null
         };
     await this.submitNewBill(input);
 
@@ -73,7 +76,7 @@ export class BillingFacade {
     const result = await this.submitNewBillUseCase.execute(input);
 
     if (result.success) {
-      this.store.setDraftBill(result.data);
+      this.store.setDraftBill(result.data, input.pdfFile ?? null);
     } else {
       this.error.set(result.error.message);
     }

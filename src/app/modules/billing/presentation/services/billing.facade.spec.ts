@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { BillStore, BillViewModel } from '../stores/bill.store';
+import { BillPdfMemoryFile, BillStore, BillViewModel } from '../stores/bill.store';
 import { Bill } from '../../domain/entities/bill.entity';
 import { SubmitNewBillUseCase } from '../../domain/usecases/submit-new-bill.usecase';
 import { BillingFacade } from './billing.facade';
@@ -9,12 +9,18 @@ import { success, failure } from '../../../../core/result/result';
 class MockBillStore implements BillStore {
   draftBill = signal<BillViewModel | null>(null);
 
-  setDraftBill(bill: Bill): void {
+  setDraftBill(bill: Bill, pdfFile?: BillPdfMemoryFile | null): void {
     this.draftBill.set({
       id: bill.id,
       reference: bill.reference,
       clientId: bill.clientId,
-      status: bill.status
+      status: bill.status,
+      amountTTC: bill.amountTTC,
+      dueDate: bill.dueDate,
+      externalInvoiceReference: bill.externalInvoiceReference,
+      type: bill.type,
+      paymentMode: bill.paymentMode,
+      pdfFile: pdfFile ?? null
     });
   }
 }
@@ -24,7 +30,14 @@ describe('BillingFacade', () => {
     const mockStore = new MockBillStore();
     const mockSubmitNewBill = {
       execute: vitest.fn().mockResolvedValue(
-        success(new Bill('b-1', 'F-2026-0001', 'c-1'))
+        success(
+          new Bill('b-1', 'F-2026-0001', 'c-1')
+            .setAmountTTC(1400)
+            .setDueDate('2026-05-01')
+            .setExternalInvoiceReference('EXT-77')
+            .setType('Situation')
+            .setPaymentMode('Virement')
+        )
       )
     };
 
@@ -44,12 +57,13 @@ describe('BillingFacade', () => {
       clientId: 'c-1',
       newClientName: '',
       chantier: '',
-      amountTTC: null,
-      dueDate: '',
-      invoiceNumber: '',
+      amountTTC: 1400,
+      dueDate: '2026-05-01',
+      invoiceNumber: 'EXT-77',
       type: 'Situation',
       paymentMode: 'Virement',
-      scenario: 'standard'
+      scenario: 'standard',
+      pdfFile: { name: 'facture.pdf', size: 2048, type: 'application/pdf' }
     });
     
     expect(facade.isSubmitting()).toBe(true);
@@ -59,11 +73,12 @@ describe('BillingFacade', () => {
     expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
       clientMode: 'EXISTING',
       clientId: 'c-1',
-      amountTTC: 0,
-      dueDate: '',
-      externalInvoiceReference: '',
+      amountTTC: 1400,
+      dueDate: '2026-05-01',
+      externalInvoiceReference: 'EXT-77',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      pdfFile: { name: 'facture.pdf', size: 2048, type: 'application/pdf' }
     });
     expect(facade.isSubmitting()).toBe(false);
     expect(facade.error()).toBeNull();
@@ -71,7 +86,13 @@ describe('BillingFacade', () => {
       id: 'b-1',
       reference: 'F-2026-0001',
       clientId: 'c-1',
-      status: 'DRAFT'
+      status: 'DRAFT',
+      amountTTC: 1400,
+      dueDate: '2026-05-01',
+      externalInvoiceReference: 'EXT-77',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      pdfFile: { name: 'facture.pdf', size: 2048, type: 'application/pdf' }
     });
   });
 
@@ -112,7 +133,8 @@ describe('BillingFacade', () => {
       dueDate: '',
       externalInvoiceReference: '',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      pdfFile: null
     });
     expect(facade.error()).toBeNull();
     expect(mockStore.draftBill()?.clientId).toBe('new-client-id');
@@ -150,5 +172,53 @@ describe('BillingFacade', () => {
     // facade error state doesn't update until after the timeout and submit finishes
     expect(facade.error()).toBe('Impossible de créer la facture');
     expect(mockStore.draftBill()).toBeNull();
+  });
+
+  it('should persist enriched bill fields in local repository format', async () => {
+    const storage = new Map<string, string>();
+    const getItemSpy = vitest.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => {
+      return storage.get(key) ?? null;
+    });
+    const setItemSpy = vitest.spyOn(Storage.prototype, 'setItem').mockImplementation((key: string, value: string) => {
+      storage.set(key, value);
+    });
+
+    const { LocalBillRepository } = await import('../../infrastructure/repositories/local-bill.repository');
+    const repository = new LocalBillRepository();
+
+    const bill = new Bill('b-2', 'F-2026-0002', 'c-9')
+      .setAmountTTC(2100)
+      .setDueDate('2026-05-14')
+      .setExternalInvoiceReference('EXT-900')
+      .setType('Solde')
+      .setPaymentMode('Chèque');
+
+    await repository.save(bill);
+
+    const savedPayload = storage.get('btp_bills');
+    expect(savedPayload).toBeTruthy();
+    if (!savedPayload) {
+      getItemSpy.mockRestore();
+      setItemSpy.mockRestore();
+      return;
+    }
+
+    const parsed = JSON.parse(savedPayload);
+    expect(parsed).toEqual([
+      {
+        id: 'b-2',
+        reference: 'F-2026-0002',
+        clientId: 'c-9',
+        status: 'DRAFT',
+        amountTTC: 2100,
+        dueDate: '2026-05-14',
+        externalInvoiceReference: 'EXT-900',
+        type: 'Solde',
+        paymentMode: 'Chèque'
+      }
+    ]);
+
+    getItemSpy.mockRestore();
+    setItemSpy.mockRestore();
   });
 });

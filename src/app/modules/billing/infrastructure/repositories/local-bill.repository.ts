@@ -14,7 +14,12 @@ export class LocalBillRepository implements BillRepository {
       id: bill.id,
       reference: bill.reference,
       clientId: bill.clientId,
-      status: bill.status
+      status: bill.status,
+      amountTTC: bill.amountTTC,
+      dueDate: bill.dueDate,
+      externalInvoiceReference: bill.externalInvoiceReference,
+      type: bill.type,
+      paymentMode: bill.paymentMode
     };
 
     bills.push(plainBill);

@@ -43,6 +43,23 @@ describe('NewBillComponent', () => {
     expect(mockFacade.createInvoice).toHaveBeenCalledWith(component.invoiceForm.value);
   });
 
+  it('should capture pdf metadata in form memory', () => {
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', {
+      value: [
+        new File(['%PDF-1.7'], 'devis.pdf', { type: 'application/pdf' })
+      ]
+    });
+
+    component.onPdfSelected({ target: input } as unknown as Event);
+
+    expect(component.invoiceForm.controls.pdfFile.value).toEqual({
+      name: 'devis.pdf',
+      size: 8,
+      type: 'application/pdf'
+    });
+  });
+
   // Test is removed since `.success-message` is not currently in the updated component HTML template.
   // When added back, we can test it again here.
   // it('should format and show the reference when draftBill is present', () => { ... });

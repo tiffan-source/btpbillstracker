@@ -84,7 +84,8 @@
           <!-- [Ligne 6] PDF de la facture -->
           <div>
             <label class="block text-sm font-medium text-foreground-muted mb-1">PDF de la facture (optionnel)</label>
-            <button type="button" class="mt-1 flex w-full justify-center rounded-input border-2 border-dashed border-input px-6 pt-5 pb-6 hover:border-primary hover:bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+            <label for="pdfFileInput" class="mt-1 flex w-full justify-center rounded-input border-2 border-dashed border-input px-6 pt-5 pb-6 hover:border-primary hover:bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer">
+              <input id="pdfFileInput" type="file" accept="application/pdf" class="sr-only" (change)="onPdfSelected($event)">
               <div class="space-y-1 text-center">
                 <svg class="mx-auto h-12 w-12 text-subtle" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                   <path d="M24 14v14m-7-7h14m-14 10h14" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -97,8 +98,11 @@
                   <p class="pl-1">ou glisser-déposer</p>
                 </div>
                 <p class="text-xs text-subtle">PDF jusqu'à 10MB</p>
+                @if (invoiceForm.controls.pdfFile.value; as pdfFile) {
+                  <p class="text-xs text-foreground-muted">{{ pdfFile.name }} ({{ pdfFile.size }} octets)</p>
+                }
               </div>
-            </button>
+            </label>
           </div>
         </div>
       </div>
