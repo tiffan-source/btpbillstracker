@@ -120,6 +120,31 @@ describe('NewBillComponent', () => {
     expect(payload['scenario']).toBeUndefined();
   });
 
+  it('keeps new-bill submit contract stable with optional chantier', () => {
+    component.toggleRemindersAuto(false);
+    component.invoiceForm.patchValue({
+      clientId: 'c-legacy',
+      amountTTC: 900,
+      dueDate: '2026-07-01',
+      invoiceNumber: 'FAC-LEGACY',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: '',
+      chantier: ''
+    });
+
+    component.onSubmit();
+
+    expect(mockFacade.createInvoice).toHaveBeenCalledTimes(1);
+    const payload = mockFacade.createInvoice.mock.calls[0][0] as Record<string, unknown>;
+    expect(payload['clientId']).toBe('c-legacy');
+    expect(payload['amountTTC']).toBe(900);
+    expect(payload['dueDate']).toBe('2026-07-01');
+    expect(payload['invoiceNumber']).toBe('FAC-LEGACY');
+    expect(payload['chantier']).toBe('');
+  });
+
   it('should show field-level errors only after an invalid submit attempt', () => {
     const host: HTMLElement = fixture.nativeElement;
 
