@@ -24,7 +24,28 @@ const mockDashboardFacade = {
       overdueDays: 1
     }
   ]),
-  markAsPaid: vitest.fn()
+  markAsPaid: vitest.fn(),
+  isEditModalOpen: signal(false),
+  isEditSubmitting: signal(false),
+  editError: signal<string | null>(null),
+  editSuccess: signal(false),
+  clients: signal([{ id: 'client-1', name: 'Marie Lambert' }]),
+  openEditInvoice: vitest.fn(async () => ({
+    id: 'b-1',
+    reference: 'F-2026-0100',
+    clientId: 'client-1',
+    chantier: 'Cadjehoun',
+    amountTTC: 156,
+    dueDate: '2026-03-19',
+    invoiceNumber: 'EXT-1',
+    type: 'Situation',
+    paymentMode: 'Chèque',
+    status: 'PAID',
+    remindersAutoEnabled: true,
+    reminderScenarioId: 'standard-reminder-scenario'
+  })),
+  closeEditModal: vitest.fn(),
+  submitEditedInvoice: vitest.fn(async () => {})
 };
 
 describe('DashboardPageComponent', () => {
@@ -99,5 +120,21 @@ describe('DashboardPageComponent', () => {
     component.markPaid('invoice-123');
 
     expect(mockDashboardFacade.markAsPaid).toHaveBeenCalledWith('invoice-123');
+  });
+
+  it('should open edit modal flow and hydrate edit form from facade', async () => {
+    await component.editInvoice('b-1');
+
+    expect(mockDashboardFacade.openEditInvoice).toHaveBeenCalledWith('b-1');
+    expect(component.editForm.controls.id.value).toBe('b-1');
+    expect(component.editForm.controls.invoiceNumber.value).toBe('EXT-1');
+  });
+
+  it('should wire modal save and close actions to facade orchestration', async () => {
+    await component.saveEditInvoice();
+    component.closeEditModal();
+
+    expect(mockDashboardFacade.submitEditedInvoice).toHaveBeenCalled();
+    expect(mockDashboardFacade.closeEditModal).toHaveBeenCalled();
   });
 });

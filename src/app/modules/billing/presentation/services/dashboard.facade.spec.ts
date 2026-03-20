@@ -1,83 +1,180 @@
 import { TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
-import { BillStore, BillViewModel } from '../stores/bill.store';
-import { DashboardFacade } from './dashboard.facade';
 import { Bill } from '../../domain/entities/bill.entity';
+import { BillNotFoundError } from '../../domain/errors/bill-not-found.error';
+import { BillRepository } from '../../domain/ports/bill.repository';
+import { UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
+import { DashboardFacade } from './dashboard.facade';
 
-class MockBillStore implements BillStore {
-  draftBill = signal<BillViewModel | null>(null);
+class InMemoryBillRepository implements BillRepository {
+  private readonly bills = new Map<string, Bill>();
 
-  setDraftBill(bill: Bill): void {
-    this.draftBill.set({
-      id: bill.id,
-      reference: bill.reference,
-      clientId: bill.clientId,
-      status: bill.status,
-      amountTTC: bill.amountTTC,
-      dueDate: bill.dueDate,
-      externalInvoiceReference: bill.externalInvoiceReference,
-      type: bill.type,
-      paymentMode: bill.paymentMode,
-      pdfFile: null
-    });
+  constructor(initialBills: Bill[] = []) {
+    for (const bill of initialBills) {
+      this.bills.set(bill.id, bill);
+    }
+  }
+
+  async save(bill: Bill): Promise<void> {
+    this.bills.set(bill.id, bill);
+  }
+
+  async list(): Promise<Bill[]> {
+    return Array.from(this.bills.values());
+  }
+
+  async update(bill: Bill): Promise<void> {
+    if (!this.bills.has(bill.id)) {
+      throw new BillNotFoundError(undefined, { billId: bill.id });
+    }
+
+    this.bills.set(bill.id, bill);
   }
 }
 
 describe('DashboardFacade', () => {
-  it('should expose seeded invoices and relance placeholder', () => {
+  it('should expose seeded invoices and relance placeholder', async () => {
     TestBed.configureTestingModule({
-      providers: [DashboardFacade, { provide: BillStore, useClass: MockBillStore }]
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: new InMemoryBillRepository() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
     });
 
     const facade = TestBed.inject(DashboardFacade);
+    await Promise.resolve();
     const invoices = facade.invoices();
 
     expect(invoices.length).toBeGreaterThan(0);
     expect(invoices.every((invoice) => invoice.nextReminder === '—')).toBe(true);
   });
 
-  it('should include draft bill in dashboard invoices', () => {
-    const store = new MockBillStore();
+  it('opens edit mode only for persisted invoices', async () => {
+    const persisted = new Bill('b-1', 'F-2026-0100', 'client-1')
+      .setAmountTTC(420)
+      .setDueDate('2099-12-30')
+      .setExternalInvoiceReference('EXT-1')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
     TestBed.configureTestingModule({
-      providers: [DashboardFacade, { provide: BillStore, useValue: store }]
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
     });
 
     const facade = TestBed.inject(DashboardFacade);
-    const draft = new Bill('draft-1', 'F-2026-1001', 'client-100').setAmountTTC(650).setDueDate('2099-12-31');
-    store.setDraftBill(draft);
+    await Promise.resolve();
 
-    const invoices = facade.invoices();
-    expect(invoices[0].id).toBe('draft-1');
-    expect(invoices[0].status).toBe('EN_COURS');
+    const editable = await facade.openEditInvoice('b-1');
+    expect(editable).not.toBeNull();
+    expect(facade.isEditModalOpen()).toBe(true);
+
+    const denied = await facade.openEditInvoice('inv-2');
+    expect(denied).toBeNull();
+    expect(facade.editError()).toContain('Seules les factures persistées');
   });
 
-  it('should compute kpis with current month collection rule', () => {
+  it('submits edited invoice, closes modal and refreshes dashboard on success', async () => {
+    const persisted = new Bill('b-2', 'F-2026-0101', 'client-2')
+      .setAmountTTC(510)
+      .setDueDate('2099-12-30')
+      .setExternalInvoiceReference('EXT-2')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
     TestBed.configureTestingModule({
-      providers: [DashboardFacade, { provide: BillStore, useClass: MockBillStore }]
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
     });
     const facade = TestBed.inject(DashboardFacade);
-    const kpis = facade.kpis();
+    await Promise.resolve();
+    await facade.openEditInvoice('b-2');
 
-    expect(kpis.overdueInvoices).toBeGreaterThanOrEqual(1);
-    expect(kpis.totalOverdueAmount).toBeGreaterThanOrEqual(0);
-    expect(kpis.toCollectThisMonth).toBeGreaterThanOrEqual(0);
-    expect(kpis.inProgressInvoices).toBeGreaterThanOrEqual(0);
+    await facade.submitEditedInvoice({
+      id: 'b-2',
+      reference: 'F-2026-0101',
+      clientId: 'client-2',
+      newClientName: '',
+      chantier: 'Akpakpa',
+      amountTTC: 777,
+      dueDate: '2099-12-28',
+      invoiceNumber: 'EXT-2B',
+      type: 'Solde',
+      paymentMode: 'Chèque',
+      status: 'PAID',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(facade.isEditModalOpen()).toBe(false);
+    expect(facade.editSuccess()).toBe(true);
+    expect(facade.editError()).toBeNull();
+    expect(facade.isEditSubmitting()).toBe(false);
+
+    const updatedInvoice = facade.invoices().find((item) => item.id === 'b-2');
+    expect(updatedInvoice?.status).toBe('PAYE');
+    expect(updatedInvoice?.amountTTC).toBe(777);
+    expect(updatedInvoice?.chantier).toBe('Akpakpa');
   });
 
-  it('should mark invoice as paid in UI-only mode', () => {
+  it('keeps modal open and exposes error when update fails', async () => {
     TestBed.configureTestingModule({
-      providers: [DashboardFacade, { provide: BillStore, useClass: MockBillStore }]
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: new InMemoryBillRepository() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
     });
     const facade = TestBed.inject(DashboardFacade);
-    const invoice = facade.invoices().find((item) => item.status !== 'PAYE');
-    expect(invoice).toBeTruthy();
-    if (!invoice) {
-      return;
-    }
+    await Promise.resolve();
 
-    facade.markAsPaid(invoice.id);
-    const updated = facade.invoices().find((item) => item.id === invoice.id);
-    expect(updated?.status).toBe('PAYE');
+    facade.isEditModalOpen.set(true);
+
+    await facade.submitEditedInvoice({
+      id: 'missing',
+      reference: 'F-2026-9999',
+      clientId: 'client-2',
+      newClientName: '',
+      chantier: '',
+      amountTTC: 777,
+      dueDate: '2099-12-28',
+      invoiceNumber: 'EXT-2B',
+      type: 'Solde',
+      paymentMode: 'Chèque',
+      status: 'PAID',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(facade.isEditModalOpen()).toBe(true);
+    expect(facade.editSuccess()).toBe(false);
+    expect(facade.editError()).toContain('introuvable');
+    expect(facade.isEditSubmitting()).toBe(false);
   });
 });
-

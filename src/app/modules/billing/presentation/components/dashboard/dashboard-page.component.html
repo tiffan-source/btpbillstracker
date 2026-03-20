@@ -79,5 +79,14 @@
       (markPaid)="markPaid($event)"
       (editInvoice)="editInvoice($event)"
     />
+
+    <app-edit-bill-modal
+      [open]="facade.isEditModalOpen()"
+      [isSubmitting]="facade.isEditSubmitting()"
+      [form]="editForm"
+      [clients]="facade.clients()"
+      (requestClose)="closeEditModal()"
+      (save)="saveEditInvoice()"
+    />
   </div>
 </div>
