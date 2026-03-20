@@ -172,6 +172,65 @@ describe('BillingFacade', () => {
     expect(mockStore.draftBill()).toBeNull();
   });
 
+  it('should expose a success signal when invoice creation succeeds', async () => {
+    const mockStore = new MockBillStore();
+    const mockSubmitNewBill = {
+      execute: vitest.fn().mockResolvedValue(
+        success(new Bill('b-9', 'F-2026-0099', 'c-9'))
+      )
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: SubmitNewBillUseCase, useValue: mockSubmitNewBill }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+
+    expect(facade.isSuccess()).toBe(false);
+
+    await facade.createInvoice({
+      clientId: 'c-9',
+      newClientName: '',
+      chantier: '',
+      amountTTC: 1000,
+      dueDate: '2026-08-01',
+      invoiceNumber: 'FAC-9',
+      type: 'Situation',
+      paymentMode: 'Virement'
+    });
+
+    expect(facade.error()).toBeNull();
+    expect(facade.isSuccess()).toBe(true);
+  });
+
+  it('should dismiss success signal explicitly', () => {
+    const mockStore = new MockBillStore();
+    const mockSubmitNewBill = {
+      execute: vitest.fn().mockResolvedValue(
+        success(new Bill('b-10', 'F-2026-0110', 'c-10'))
+      )
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: SubmitNewBillUseCase, useValue: mockSubmitNewBill }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+    facade.isSuccess.set(true);
+
+    facade.dismissSuccess();
+
+    expect(facade.isSuccess()).toBe(false);
+  });
+
   it('should persist enriched bill fields in local repository format', async () => {
     const storage = new Map<string, string>();
     const getItemSpy = vitest.spyOn(Storage.prototype, 'getItem').mockImplementation((key: string) => {

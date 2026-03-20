@@ -170,3 +170,31 @@
     </form>
   </div>
 </div>
+
+@if (facade.isSuccess(); as isSuccess) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 px-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="success-modal-title"
+      aria-describedby="success-modal-description"
+      class="w-full max-w-md rounded-card bg-surface p-6 shadow-lg"
+    >
+      <h2 id="success-modal-title" class="text-lg font-bold text-foreground">Facture créée avec succès</h2>
+      <p id="success-modal-description" class="mt-2 text-sm text-foreground-muted">
+        La facture a bien été enregistrée. Vous pouvez maintenant saisir une nouvelle facture.
+      </p>
+      <div class="mt-6 flex justify-end">
+        <button
+          #successModalCloseButton
+          data-testid="success-modal-close"
+          type="button"
+          (click)="closeSuccessModal()"
+          class="inline-flex items-center rounded-btn bg-primary px-4 py-2 text-sm font-medium text-primary-content hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+}

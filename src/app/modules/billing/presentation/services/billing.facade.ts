@@ -22,6 +22,7 @@ export class BillingFacade {
 
   readonly isSubmitting = signal(false);
   readonly error = signal<string | null>(null);
+  readonly isSuccess = signal(false);
   readonly draftBill = this.store.draftBill;
 
   // Mock data to satisfy UI blueprint
@@ -31,6 +32,7 @@ export class BillingFacade {
   ]);
 
   async createInvoice(formValue: InvoiceFormValue): Promise<void> {
+    this.isSuccess.set(false);
     this.isSubmitting.set(true);
     // Temporary implementation linking to old logic for compatibility if needed.
     // Wait for 500ms to simulate network
@@ -72,8 +74,13 @@ export class BillingFacade {
 
     if (result.success) {
       this.store.setDraftBill(result.data, input.pdfFile ?? null);
+      this.isSuccess.set(true);
     } else {
       this.error.set(result.error.message);
     }
+  }
+
+  dismissSuccess(): void {
+    this.isSuccess.set(false);
   }
 }

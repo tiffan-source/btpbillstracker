@@ -11,10 +11,12 @@ describe('NewBillComponent', () => {
   beforeEach(async () => {
     mockFacade = {
       isSubmitting: signal(false),
+      isSuccess: signal(false),
       error: signal(null),
       draftBill: signal(null),
       clients: signal([]),
-      createInvoice: vitest.fn()
+      createInvoice: vitest.fn(),
+      dismissSuccess: vitest.fn()
     };
 
     await TestBed.configureTestingModule({
@@ -147,6 +149,72 @@ describe('NewBillComponent', () => {
     component.onSubmit();
 
     expect(mockFacade.createInvoice).not.toHaveBeenCalled();
+  });
+
+  it('should show an accessible success modal and focus close button after success', () => {
+    mockFacade.draftBill.set({
+      id: 'b-1',
+      reference: 'F-2026-0101',
+      clientId: 'c-1',
+      status: 'DRAFT',
+      amountTTC: 1200,
+      dueDate: '2026-09-10',
+      externalInvoiceReference: 'FAC-101',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      pdfFile: null
+    });
+    mockFacade.isSuccess.set(true);
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const modal = host.querySelector<HTMLElement>('[role="dialog"]');
+    expect(modal).toBeTruthy();
+    expect(modal?.getAttribute('aria-modal')).toBe('true');
+
+    const closeButton = host.querySelector<HTMLButtonElement>('[data-testid="success-modal-close"]');
+    expect(closeButton).toBeTruthy();
+    expect(document.activeElement).toBe(closeButton);
+  });
+
+  it('should reset the entire form after successful invoice creation', () => {
+    component.invoiceForm.patchValue({
+      clientId: 'client-1',
+      chantier: 'Lot A',
+      amountTTC: 2400,
+      dueDate: '2026-09-01',
+      invoiceNumber: 'FAC-RESET',
+      type: 'Solde',
+      paymentMode: 'Chèque',
+      pdfFile: { name: 'facture.pdf', size: 1000, type: 'application/pdf' }
+    });
+    component.toggleNewClientMode();
+    component.invoiceForm.patchValue({ newClientName: 'Temp Client' });
+
+    mockFacade.draftBill.set({
+      id: 'b-2',
+      reference: 'F-2026-0202',
+      clientId: 'c-2',
+      status: 'DRAFT',
+      amountTTC: 2400,
+      dueDate: '2026-09-01',
+      externalInvoiceReference: 'FAC-RESET',
+      type: 'Solde',
+      paymentMode: 'Chèque',
+      pdfFile: null
+    });
+    mockFacade.isSuccess.set(true);
+    fixture.detectChanges();
+
+    expect(component.invoiceForm.controls.clientId.value).toBe('');
+    expect(component.invoiceForm.controls.newClientName.value).toBe('');
+    expect(component.invoiceForm.controls.chantier.value).toBe('');
+    expect(component.invoiceForm.controls.amountTTC.value).toBeNull();
+    expect(component.invoiceForm.controls.dueDate.value).toBe('');
+    expect(component.invoiceForm.controls.invoiceNumber.value).toBe('');
+    expect(component.invoiceForm.controls.type.value).toBe('Situation');
+    expect(component.invoiceForm.controls.paymentMode.value).toBe('Virement');
+    expect(component.invoiceForm.controls.pdfFile.value).toBeNull();
   });
 
   // Test is removed since `.success-message` is not currently in the updated component HTML template.
