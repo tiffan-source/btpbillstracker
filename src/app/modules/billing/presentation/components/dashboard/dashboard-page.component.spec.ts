@@ -83,4 +83,21 @@ describe('DashboardPageComponent', () => {
     expect(host.textContent).toContain('Prochaine relance');
     expect(host.textContent).toContain('Actions');
   });
+
+  it('should compose dashboard modules in order', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const kpiSection = host.querySelectorAll('app-kpi-card');
+    const urgentSection = host.querySelector('h2');
+    const tableSection = host.querySelector('app-invoice-table');
+
+    expect(kpiSection.length).toBe(4);
+    expect(urgentSection?.textContent).toContain('Factures les plus urgentes');
+    expect(tableSection).toBeTruthy();
+  });
+
+  it('should delegate quick paid action to facade', () => {
+    component.markPaid('invoice-123');
+
+    expect(mockDashboardFacade.markAsPaid).toHaveBeenCalledWith('invoice-123');
+  });
 });
