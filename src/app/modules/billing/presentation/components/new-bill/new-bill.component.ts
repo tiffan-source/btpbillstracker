@@ -50,6 +50,11 @@ export class NewBillComponent {
     this.invoiceForm.setClientMode(this.isCreatingNewClient);
   }
 
+
+  toggleRemindersAuto(isEnabled: boolean): void {
+    this.invoiceForm.setRemindersAutoEnabled(isEnabled);
+  }
+
   onSubmit(): void {
     if (this.facade.isSubmitting()) {
       return;
@@ -115,7 +120,9 @@ export class NewBillComponent {
       dueDate: '',
       invoiceNumber: '',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
     this.selectedPdfFile = null;
     this.invoiceForm.setClientMode(false);

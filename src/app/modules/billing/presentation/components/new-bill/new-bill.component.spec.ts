@@ -37,7 +37,9 @@ describe('NewBillComponent', () => {
       amountTTC: 1500,
       dueDate: '2026-06-30',
       invoiceNumber: 'FAC-100',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
 
     fixture.detectChanges();
@@ -106,7 +108,9 @@ describe('NewBillComponent', () => {
       dueDate: '2026-06-01',
       invoiceNumber: 'FAC-22',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
 
     component.onSubmit();
@@ -137,6 +141,18 @@ describe('NewBillComponent', () => {
     expect(amountInput?.className).toContain('border-danger');
   });
 
+  it('should toggle reminder auto mode through form object', () => {
+    component.toggleRemindersAuto(false);
+
+    expect(component.invoiceForm.controls.remindersAutoEnabled.value).toBe(false);
+    expect(component.invoiceForm.controls.reminderScenarioId.value).toBe('');
+
+    component.toggleRemindersAuto(true);
+
+    expect(component.invoiceForm.controls.remindersAutoEnabled.value).toBe(true);
+    expect(component.invoiceForm.controls.reminderScenarioId.value).toBe('standard-reminder-scenario');
+  });
+
   it('should block submit action while submitting', () => {
     mockFacade.isSubmitting.set(true);
     fixture.detectChanges();
@@ -146,7 +162,9 @@ describe('NewBillComponent', () => {
       amountTTC: 1500,
       dueDate: '2026-06-30',
       invoiceNumber: 'FAC-200',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
 
     component.onSubmit();

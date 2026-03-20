@@ -9,6 +9,8 @@ export type BillingInvoiceFormValue = {
   invoiceNumber?: string | null;
   type?: string | null;
   paymentMode?: string | null;
+  remindersAutoEnabled?: boolean | null;
+  reminderScenarioId?: string | null;
 };
 
 /**
@@ -27,7 +29,9 @@ export function mapInvoiceFormToCreateEnrichedBillInput(
       dueDate: formValue.dueDate ?? '',
       externalInvoiceReference: formValue.invoiceNumber ?? '',
       type: formValue.type ?? '',
-      paymentMode: formValue.paymentMode ?? ''
+      paymentMode: formValue.paymentMode ?? '',
+      remindersAutoEnabled: formValue.remindersAutoEnabled ?? false,
+      reminderScenarioId: formValue.reminderScenarioId ?? ''
     };
   }
 
@@ -38,6 +42,8 @@ export function mapInvoiceFormToCreateEnrichedBillInput(
     dueDate: formValue.dueDate ?? '',
     externalInvoiceReference: formValue.invoiceNumber ?? '',
     type: formValue.type ?? '',
-    paymentMode: formValue.paymentMode ?? ''
+    paymentMode: formValue.paymentMode ?? '',
+    remindersAutoEnabled: formValue.remindersAutoEnabled ?? false,
+    reminderScenarioId: formValue.reminderScenarioId ?? ''
   };
 }

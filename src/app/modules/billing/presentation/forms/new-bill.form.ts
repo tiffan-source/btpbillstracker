@@ -4,6 +4,7 @@ import {
   BILL_TYPES,
   PAYMENT_MODES
 } from '../../domain/values/bill.constraints';
+import { STANDARD_REMINDER_SCENARIO_ID } from '../../../reminders/domain/values/reminder.constants';
 
 export interface NewBillFormModel {
   [key: string]: AbstractControl;
@@ -15,6 +16,8 @@ export interface NewBillFormModel {
   invoiceNumber: FormControl<string>;
   type: FormControl<string>;
   paymentMode: FormControl<string>;
+  remindersAutoEnabled: FormControl<boolean>;
+  reminderScenarioId: FormControl<string>;
 }
 
 export type NewBillFormValue = {
@@ -26,6 +29,8 @@ export type NewBillFormValue = {
   invoiceNumber: string;
   type: string;
   paymentMode: string;
+  remindersAutoEnabled: boolean;
+  reminderScenarioId: string;
 };
 
 export class NewBillForm extends FormGroup<NewBillFormModel> {
@@ -38,7 +43,9 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
       dueDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       invoiceNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       type: new FormControl(BILL_TYPES[0], { nonNullable: true, validators: [Validators.required] }),
-      paymentMode: new FormControl(PAYMENT_MODES[0], { nonNullable: true, validators: [Validators.required] })
+      paymentMode: new FormControl(PAYMENT_MODES[0], { nonNullable: true, validators: [Validators.required] }),
+      remindersAutoEnabled: new FormControl(true, { nonNullable: true }),
+      reminderScenarioId: new FormControl(STANDARD_REMINDER_SCENARIO_ID, { nonNullable: true, validators: [Validators.required] })
     });
   }
 
@@ -53,6 +60,22 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
 
     this.controls.clientId.updateValueAndValidity({ emitEvent: false });
     this.controls.newClientName.updateValueAndValidity({ emitEvent: false });
+  }
+
+  setRemindersAutoEnabled(isEnabled: boolean): void {
+    this.controls.remindersAutoEnabled.setValue(isEnabled);
+
+    if (isEnabled) {
+      this.controls.reminderScenarioId.setValidators([Validators.required]);
+      if (!this.controls.reminderScenarioId.value) {
+        this.controls.reminderScenarioId.setValue(STANDARD_REMINDER_SCENARIO_ID);
+      }
+    } else {
+      this.controls.reminderScenarioId.clearValidators();
+      this.controls.reminderScenarioId.setValue('');
+    }
+
+    this.controls.reminderScenarioId.updateValueAndValidity({ emitEvent: false });
   }
 
   getErrorMessage(controlName: keyof NewBillFormModel): string | null {
@@ -78,6 +101,8 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
           return 'Le type de facture est obligatoire.';
         case 'paymentMode':
           return 'Le mode de paiement est obligatoire.';
+        case 'reminderScenarioId':
+          return 'Le scénario de relance est obligatoire lorsque les relances automatiques sont activées.';
         default:
           return 'Ce champ est obligatoire.';
       }

@@ -9,7 +9,9 @@ describe('bill-submission.mapper', () => {
       dueDate: '2026-05-01',
       invoiceNumber: 'EXT-44',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
 
     expect(result).toEqual({
@@ -19,7 +21,9 @@ describe('bill-submission.mapper', () => {
       dueDate: '2026-05-01',
       externalInvoiceReference: 'EXT-44',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
   });
 
@@ -30,7 +34,9 @@ describe('bill-submission.mapper', () => {
       dueDate: '2026-05-10',
       invoiceNumber: 'EXT-99',
       type: 'Solde',
-      paymentMode: 'Chèque'
+      paymentMode: 'Chèque',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
 
     expect(result).toEqual({
@@ -40,7 +46,9 @@ describe('bill-submission.mapper', () => {
       dueDate: '2026-05-10',
       externalInvoiceReference: 'EXT-99',
       type: 'Solde',
-      paymentMode: 'Chèque'
+      paymentMode: 'Chèque',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
     });
   });
 
@@ -51,7 +59,9 @@ describe('bill-submission.mapper', () => {
       dueDate: null,
       invoiceNumber: null,
       type: null,
-      paymentMode: null
+      paymentMode: null,
+      remindersAutoEnabled: null,
+      reminderScenarioId: null
     });
 
     expect(result).toEqual({
@@ -61,7 +71,9 @@ describe('bill-submission.mapper', () => {
       dueDate: '',
       externalInvoiceReference: '',
       type: '',
-      paymentMode: ''
+      paymentMode: '',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
     });
   });
 });

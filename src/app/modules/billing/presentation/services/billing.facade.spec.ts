@@ -77,7 +77,9 @@ describe('BillingFacade', () => {
       dueDate: '2026-05-01',
       externalInvoiceReference: 'EXT-77',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
     });
     expect(facade.isSubmitting()).toBe(false);
     expect(facade.error()).toBeNull();
@@ -121,7 +123,9 @@ describe('BillingFacade', () => {
       dueDate: '',
       invoiceNumber: '',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
     });
 
     expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
@@ -131,7 +135,9 @@ describe('BillingFacade', () => {
       dueDate: '',
       externalInvoiceReference: '',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
     });
     expect(facade.error()).toBeNull();
     expect(mockStore.draftBill()?.clientId).toBe('new-client-id');
@@ -162,7 +168,9 @@ describe('BillingFacade', () => {
       dueDate: '',
       invoiceNumber: '',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
     });
 
     expect(facade.isSubmitting()).toBe(false);
@@ -199,7 +207,9 @@ describe('BillingFacade', () => {
       dueDate: '2026-08-01',
       invoiceNumber: 'FAC-9',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
     });
 
     expect(facade.error()).toBeNull();
