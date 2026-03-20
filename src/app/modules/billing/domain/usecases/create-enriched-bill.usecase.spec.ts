@@ -182,4 +182,59 @@ describe('CreateEnrichedBillUseCase', () => {
     expect(result.error.code).toBe('INVALID_PAYMENT_MODE');
     expect(result.error.message).toBe('Le mode de paiement est invalide. Valeurs autorisées: Virement, Chèque, Espèces.');
   });
+
+  it('fails when reminders are enabled without scenario id', async () => {
+    const repository = new InMemoryBillRepository();
+    const referenceGenerator = new StaticReferenceGenerator();
+    const clientProvider = new SuccessClientProvider();
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+
+    const result = await useCase.execute({
+      isNewClient: false,
+      clientIdOrName: 'client-123',
+      amountTTC: 100,
+      dueDate: '2026-04-20',
+      externalInvoiceReference: 'EXT-7788',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: ''
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+
+    expect(result.error.code).toBe('REMINDER_SCENARIO_REQUIRED');
+    expect(repository.savedBill).toBeNull();
+  });
+
+  it('persists reminder relation when enabled with scenario id', async () => {
+    const repository = new InMemoryBillRepository();
+    const referenceGenerator = new StaticReferenceGenerator();
+    const clientProvider = new SuccessClientProvider();
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+
+    const result = await useCase.execute({
+      isNewClient: false,
+      clientIdOrName: 'client-123',
+      amountTTC: 3200,
+      dueDate: '2026-04-20',
+      externalInvoiceReference: 'EXT-7788',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+
+    expect(result.data.remindersAutoEnabled).toBe(true);
+    expect(result.data.reminderScenarioId).toBe('standard-reminder-scenario');
+  });
+
 });

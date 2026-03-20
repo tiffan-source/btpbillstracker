@@ -13,6 +13,7 @@ import { BillExternalReferenceRequiredError } from '../errors/bill-external-refe
 import { InvalidBillReferenceError } from '../errors/invalid-bill-reference.error';
 import { InvalidBillTypeError } from '../errors/invalid-bill-type.error';
 import { InvalidPaymentModeError } from '../errors/invalid-payment-mode.error';
+import { ReminderScenarioRequiredError } from '../errors/reminder-scenario-required.error';
 
 export class Bill {
   private readonly _id: string;
@@ -24,6 +25,8 @@ export class Bill {
   private _externalInvoiceReference?: string;
   private _type?: BillType;
   private _paymentMode?: PaymentMode;
+  private _remindersAutoEnabled = false;
+  private _reminderScenarioId?: string;
 
   constructor(id: string, reference: string, clientId: string) {
     if (!reference || reference.trim().length === 0) {
@@ -47,6 +50,8 @@ export class Bill {
   get externalInvoiceReference(): string | undefined { return this._externalInvoiceReference; }
   get type(): BillType | undefined { return this._type; }
   get paymentMode(): PaymentMode | undefined { return this._paymentMode; }
+  get remindersAutoEnabled(): boolean { return this._remindersAutoEnabled; }
+  get reminderScenarioId(): string | undefined { return this._reminderScenarioId; }
 
   setAmountTTC(amountTTC: number): this {
     if (amountTTC < BILL_MIN_AMOUNT_TTC) {
@@ -85,6 +90,22 @@ export class Bill {
       throw new InvalidPaymentModeError();
     }
     this._paymentMode = paymentMode;
+    return this;
+  }
+
+  configureReminder(remindersAutoEnabled: boolean, reminderScenarioId?: string): this {
+    this._remindersAutoEnabled = remindersAutoEnabled;
+
+    if (!remindersAutoEnabled) {
+      this._reminderScenarioId = undefined;
+      return this;
+    }
+
+    if (!reminderScenarioId || reminderScenarioId.trim().length === 0) {
+      throw new ReminderScenarioRequiredError();
+    }
+
+    this._reminderScenarioId = reminderScenarioId;
     return this;
   }
 }

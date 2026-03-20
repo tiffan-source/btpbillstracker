@@ -8,6 +8,7 @@ import { InvalidBillReferenceError } from '../errors/invalid-bill-reference.erro
 import { InvalidBillTypeError } from '../errors/invalid-bill-type.error';
 import { InvalidPaymentModeError } from '../errors/invalid-payment-mode.error';
 import { BillRepository } from '../ports/bill.repository';
+import { ReminderScenarioRequiredError } from '../errors/reminder-scenario-required.error';
 import { ClientProviderPort } from '../ports/client-provider.port';
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
 
@@ -20,6 +21,8 @@ export type CreateEnrichedBillInput = {
   externalInvoiceReference: string;
   type: string;
   paymentMode: string;
+  remindersAutoEnabled?: boolean;
+  reminderScenarioId?: string;
 };
 
 /**
@@ -53,7 +56,8 @@ export class CreateEnrichedBillUseCase {
         .setDueDate(input.dueDate)
         .setExternalInvoiceReference(input.externalInvoiceReference)
         .setType(input.type)
-        .setPaymentMode(input.paymentMode);
+        .setPaymentMode(input.paymentMode)
+        .configureReminder(input.remindersAutoEnabled ?? false, input.reminderScenarioId);
 
       await this.repository.save(bill);
       return success(bill);
@@ -65,7 +69,8 @@ export class CreateEnrichedBillUseCase {
         error instanceof BillExternalReferenceRequiredError ||
         error instanceof InvalidBillTypeError ||
         error instanceof InvalidPaymentModeError ||
-        error instanceof BillPersistenceError
+        error instanceof BillPersistenceError ||
+        error instanceof ReminderScenarioRequiredError
       ) {
         return failure(error.code, error.message, error.metadata);
       }
