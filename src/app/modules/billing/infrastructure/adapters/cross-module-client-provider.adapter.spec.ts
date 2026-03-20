@@ -37,7 +37,8 @@ describe('CrossModuleClientProviderAdapter', () => {
     });
 
     expect(creator.execute).toHaveBeenCalledWith({
-      name: 'Alice',
+      firstName: 'Alice',
+      lastName: 'Client',
       email: 'alice@example.com'
     });
     expect(result).toEqual(success('new-client-1'));

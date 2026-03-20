@@ -1,4 +1,6 @@
 export interface CreateQuickClientInput {
-  name: string;
+  firstName: string;
+  lastName: string;
   email?: string;
+  phone?: string;
 }

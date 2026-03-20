@@ -14,10 +14,16 @@ export class CreateQuickClientUseCase extends QuickClientCreatorPort {
   async execute(input: CreateQuickClientInput): Promise<Result<Client>> {
     try {
       const id = crypto.randomUUID();
-      const client = new Client(id, input.name);
+      const fullName = `${input.firstName} ${input.lastName}`.trim();
+      const client = new Client(id, fullName)
+        .setFirstName(input.firstName)
+        .setLastName(input.lastName);
 
       if (input.email) {
         client.setEmail(input.email);
+      }
+      if (input.phone) {
+        client.setPhone(input.phone);
       }
 
       await this.repository.save(client);

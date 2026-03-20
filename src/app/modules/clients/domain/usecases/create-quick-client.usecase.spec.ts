@@ -17,6 +17,12 @@ class MockClientRepository implements ClientRepository {
     }
     this.savedClient = client;
   }
+
+  async list(): Promise<Client[]> {
+    return this.savedClient ? [this.savedClient] : [];
+  }
+
+  async update(_client: Client): Promise<void> {}
 }
 
 describe('CreateQuickClientUseCase', () => {
@@ -24,12 +30,20 @@ describe('CreateQuickClientUseCase', () => {
     const repository = new MockClientRepository();
     const useCase = new CreateQuickClientUseCase(repository);
 
-    const result = await useCase.execute({ name: 'Jane Doe', email: 'jane@example.com' });
+    const result = await useCase.execute({
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane@example.com',
+      phone: '+2290100000000'
+    });
 
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.name).toBe('Jane Doe');
+      expect(result.data.firstName).toBe('Jane');
+      expect(result.data.lastName).toBe('Doe');
       expect(result.data.email).toBe('jane@example.com');
+      expect(result.data.phone).toBe('+2290100000000');
       expect(result.data.id).toBeDefined();
 
       expect(repository.savedClient).toBe(result.data);
@@ -40,7 +54,7 @@ describe('CreateQuickClientUseCase', () => {
     const repository = new MockClientRepository();
     const useCase = new CreateQuickClientUseCase(repository);
 
-    const result = await useCase.execute({ name: '   ' });
+    const result = await useCase.execute({ firstName: '   ', lastName: 'Doe' });
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -54,7 +68,7 @@ describe('CreateQuickClientUseCase', () => {
     repository.throwPersistenceError = true;
     const useCase = new CreateQuickClientUseCase(repository);
 
-    const result = await useCase.execute({ name: 'Jane Doe' });
+    const result = await useCase.execute({ firstName: 'Jane', lastName: 'Doe' });
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -67,7 +81,7 @@ describe('CreateQuickClientUseCase', () => {
     repository.throwUnknown = true;
     const useCase = new CreateQuickClientUseCase(repository);
 
-    const result = await useCase.execute({ name: 'Jane Doe' });
+    const result = await useCase.execute({ firstName: 'Jane', lastName: 'Doe' });
 
     expect(result.success).toBe(false);
     if (!result.success) {

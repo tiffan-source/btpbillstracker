@@ -15,7 +15,8 @@ export class CrossModuleClientProviderAdapter implements ClientProviderPort {
 
     try {
       const clientResult = await this.quickClientCreator.execute({
-        name: input.clientIdOrName,
+        firstName: input.clientIdOrName,
+        lastName: 'Client',
         email: input.clientEmail
       });
 
