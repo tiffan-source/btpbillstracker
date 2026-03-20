@@ -13,25 +13,81 @@ export class LocalBillRepository implements BillRepository {
    */
   async save(bill: Bill): Promise<void> {
     try {
-      const rawData = localStorage.getItem(this.storageKey);
-      const bills = rawData ? JSON.parse(rawData) : [];
+      const bills = this.readPlainBills();
 
-      const plainBill = {
-        id: bill.id,
-        reference: bill.reference,
-        clientId: bill.clientId,
-        status: bill.status,
-        amountTTC: bill.amountTTC,
-        dueDate: bill.dueDate,
-        externalInvoiceReference: bill.externalInvoiceReference,
-        type: bill.type,
-        paymentMode: bill.paymentMode
-      };
+      const plainBill = this.toPlainBill(bill);
 
       bills.push(plainBill);
       localStorage.setItem(this.storageKey, JSON.stringify(bills));
     } catch (error: unknown) {
       throw new BillPersistenceError(undefined, { storageKey: this.storageKey }, error);
     }
+  }
+
+  async list(): Promise<Bill[]> {
+    try {
+      return this.readPlainBills().map((plainBill) => {
+        const bill = new Bill(plainBill.id, plainBill.reference, plainBill.clientId);
+
+        if (typeof plainBill.amountTTC === 'number') {
+          bill.setAmountTTC(plainBill.amountTTC);
+        }
+        if (plainBill.dueDate) {
+          bill.setDueDate(plainBill.dueDate);
+        }
+        if (plainBill.externalInvoiceReference) {
+          bill.setExternalInvoiceReference(plainBill.externalInvoiceReference);
+        }
+        if (plainBill.type) {
+          bill.setType(plainBill.type);
+        }
+        if (plainBill.paymentMode) {
+          bill.setPaymentMode(plainBill.paymentMode);
+        }
+
+        return bill;
+      });
+    } catch (error: unknown) {
+      throw new BillPersistenceError('Impossible de lire les factures.', { storageKey: this.storageKey }, error);
+    }
+  }
+
+  private readPlainBills(): Array<{
+    id: string;
+    reference: string;
+    clientId: string;
+    status?: string;
+    amountTTC?: number;
+    dueDate?: string;
+    externalInvoiceReference?: string;
+    type?: string;
+    paymentMode?: string;
+  }> {
+    const rawData = localStorage.getItem(this.storageKey);
+    return rawData ? JSON.parse(rawData) : [];
+  }
+
+  private toPlainBill(bill: Bill): {
+    id: string;
+    reference: string;
+    clientId: string;
+    status: string;
+    amountTTC?: number;
+    dueDate?: string;
+    externalInvoiceReference?: string;
+    type?: string;
+    paymentMode?: string;
+  } {
+    return {
+      id: bill.id,
+      reference: bill.reference,
+      clientId: bill.clientId,
+      status: bill.status,
+      amountTTC: bill.amountTTC,
+      dueDate: bill.dueDate,
+      externalInvoiceReference: bill.externalInvoiceReference,
+      type: bill.type,
+      paymentMode: bill.paymentMode
+    };
   }
 }

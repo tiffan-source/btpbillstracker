@@ -7,7 +7,24 @@
 
     <section class="flex flex-col gap-4 rounded-card border border-subtle bg-surface p-4">
       <h2 class="text-lg font-semibold text-foreground">Par client</h2>
-      <p class="text-sm text-subtle">La gestion détaillée des clients arrive dans la prochaine étape.</p>
+      <div class="flex flex-col gap-4" data-testid="client-list">
+        @for (client of facade.clients(); track client.id) {
+          <app-client-card
+            [client]="{
+              id: client.id,
+              fullName: client.fullName,
+              email: client.email,
+              phone: client.phone,
+              invoiceCount: client.invoiceCount,
+              totalDue: client.totalDue,
+              paid: client.paid
+            }"
+            (edit)="openClientModal($event.id, $event.trigger)"
+          />
+        } @empty {
+          <p class="text-sm text-subtle">Aucun client disponible.</p>
+        }
+      </div>
     </section>
 
     <section class="flex flex-col gap-4 rounded-card border border-subtle bg-surface p-4">
@@ -16,3 +33,11 @@
     </section>
   </div>
 </div>
+
+<app-client-form-modal
+  [isOpen]="isClientModalOpen()"
+  [client]="editedClient()"
+  [isSubmitting]="facade.isSubmitting()"
+  (closed)="closeClientModal()"
+  (saved)="saveClient($event)"
+/>

@@ -29,5 +29,17 @@ describe('LocalBillRepository', () => {
 
     setItemSpy.mockRestore();
   });
-});
 
+  it('should list saved bills from local storage', async () => {
+    const repository = new LocalBillRepository();
+    const bill = new Bill('b-3', 'F-2026-0003', 'c-3');
+
+    await repository.save(bill);
+    const bills = await repository.list();
+
+    expect(bills).toHaveLength(1);
+    expect(bills[0]?.id).toBe('b-3');
+    expect(bills[0]?.reference).toBe('F-2026-0003');
+    expect(bills[0]?.clientId).toBe('c-3');
+  });
+});

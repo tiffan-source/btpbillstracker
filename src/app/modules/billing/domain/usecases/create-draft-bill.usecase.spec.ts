@@ -10,6 +10,10 @@ class MockBillRepository implements BillRepository {
   async save(bill: Bill): Promise<void> {
     this.savedBill = bill;
   }
+
+  async list(): Promise<Bill[]> {
+    return this.savedBill ? [this.savedBill] : [];
+  }
 }
 
 class MockReferenceGenerator implements ReferenceGeneratorService {

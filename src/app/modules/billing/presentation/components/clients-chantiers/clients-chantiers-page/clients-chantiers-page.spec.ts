@@ -1,12 +1,49 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { ClientsChantiersPage } from './clients-chantiers-page';
+import { ClientsChantiersFacade } from '../../../services/clients-chantiers.facade';
+
+const mockFacade = {
+  clients: signal([
+    {
+      id: 'c-1',
+      fullName: 'Alice Martin',
+      email: 'alice@example.com',
+      phone: '+2290100000000',
+      invoiceCount: 2,
+      totalDue: 300,
+      paid: 120,
+      firstName: 'Alice',
+      lastName: 'Martin'
+    }
+  ]),
+  isSubmitting: signal(false),
+  error: signal<string | null>(null),
+  loadClients: vitest.fn().mockResolvedValue(undefined),
+  updateClient: vitest.fn().mockResolvedValue(true)
+};
 
 describe('ClientsChantiersPage', () => {
   let fixture: ComponentFixture<ClientsChantiersPage>;
 
   beforeEach(async () => {
+    mockFacade.clients.set([
+      {
+        id: 'c-1',
+        fullName: 'Alice Martin',
+        email: 'alice@example.com',
+        phone: '+2290100000000',
+        invoiceCount: 2,
+        totalDue: 300,
+        paid: 120,
+        firstName: 'Alice',
+        lastName: 'Martin'
+      }
+    ]);
+
     await TestBed.configureTestingModule({
-      imports: [ClientsChantiersPage]
+      imports: [ClientsChantiersPage],
+      providers: [{ provide: ClientsChantiersFacade, useValue: mockFacade }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ClientsChantiersPage);
@@ -25,6 +62,13 @@ describe('ClientsChantiersPage', () => {
 
     expect(host.textContent).toContain('Par client');
     expect(host.textContent).toContain('Par chantier');
+  });
+
+  it('renders a client management list placeholder for cards', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('[data-testid="client-list"]')).toBeTruthy();
+    expect(host.querySelectorAll('[data-testid="client-card"]').length).toBe(1);
   });
 
   it('uses semantic design token classes for global sections', () => {

@@ -1,0 +1,44 @@
+@if (isOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    (click)="onOverlayClick($event)"
+    (keydown.escape)="onEscape()"
+    tabindex="-1"
+  >
+    <div class="w-full max-w-lg rounded-card bg-surface p-6 shadow-lg" role="dialog" aria-modal="true" aria-labelledby="client-modal-title">
+      <div class="flex items-center justify-between">
+        <h3 id="client-modal-title" class="text-lg font-semibold text-foreground">Modifier le client</h3>
+        <button type="button" class="text-subtle hover:text-foreground" (click)="onCancel()" aria-label="Fermer">✕</button>
+      </div>
+
+      <form [formGroup]="form()" (ngSubmit)="onSubmit()" class="mt-4 flex flex-col gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label for="firstName" class="mb-1 block text-sm font-medium text-foreground-muted">Prenom</label>
+            <input #firstNameInput id="firstName" type="text" formControlName="firstName" class="w-full rounded-input border border-input px-3 py-2 text-sm" />
+          </div>
+
+          <div>
+            <label for="lastName" class="mb-1 block text-sm font-medium text-foreground-muted">Nom</label>
+            <input id="lastName" type="text" formControlName="lastName" class="w-full rounded-input border border-input px-3 py-2 text-sm" />
+          </div>
+        </div>
+
+        <div>
+          <label for="email" class="mb-1 block text-sm font-medium text-foreground-muted">Email</label>
+          <input id="email" type="email" formControlName="email" class="w-full rounded-input border border-input px-3 py-2 text-sm" />
+        </div>
+
+        <div>
+          <label for="phone" class="mb-1 block text-sm font-medium text-foreground-muted">Telephone</label>
+          <input id="phone" type="text" formControlName="phone" class="w-full rounded-input border border-input px-3 py-2 text-sm" />
+        </div>
+
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" class="rounded-btn border border-input bg-surface px-4 py-2 text-sm text-foreground" (click)="onCancel()">Annuler</button>
+          <button type="submit" class="rounded-btn bg-primary px-4 py-2 text-sm text-primary-content" [disabled]="isSubmitting()">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

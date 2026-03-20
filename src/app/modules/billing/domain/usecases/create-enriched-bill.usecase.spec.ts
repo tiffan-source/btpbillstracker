@@ -11,6 +11,10 @@ class InMemoryBillRepository implements BillRepository {
   async save(bill: Bill): Promise<void> {
     this.savedBill = bill;
   }
+
+  async list(): Promise<Bill[]> {
+    return this.savedBill ? [this.savedBill] : [];
+  }
 }
 
 class StaticReferenceGenerator implements ReferenceGeneratorService {
