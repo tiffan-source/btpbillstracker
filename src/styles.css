@@ -25,6 +25,14 @@
 
   /* Validation */
   --color-danger: #dc2626;
+  --color-danger-light: #fee2e2;
+  --color-warning: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-success: #16a34a;
+  --color-success-light: #dcfce7;
+  --color-border-danger-light: #fecaca;
+  --color-border-warning-light: #fde68a;
+  --color-border-success-light: #bbf7d0;
 
   /* Radius */
   --radius-card: 0.75rem;
