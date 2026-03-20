@@ -1,4 +1,5 @@
 import { Bill } from '../entities/bill.entity';
+import { BillPersistenceError } from '../errors/bill-persistence.error';
 import { BillRepository } from '../ports/bill.repository';
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
 import { CreateDraftBillUseCase } from './create-draft-bill.usecase';
@@ -37,7 +38,7 @@ describe('CreateDraftBillUseCase', () => {
 
   it('should return a failure if repository throws an error', async () => {
     const repository = new MockBillRepository();
-    repository.save = vitest.fn().mockRejectedValue(new Error('DB failure'));
+    repository.save = vitest.fn().mockRejectedValue(new BillPersistenceError('DB failure'));
 
     const generator = new MockReferenceGenerator();
     const useCase = new CreateDraftBillUseCase(repository, generator);
@@ -46,9 +47,23 @@ describe('CreateDraftBillUseCase', () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.code).toBe('BILL_CREATION_ERROR');
+      expect(result.error.code).toBe('BILL_PERSISTENCE_ERROR');
       expect(result.error.message).toBe('DB failure');
     }
   });
-});
 
+  it('should map unknown errors to UNKNOWN_ERROR', async () => {
+    const repository = new MockBillRepository();
+    repository.save = vitest.fn().mockRejectedValue('unexpected');
+
+    const generator = new MockReferenceGenerator();
+    const useCase = new CreateDraftBillUseCase(repository, generator);
+
+    const result = await useCase.execute('client-123');
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('UNKNOWN_ERROR');
+    }
+  });
+});

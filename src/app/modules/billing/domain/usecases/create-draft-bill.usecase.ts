@@ -1,4 +1,7 @@
 import { Bill } from '../entities/bill.entity';
+import { BillClientRequiredError } from '../errors/bill-client-required.error';
+import { BillPersistenceError } from '../errors/bill-persistence.error';
+import { InvalidBillReferenceError } from '../errors/invalid-bill-reference.error';
 import { BillRepository } from '../ports/bill.repository';
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
 import { Result, success, failure } from '../../../../core/result/result';
@@ -18,8 +21,17 @@ export class CreateDraftBillUseCase {
       await this.repository.save(bill);
 
       return success(bill);
-    } catch (e: any) {
-      return failure('BILL_CREATION_ERROR', e.message || 'Error occurred while creating the bill');
+    } catch (error: unknown) {
+      if (
+        error instanceof InvalidBillReferenceError ||
+        error instanceof BillClientRequiredError ||
+        error instanceof BillPersistenceError
+      ) {
+        return failure(error.code, error.message, error.metadata);
+      }
+
+      const message = error instanceof Error ? error.message : 'Error occurred while creating the bill';
+      return failure('UNKNOWN_ERROR', message);
     }
   }
 }

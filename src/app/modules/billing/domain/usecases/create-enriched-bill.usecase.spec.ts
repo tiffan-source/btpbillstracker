@@ -78,7 +78,7 @@ describe('CreateEnrichedBillUseCase', () => {
       return;
     }
 
-    expect(result.error.code).toBe('BILL_CREATION_ERROR');
+    expect(result.error.code).toBe('BILL_AMOUNT_BELOW_MIN');
     expect(result.error.message).toBe('Le montant TTC doit être supérieur ou égal à 0.');
     expect(repository.savedBill).toBeNull();
   });
@@ -104,7 +104,7 @@ describe('CreateEnrichedBillUseCase', () => {
       return;
     }
 
-    expect(result.error.code).toBe('BILL_CREATION_ERROR');
+    expect(result.error.code).toBe('BILL_DUE_DATE_REQUIRED');
     expect(result.error.message).toBe("La date d'échéance est obligatoire.");
     expect(repository.savedBill).toBeNull();
   });
@@ -130,7 +130,7 @@ describe('CreateEnrichedBillUseCase', () => {
       return;
     }
 
-    expect(result.error.code).toBe('BILL_CREATION_ERROR');
+    expect(result.error.code).toBe('BILL_EXTERNAL_REFERENCE_REQUIRED');
     expect(result.error.message).toBe('La référence facture externe est obligatoire.');
     expect(repository.savedBill).toBeNull();
   });
@@ -155,6 +155,7 @@ describe('CreateEnrichedBillUseCase', () => {
     if (result.success) {
       return;
     }
+    expect(result.error.code).toBe('INVALID_BILL_TYPE');
     expect(result.error.message).toBe("Le type de facture est invalide. Valeurs autorisées: Situation, Solde, Acompte.");
   });
 
@@ -178,6 +179,7 @@ describe('CreateEnrichedBillUseCase', () => {
     if (result.success) {
       return;
     }
+    expect(result.error.code).toBe('INVALID_PAYMENT_MODE');
     expect(result.error.message).toBe('Le mode de paiement est invalide. Valeurs autorisées: Virement, Chèque, Espèces.');
   });
 });

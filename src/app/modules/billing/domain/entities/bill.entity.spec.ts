@@ -1,4 +1,6 @@
 import { Bill } from './bill.entity';
+import { BillClientRequiredError } from '../errors/bill-client-required.error';
+import { InvalidBillReferenceError } from '../errors/invalid-bill-reference.error';
 
 describe('Bill Entity', () => {
   it('should create a valid Draft Bill automatically', () => {
@@ -11,12 +13,12 @@ describe('Bill Entity', () => {
   });
 
   it('should fail if reference is empty or missing', () => {
-    expect(() => new Bill('bill-1', '', 'client-xyz')).toThrow('Une facture doit avoir une référence valide.');
-    expect(() => new Bill('bill-1', '   ', 'client-xyz')).toThrow('Une facture doit avoir une référence valide.');
+    expect(() => new Bill('bill-1', '', 'client-xyz')).toThrow(InvalidBillReferenceError);
+    expect(() => new Bill('bill-1', '   ', 'client-xyz')).toThrow(InvalidBillReferenceError);
   });
 
   it('should fail if clientId is empty or missing', () => {
-    expect(() => new Bill('bill-1', 'F-2026-0001', '')).toThrow('Une facture doit être associée à un client.');
-    expect(() => new Bill('bill-1', 'F-2026-0001', '   ')).toThrow('Une facture doit être associée à un client.');
+    expect(() => new Bill('bill-1', 'F-2026-0001', '')).toThrow(BillClientRequiredError);
+    expect(() => new Bill('bill-1', 'F-2026-0001', '   ')).toThrow(BillClientRequiredError);
   });
 });

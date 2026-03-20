@@ -53,4 +53,18 @@ describe('CrossModuleClientProviderAdapter', () => {
 
     expect(result).toEqual(failure('CLIENT_CREATION_ERROR', 'Creation failed'));
   });
+
+  it('maps unexpected technical failures to client resolution error', async () => {
+    creator.execute.mockRejectedValue(new Error('network down'));
+
+    const result = await adapter.resolveClient({
+      isNewClient: true,
+      clientIdOrName: 'Alice'
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe('CLIENT_RESOLUTION_ERROR');
+    }
+  });
 });

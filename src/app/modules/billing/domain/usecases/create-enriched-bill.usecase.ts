@@ -1,5 +1,12 @@
 import { Result, failure, success } from '../../../../core/result/result';
 import { Bill } from '../entities/bill.entity';
+import { BillAmountBelowMinError } from '../errors/bill-amount-below-min.error';
+import { BillDueDateRequiredError } from '../errors/bill-due-date-required.error';
+import { BillExternalReferenceRequiredError } from '../errors/bill-external-reference-required.error';
+import { BillPersistenceError } from '../errors/bill-persistence.error';
+import { InvalidBillReferenceError } from '../errors/invalid-bill-reference.error';
+import { InvalidBillTypeError } from '../errors/invalid-bill-type.error';
+import { InvalidPaymentModeError } from '../errors/invalid-payment-mode.error';
 import { BillRepository } from '../ports/bill.repository';
 import { ClientProviderPort } from '../ports/client-provider.port';
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
@@ -51,8 +58,20 @@ export class CreateEnrichedBillUseCase {
       await this.repository.save(bill);
       return success(bill);
     } catch (error: unknown) {
+      if (
+        error instanceof InvalidBillReferenceError ||
+        error instanceof BillAmountBelowMinError ||
+        error instanceof BillDueDateRequiredError ||
+        error instanceof BillExternalReferenceRequiredError ||
+        error instanceof InvalidBillTypeError ||
+        error instanceof InvalidPaymentModeError ||
+        error instanceof BillPersistenceError
+      ) {
+        return failure(error.code, error.message, error.metadata);
+      }
+
       const message = error instanceof Error ? error.message : 'Une erreur inattendue est survenue';
-      return failure('BILL_CREATION_ERROR', message);
+      return failure('UNKNOWN_ERROR', message);
     }
   }
 }

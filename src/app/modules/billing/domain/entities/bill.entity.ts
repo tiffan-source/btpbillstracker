@@ -1,12 +1,18 @@
 export type BillStatus = 'DRAFT' | 'VALIDATED' | 'PAID';
 import {
   BILL_MIN_AMOUNT_TTC,
-  BILL_VALIDATION_MESSAGES,
   BillType,
   PaymentMode,
   isBillType,
   isPaymentMode
 } from '../values/bill.constraints';
+import { BillAmountBelowMinError } from '../errors/bill-amount-below-min.error';
+import { BillClientRequiredError } from '../errors/bill-client-required.error';
+import { BillDueDateRequiredError } from '../errors/bill-due-date-required.error';
+import { BillExternalReferenceRequiredError } from '../errors/bill-external-reference-required.error';
+import { InvalidBillReferenceError } from '../errors/invalid-bill-reference.error';
+import { InvalidBillTypeError } from '../errors/invalid-bill-type.error';
+import { InvalidPaymentModeError } from '../errors/invalid-payment-mode.error';
 
 export class Bill {
   private readonly _id: string;
@@ -21,10 +27,10 @@ export class Bill {
 
   constructor(id: string, reference: string, clientId: string) {
     if (!reference || reference.trim().length === 0) {
-      throw new Error(BILL_VALIDATION_MESSAGES.INVALID_REFERENCE);
+      throw new InvalidBillReferenceError();
     }
     if (!clientId || clientId.trim().length === 0) {
-      throw new Error(BILL_VALIDATION_MESSAGES.CLIENT_REQUIRED);
+      throw new BillClientRequiredError();
     }
 
     this._id = id;
@@ -44,7 +50,7 @@ export class Bill {
 
   setAmountTTC(amountTTC: number): this {
     if (amountTTC < BILL_MIN_AMOUNT_TTC) {
-      throw new Error(BILL_VALIDATION_MESSAGES.AMOUNT_MIN);
+      throw new BillAmountBelowMinError();
     }
     this._amountTTC = amountTTC;
     return this;
@@ -52,7 +58,7 @@ export class Bill {
 
   setDueDate(dueDate: string): this {
     if (!dueDate || dueDate.trim().length === 0) {
-      throw new Error(BILL_VALIDATION_MESSAGES.DUE_DATE_REQUIRED);
+      throw new BillDueDateRequiredError();
     }
     this._dueDate = dueDate;
     return this;
@@ -60,7 +66,7 @@ export class Bill {
 
   setExternalInvoiceReference(externalInvoiceReference: string): this {
     if (!externalInvoiceReference || externalInvoiceReference.trim().length === 0) {
-      throw new Error(BILL_VALIDATION_MESSAGES.EXTERNAL_REFERENCE_REQUIRED);
+      throw new BillExternalReferenceRequiredError();
     }
     this._externalInvoiceReference = externalInvoiceReference;
     return this;
@@ -68,7 +74,7 @@ export class Bill {
 
   setType(type: string): this {
     if (!isBillType(type)) {
-      throw new Error(BILL_VALIDATION_MESSAGES.TYPE_INVALID);
+      throw new InvalidBillTypeError();
     }
     this._type = type;
     return this;
@@ -76,7 +82,7 @@ export class Bill {
 
   setPaymentMode(paymentMode: string): this {
     if (!isPaymentMode(paymentMode)) {
-      throw new Error(BILL_VALIDATION_MESSAGES.PAYMENT_MODE_INVALID);
+      throw new InvalidPaymentModeError();
     }
     this._paymentMode = paymentMode;
     return this;
