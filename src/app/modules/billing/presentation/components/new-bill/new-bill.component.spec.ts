@@ -198,6 +198,63 @@ describe('NewBillComponent', () => {
     expect(document.activeElement).toBe(closeButton);
   });
 
+  it('renders reminder scenario card with token-based classes', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    const card = host.querySelector<HTMLElement>('[data-testid="reminder-card"]');
+    expect(card).toBeTruthy();
+    expect(card?.className).toContain('bg-surface');
+    expect(card?.className).toContain('border-subtle');
+    expect(card?.className).toContain('rounded-card');
+
+    const select = host.querySelector<HTMLSelectElement>('#reminderScenarioId');
+    expect(select?.value).toBe('standard-reminder-scenario');
+
+    const toggle = host.querySelector<HTMLButtonElement>('[data-testid="reminder-toggle"]');
+    expect(toggle).toBeTruthy();
+    expect(toggle?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('shows dynamic CTA label based on reminder toggle', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    const submitButton = host.querySelector<HTMLButtonElement>('[data-testid="submit-bill-button"]');
+    expect(submitButton?.textContent).toContain('Enregistrer et activer les relances');
+
+    component.toggleRemindersAuto(false);
+    fixture.detectChanges();
+
+    expect(submitButton?.textContent).toContain('Enregistrer sans relances');
+  });
+
+  it('wires reminder select and toggle to form payload on submit', () => {
+    component.invoiceForm.patchValue({
+      clientId: 'client-1',
+      amountTTC: 1500,
+      dueDate: '2026-06-30',
+      invoiceNumber: 'FAC-100',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
+    });
+
+    const host = fixture.nativeElement as HTMLElement;
+    const select = host.querySelector<HTMLSelectElement>('#reminderScenarioId');
+    expect(select).toBeTruthy();
+    if (!select) {
+      return;
+    }
+
+    select.value = 'standard-reminder-scenario';
+    select.dispatchEvent(new Event('change'));
+
+    component.onSubmit();
+
+    const payload = mockFacade.createInvoice.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    expect(payload['remindersAutoEnabled']).toBe(true);
+    expect(payload['reminderScenarioId']).toBe('standard-reminder-scenario');
+  });
+
   it('should reset the entire form after successful invoice creation', () => {
     component.invoiceForm.patchValue({
       clientId: 'client-1',

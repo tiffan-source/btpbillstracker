@@ -1,8 +1,7 @@
 <div class="min-h-screen bg-background pb-10">
-  <!-- Header de page -->
   <div class="max-w-4xl mx-auto pt-8 px-4 sm:px-6 lg:px-8">
     <div class="flex items-center gap-4 mb-2">
-      <button type="button" class="text-subtle hover:text-foreground-muted">
+      <button type="button" class="text-subtle hover:text-foreground-muted" aria-label="Retour">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
@@ -12,16 +11,12 @@
     <p class="text-sm text-subtle ml-10">Renseignez les informations de la facture à suivre</p>
   </div>
 
-  <!-- Formulaire -->
   <div class="max-w-4xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
     <form [formGroup]="invoiceForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
-
-      <!-- CARTE 1 : Informations de la facture -->
       <div class="bg-surface rounded-card shadow-sm border border-subtle p-6">
         <h2 class="text-lg font-bold text-foreground mb-6">Informations de la facture</h2>
 
         <div class="flex flex-col gap-6">
-          <!-- [Ligne 1] Client -->
           <div>
             <label for="clientId" class="block text-sm font-medium text-foreground-muted mb-1">Client</label>
             <div class="flex gap-3">
@@ -58,13 +53,11 @@
             }
           </div>
 
-          <!-- [Ligne 2] Chantier -->
           <div>
             <label for="chantier" class="block text-sm font-medium text-foreground-muted mb-1">Chantier</label>
             <input type="text" id="chantier" formControlName="chantier" placeholder="Nom ou adresse du chantier" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
           </div>
 
-          <!-- [Ligne 3] Grille 2 colonnes (Montant TTC / Date d'échéance) -->
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <label for="amountTTC" class="block text-sm font-medium text-foreground-muted mb-1">Montant TTC (€)</label>
@@ -97,7 +90,6 @@
             </div>
           </div>
 
-          <!-- [Ligne 4] Grille 2 colonnes (N° de facture / Type) -->
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <label for="invoiceNumber" class="block text-sm font-medium text-foreground-muted mb-1">N° de facture</label>
@@ -124,7 +116,6 @@
             </div>
           </div>
 
-          <!-- [Ligne 5] Mode de paiement -->
           <div>
             <label for="paymentMode" class="block text-sm font-medium text-foreground-muted mb-1">Mode de paiement prévu</label>
             <select id="paymentMode" formControlName="paymentMode" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
@@ -134,7 +125,6 @@
             </select>
           </div>
 
-          <!-- [Ligne 6] PDF de la facture -->
           <div>
             <label class="block text-sm font-medium text-foreground-muted mb-1">PDF de la facture (optionnel)</label>
             <label for="pdfFileInput" class="mt-1 flex w-full justify-center rounded-input border-2 border-dashed border-input px-6 pt-5 pb-6 hover:border-primary hover:bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer">
@@ -160,18 +150,72 @@
         </div>
       </div>
 
-      <!-- Submit Section -->
-      <div class="flex justify-end pt-4">
-        <button type="submit" [disabled]="invoiceForm.invalid || facade.isSubmitting()" class="inline-flex justify-center rounded-btn border border-transparent bg-primary px-6 py-3 text-base font-medium text-primary-content shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed">
-          {{ facade.isSubmitting() ? 'Enregistrement...' : 'Enregistrer' }}
-        </button>
+      <div data-testid="reminder-card" class="bg-surface rounded-card shadow-sm border border-subtle p-6">
+        <h2 class="text-lg font-bold text-foreground mb-6">Scénario de relance</h2>
+
+        <div>
+          <label for="reminderScenarioId" class="block text-sm font-medium text-foreground-muted mb-1">Scénario</label>
+          <select
+            id="reminderScenarioId"
+            formControlName="reminderScenarioId"
+            [disabled]="!invoiceForm.controls.remindersAutoEnabled.value"
+            class="block w-full rounded-input border border-input bg-surface text-foreground shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <option value="standard-reminder-scenario">Standard – J-3, J+3, J+10</option>
+          </select>
+        </div>
+
+        <div class="mt-4 bg-background rounded-card p-4 flex justify-between items-center">
+          <div>
+            <p class="text-sm font-medium text-foreground">Relances automatiques</p>
+            <p class="text-xs text-subtle">Désactivez si vous gérez à la main</p>
+          </div>
+          <button
+            data-testid="reminder-toggle"
+            type="button"
+            role="switch"
+            [attr.aria-checked]="invoiceForm.controls.remindersAutoEnabled.value"
+            [attr.aria-pressed]="invoiceForm.controls.remindersAutoEnabled.value"
+            [class]="invoiceForm.controls.remindersAutoEnabled.value
+              ? 'relative inline-flex h-6 w-11 items-center rounded-full bg-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+              : 'relative inline-flex h-6 w-11 items-center rounded-full bg-subtle transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'"
+            (click)="toggleRemindersAuto(!invoiceForm.controls.remindersAutoEnabled.value)"
+          >
+            <span
+              [class]="invoiceForm.controls.remindersAutoEnabled.value
+                ? 'inline-block h-4 w-4 transform rounded-full bg-primary-content transition translate-x-6'
+                : 'inline-block h-4 w-4 transform rounded-full bg-primary-content transition translate-x-1'"
+            ></span>
+          </button>
+        </div>
       </div>
 
+      <div class="mt-6">
+        <button
+          data-testid="submit-bill-button"
+          type="submit"
+          [disabled]="invoiceForm.invalid || facade.isSubmitting()"
+          class="w-full rounded-btn bg-primary py-3 text-base font-medium text-primary-content shadow-sm hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8l4 4v12a2 2 0 0 1-2 2Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-8H7v8" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v5h8" />
+          </svg>
+          @if (facade.isSubmitting()) {
+            <span>Enregistrement...</span>
+          } @else if (invoiceForm.controls.remindersAutoEnabled.value) {
+            <span>Enregistrer et activer les relances</span>
+          } @else {
+            <span>Enregistrer sans relances</span>
+          }
+        </button>
+      </div>
     </form>
   </div>
 </div>
 
-@if (facade.isSuccess(); as isSuccess) {
+@if (facade.isSuccess()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 px-4">
     <div
       role="dialog"
