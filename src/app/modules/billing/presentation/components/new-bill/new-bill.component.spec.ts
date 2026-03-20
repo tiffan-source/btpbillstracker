@@ -14,7 +14,6 @@ describe('NewBillComponent', () => {
       error: signal(null),
       draftBill: signal(null),
       clients: signal([]),
-      scenarios: signal([]),
       createInvoice: vitest.fn()
     };
 
@@ -58,6 +57,56 @@ describe('NewBillComponent', () => {
       size: 8,
       type: 'application/pdf'
     });
+  });
+
+  it('should toggle inline new client mode and preserve new client data when hidden', () => {
+    const host: HTMLElement = fixture.nativeElement;
+    const toggleButton = host.querySelector<HTMLButtonElement>('[data-testid="toggle-new-client-mode"]');
+    expect(toggleButton).toBeTruthy();
+    if (!toggleButton) {
+      return;
+    }
+
+    expect(host.querySelector<HTMLInputElement>('#newClientName')).toBeNull();
+
+    toggleButton.click();
+    fixture.detectChanges();
+
+    const newClientNameInput = host.querySelector<HTMLInputElement>('#newClientName');
+    expect(newClientNameInput).toBeTruthy();
+    if (!newClientNameInput) {
+      return;
+    }
+
+    newClientNameInput.value = 'Client Inline';
+    newClientNameInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(component.invoiceForm.controls.newClientName.value).toBe('Client Inline');
+
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLInputElement>('#newClientName')).toBeNull();
+
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLInputElement>('#newClientName')?.value).toBe('Client Inline');
+  });
+
+  it('should submit without relance scenario field in payload', () => {
+    component.invoiceForm.patchValue({
+      clientId: 'c-1',
+      amountTTC: 1200,
+      dueDate: '2026-06-01',
+      invoiceNumber: 'FAC-22',
+      type: 'Situation',
+      paymentMode: 'Virement'
+    });
+
+    component.onSubmit();
+
+    expect(mockFacade.createInvoice).toHaveBeenCalledTimes(1);
+    const payload = mockFacade.createInvoice.mock.calls[0][0] as Record<string, unknown>;
+    expect(payload['scenario']).toBeUndefined();
   });
 
   // Test is removed since `.success-message` is not currently in the updated component HTML template.

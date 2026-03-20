@@ -7,7 +7,6 @@ type InvoiceFormValue = {
   clientId?: string | null;
   newClientName?: string | null;
   chantier?: string | null;
-  scenario?: string | null;
   amountTTC?: number | null;
   dueDate?: string | null;
   invoiceNumber?: string | null;
@@ -29,10 +28,6 @@ export class BillingFacade {
   readonly clients = signal<{id: string, name: string}[]>([
     { id: 'client-1', name: 'Client 1' },
     { id: 'client-2', name: 'Client 2' }
-  ]);
-
-  readonly scenarios = signal<{id: string, label: string}[]>([
-    { id: 'standard', label: 'Standard - J-3, J+3, J+10' }
   ]);
 
   async createInvoice(formValue: InvoiceFormValue): Promise<void> {

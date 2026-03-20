@@ -62,7 +62,6 @@ describe('BillingFacade', () => {
       invoiceNumber: 'EXT-77',
       type: 'Situation',
       paymentMode: 'Virement',
-      scenario: 'standard',
       pdfFile: { name: 'facture.pdf', size: 2048, type: 'application/pdf' }
     });
     
@@ -122,8 +121,7 @@ describe('BillingFacade', () => {
       dueDate: '',
       invoiceNumber: '',
       type: 'Situation',
-      paymentMode: 'Virement',
-      scenario: 'standard'
+      paymentMode: 'Virement'
     });
 
     expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({

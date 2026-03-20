@@ -6,7 +6,8 @@ Gérer le cycle métier de création de facture, incluant la création enrichie 
 ## 📦 Contenu Clé (Inside)
 - Entité métier principale: `Bill`.
 - Use cases: `CreateDraftBillUseCase`, `SubmitNewBillUseCase`, `CreateEnrichedBillUseCase`.
-- Composant UI majeur: `new-bill`.
+- Composant UI majeur: `new-bill` (formulaire basé sur Form Object typed dans `presentation/forms/new-bill.form.ts`).
 
 ## ⚠️ Contraintes spécifiques
 - Les validations métier de la facture enrichie sont centralisées dans le domaine (entité + use case), avant tout couplage UI.
+- Le flux de création de facture n'utilise plus de scénario de relance; le mode `+ Nouveau` client est inline et conserve les données saisies lors du retour au mode client existant.

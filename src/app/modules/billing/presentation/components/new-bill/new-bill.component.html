@@ -25,14 +25,18 @@
           <div>
             <label for="clientId" class="block text-sm font-medium text-foreground-muted mb-1">Client</label>
             <div class="flex gap-3">
-              <select id="clientId" formControlName="clientId" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
-                <option value="">Sélectionner un client</option>
-                @for (client of facade.clients(); track client.id) {
-                  <option [value]="client.id">{{ client.name }}</option>
-                }
-              </select>
-              <button type="button" class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted shadow-sm hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap">
-                + Nouveau
+              @if (!isCreatingNewClient) {
+                <select id="clientId" formControlName="clientId" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+                  <option value="">Sélectionner un client</option>
+                  @for (client of facade.clients(); track client.id) {
+                    <option [value]="client.id">{{ client.name }}</option>
+                  }
+                </select>
+              } @else {
+                <input id="newClientName" type="text" formControlName="newClientName" placeholder="Nom du nouveau client" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+              }
+              <button type="button" data-testid="toggle-new-client-mode" (click)="toggleNewClientMode()" class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted shadow-sm hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap">
+                {{ isCreatingNewClient ? 'Client existant' : '+ Nouveau' }}
               </button>
             </div>
           </div>
@@ -104,20 +108,6 @@
               </div>
             </label>
           </div>
-        </div>
-      </div>
-
-      <!-- CARTE 2 : Scénario de relance -->
-      <div class="bg-surface rounded-card shadow-sm border border-subtle p-6">
-        <h2 class="text-lg font-bold text-foreground mb-6">Scénario de relance</h2>
-
-        <div>
-          <label for="scenario" class="block text-sm font-medium text-foreground-muted mb-1">Scénario</label>
-          <select id="scenario" formControlName="scenario" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
-            @for (sc of facade.scenarios(); track sc.id) {
-              <option [value]="sc.id">{{ sc.label }}</option>
-            }
-          </select>
         </div>
       </div>
 
