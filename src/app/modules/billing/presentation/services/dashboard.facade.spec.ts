@@ -177,4 +177,25 @@ describe('DashboardFacade', () => {
     expect(facade.editError()).toContain('introuvable');
     expect(facade.isEditSubmitting()).toBe(false);
   });
+
+  it('does not close edit modal while a submit is in progress', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: new InMemoryBillRepository() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+    const facade = TestBed.inject(DashboardFacade);
+    facade.isEditModalOpen.set(true);
+    facade.isEditSubmitting.set(true);
+
+    facade.closeEditModal();
+
+    expect(facade.isEditModalOpen()).toBe(true);
+  });
 });

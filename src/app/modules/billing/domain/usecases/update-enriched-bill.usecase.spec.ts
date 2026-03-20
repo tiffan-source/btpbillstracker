@@ -7,6 +7,7 @@ import { UpdateEnrichedBillUseCase } from './update-enriched-bill.usecase';
 class InMemoryBillRepository implements BillRepository {
   private readonly byId = new Map<string, Bill>();
   throwPersistence = false;
+  throwUnknown = false;
 
   constructor(initialBills: Bill[] = []) {
     for (const bill of initialBills) {
@@ -23,6 +24,9 @@ class InMemoryBillRepository implements BillRepository {
   }
 
   async update(bill: Bill): Promise<void> {
+    if (this.throwUnknown) {
+      throw 'unexpected';
+    }
     if (this.throwPersistence) {
       throw new BillPersistenceError('Erreur de persistance.');
     }
@@ -116,5 +120,32 @@ describe('UpdateEnrichedBillUseCase', () => {
     }
 
     expect(result.error.code).toBe('BILL_PERSISTENCE_ERROR');
+  });
+
+  it('maps unknown failures to UNKNOWN_ERROR', async () => {
+    const existing = new Bill('b-3', 'F-2026-0103', 'client-1');
+    const repository = new InMemoryBillRepository([existing]);
+    repository.throwUnknown = true;
+    const useCase = new UpdateEnrichedBillUseCase(repository);
+
+    const result = await useCase.execute({
+      id: 'b-3',
+      reference: 'F-2026-0103',
+      clientId: 'client-1',
+      amountTTC: 300,
+      dueDate: '2026-04-22',
+      externalInvoiceReference: 'EXT-10',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      status: 'VALIDATED'
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+
+    expect(result.error.code).toBe('UNKNOWN_ERROR');
   });
 });

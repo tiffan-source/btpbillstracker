@@ -106,4 +106,14 @@ describe('EditBillModalComponent', () => {
     expect(closeButton.disabled).toBe(true);
     expect(saveButton.disabled).toBe(true);
   });
+
+  it('emits close request when clicking overlay if not submitting', () => {
+    const closeSpy = vitest.fn();
+    component.requestClose.subscribe(closeSpy);
+    const overlay = fixture.nativeElement.querySelector('.fixed.inset-0') as HTMLElement;
+
+    overlay.click();
+
+    expect(closeSpy).toHaveBeenCalled();
+  });
 });
