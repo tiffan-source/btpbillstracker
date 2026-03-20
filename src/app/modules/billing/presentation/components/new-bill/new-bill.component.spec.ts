@@ -31,8 +31,10 @@ describe('NewBillComponent', () => {
 
   it('should call createInvoice when form is populated', () => {
     component.invoiceForm.patchValue({
-      newClientName: 'Alice',
+      clientId: 'client-1',
       amountTTC: 1500,
+      dueDate: '2026-06-30',
+      invoiceNumber: 'FAC-100',
       paymentMode: 'Virement'
     });
 
@@ -107,6 +109,44 @@ describe('NewBillComponent', () => {
     expect(mockFacade.createInvoice).toHaveBeenCalledTimes(1);
     const payload = mockFacade.createInvoice.mock.calls[0][0] as Record<string, unknown>;
     expect(payload['scenario']).toBeUndefined();
+  });
+
+  it('should show field-level errors only after an invalid submit attempt', () => {
+    const host: HTMLElement = fixture.nativeElement;
+
+    expect(host.textContent).not.toContain('Le client est obligatoire.');
+    expect(host.textContent).not.toContain('Le montant TTC est obligatoire.');
+    expect(host.textContent).not.toContain("La date d'échéance est obligatoire.");
+    expect(host.textContent).not.toContain('La référence facture est obligatoire.');
+
+    component.onSubmit();
+    fixture.detectChanges();
+
+    expect(mockFacade.createInvoice).not.toHaveBeenCalled();
+    expect(host.textContent).toContain('Le client est obligatoire.');
+    expect(host.textContent).toContain('Le montant TTC est obligatoire.');
+    expect(host.textContent).toContain("La date d'échéance est obligatoire.");
+    expect(host.textContent).toContain('La référence facture est obligatoire.');
+
+    const amountInput = host.querySelector<HTMLInputElement>('#amountTTC');
+    expect(amountInput?.className).toContain('border-danger');
+  });
+
+  it('should block submit action while submitting', () => {
+    mockFacade.isSubmitting.set(true);
+    fixture.detectChanges();
+
+    component.invoiceForm.patchValue({
+      clientId: 'client-1',
+      amountTTC: 1500,
+      dueDate: '2026-06-30',
+      invoiceNumber: 'FAC-200',
+      paymentMode: 'Virement'
+    });
+
+    component.onSubmit();
+
+    expect(mockFacade.createInvoice).not.toHaveBeenCalled();
   });
 
   // Test is removed since `.success-message` is not currently in the updated component HTML template.

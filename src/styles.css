@@ -21,6 +21,10 @@
   /* Borders */
   --color-border-subtle: #f3f4f6;
   --color-border-input: #d1d5db;
+  --color-border-danger: #dc2626;
+
+  /* Validation */
+  --color-danger: #dc2626;
 
   /* Radius */
   --radius-card: 0.75rem;

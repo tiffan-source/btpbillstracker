@@ -26,19 +26,36 @@
             <label for="clientId" class="block text-sm font-medium text-foreground-muted mb-1">Client</label>
             <div class="flex gap-3">
               @if (!isCreatingNewClient) {
-                <select id="clientId" formControlName="clientId" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+                <select
+                  id="clientId"
+                  formControlName="clientId"
+                  [class]="hasFieldError('clientId')
+                    ? 'block w-full rounded-input border-danger shadow-sm focus:border-danger focus:ring-danger sm:text-sm px-3 py-2 border'
+                    : 'block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border'"
+                >
                   <option value="">Sélectionner un client</option>
                   @for (client of facade.clients(); track client.id) {
                     <option [value]="client.id">{{ client.name }}</option>
                   }
                 </select>
               } @else {
-                <input id="newClientName" type="text" formControlName="newClientName" placeholder="Nom du nouveau client" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+                <input
+                  id="newClientName"
+                  type="text"
+                  formControlName="newClientName"
+                  placeholder="Nom du nouveau client"
+                  [class]="hasFieldError('newClientName')
+                    ? 'block w-full rounded-input border-danger shadow-sm focus:border-danger focus:ring-danger sm:text-sm px-3 py-2 border'
+                    : 'block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border'"
+                >
               }
               <button type="button" data-testid="toggle-new-client-mode" (click)="toggleNewClientMode()" class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted shadow-sm hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap">
                 {{ isCreatingNewClient ? 'Client existant' : '+ Nouveau' }}
               </button>
             </div>
+            @if (fieldErrorMessage(isCreatingNewClient ? 'newClientName' : 'clientId'); as errorMessage) {
+              <p class="mt-2 text-sm text-danger">{{ errorMessage }}</p>
+            }
           </div>
 
           <!-- [Ligne 2] Chantier -->
@@ -51,11 +68,32 @@
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <label for="amountTTC" class="block text-sm font-medium text-foreground-muted mb-1">Montant TTC (€)</label>
-              <input type="number" id="amountTTC" formControlName="amountTTC" placeholder="0,00" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+              <input
+                type="number"
+                id="amountTTC"
+                formControlName="amountTTC"
+                placeholder="0,00"
+                [class]="hasFieldError('amountTTC')
+                  ? 'block w-full rounded-input border-danger shadow-sm focus:border-danger focus:ring-danger sm:text-sm px-3 py-2 border'
+                  : 'block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border'"
+              >
+              @if (fieldErrorMessage('amountTTC'); as errorMessage) {
+                <p class="mt-2 text-sm text-danger">{{ errorMessage }}</p>
+              }
             </div>
             <div>
               <label for="dueDate" class="block text-sm font-medium text-foreground-muted mb-1">Date d'échéance</label>
-              <input type="date" id="dueDate" formControlName="dueDate" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border text-subtle">
+              <input
+                type="date"
+                id="dueDate"
+                formControlName="dueDate"
+                [class]="hasFieldError('dueDate')
+                  ? 'block w-full rounded-input border-danger shadow-sm focus:border-danger focus:ring-danger sm:text-sm px-3 py-2 border text-subtle'
+                  : 'block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border text-subtle'"
+              >
+              @if (fieldErrorMessage('dueDate'); as errorMessage) {
+                <p class="mt-2 text-sm text-danger">{{ errorMessage }}</p>
+              }
             </div>
           </div>
 
@@ -63,7 +101,18 @@
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <label for="invoiceNumber" class="block text-sm font-medium text-foreground-muted mb-1">N° de facture</label>
-              <input type="text" id="invoiceNumber" formControlName="invoiceNumber" placeholder="FAC-001" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+              <input
+                type="text"
+                id="invoiceNumber"
+                formControlName="invoiceNumber"
+                placeholder="FAC-001"
+                [class]="hasFieldError('invoiceNumber')
+                  ? 'block w-full rounded-input border-danger shadow-sm focus:border-danger focus:ring-danger sm:text-sm px-3 py-2 border'
+                  : 'block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border'"
+              >
+              @if (fieldErrorMessage('invoiceNumber'); as errorMessage) {
+                <p class="mt-2 text-sm text-danger">{{ errorMessage }}</p>
+              }
             </div>
             <div>
               <label for="type" class="block text-sm font-medium text-foreground-muted mb-1">Type</label>
