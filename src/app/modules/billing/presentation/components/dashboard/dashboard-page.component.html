@@ -27,8 +27,31 @@
       </div>
     </header>
 
-    <section class="rounded-card border border-subtle bg-surface p-6">
-      <p class="text-sm text-subtle">Section KPI à venir.</p>
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <app-kpi-card
+        title="Total en retard"
+        [value]="facade.kpis().totalOverdueAmount + ' €'"
+        icon="!"
+        variant="danger"
+      />
+      <app-kpi-card
+        title="Factures en retard"
+        [value]="facade.kpis().overdueInvoices.toString()"
+        icon="!"
+        variant="danger"
+      />
+      <app-kpi-card
+        title="À encaisser ce mois"
+        [value]="facade.kpis().toCollectThisMonth + ' €'"
+        icon="⏱"
+        variant="warning"
+      />
+      <app-kpi-card
+        title="Factures en cours"
+        [value]="facade.kpis().inProgressInvoices.toString()"
+        icon="•"
+        variant="neutral"
+      />
     </section>
 
     <section class="rounded-card border border-subtle bg-surface p-6">
@@ -40,4 +63,3 @@
     </section>
   </div>
 </div>
-

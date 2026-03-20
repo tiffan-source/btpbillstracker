@@ -1,0 +1,30 @@
+<article
+  class="rounded-card border p-5"
+  [class]="
+    variant() === 'danger'
+      ? 'bg-danger-light border-danger-light'
+      : variant() === 'warning'
+        ? 'bg-warning-light border-warning-light'
+        : 'bg-surface border-subtle'
+  "
+>
+  <header class="mb-6 flex items-center justify-between">
+    <h3 class="text-sm text-foreground-muted">{{ title() }}</h3>
+    <span
+      class="inline-flex h-9 w-9 items-center justify-center rounded-full"
+      [class]="
+        variant() === 'danger'
+          ? 'bg-surface text-danger'
+          : variant() === 'warning'
+            ? 'bg-surface text-warning'
+            : 'bg-background text-subtle'
+      "
+      aria-hidden="true"
+    >
+      {{ icon() }}
+    </span>
+  </header>
+
+  <p class="text-2xl font-bold text-foreground">{{ value() }}</p>
+</article>
+
