@@ -4,12 +4,14 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { BILLING_PROVIDERS } from './modules/billing/billing.providers';
 import { CLIENT_PROVIDERS } from './modules/clients/clients.providers';
+import { REMINDERS_PROVIDERS } from './modules/reminders/reminders.providers';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     ...BILLING_PROVIDERS,
-    ...CLIENT_PROVIDERS
+    ...CLIENT_PROVIDERS,
+    ...REMINDERS_PROVIDERS
   ]
 };
