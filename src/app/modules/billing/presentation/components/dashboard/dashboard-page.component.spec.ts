@@ -12,7 +12,18 @@ const mockDashboardFacade = {
     inProgressInvoices: 3
   }),
   invoices: signal([]),
-  urgentInvoices: signal([]),
+  urgentInvoices: signal([
+    {
+      id: 'u-1',
+      client: 'Marie Lambert',
+      chantier: 'Cadjehoun',
+      amountTTC: 156,
+      dueDate: '2026-03-19',
+      status: 'EN_RETARD' as const,
+      nextReminder: '—',
+      overdueDays: 1
+    }
+  ]),
   markAsPaid: vitest.fn()
 };
 
@@ -53,5 +64,15 @@ describe('DashboardPageComponent', () => {
     expect(host.textContent).toContain('Factures en retard');
     expect(host.textContent).toContain('À encaisser ce mois');
     expect(host.textContent).toContain('Factures en cours');
+  });
+
+  it('should render urgent invoices section', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.textContent).toContain('Factures les plus urgentes');
+    expect(host.textContent).toContain('Marie Lambert');
+    expect(host.textContent).toContain('Cadjehoun');
+    expect(host.textContent).toContain('156 €');
+    expect(host.textContent).toContain('1j de retard');
   });
 });
