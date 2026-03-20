@@ -1,5 +1,8 @@
 export type CoreErrorMetadata = Record<string, unknown>;
 
+/**
+ * Erreur racine de l'application avec code stable et contexte optionnel.
+ */
 export class CoreError extends Error {
   readonly code: string;
   readonly metadata?: CoreErrorMetadata;
