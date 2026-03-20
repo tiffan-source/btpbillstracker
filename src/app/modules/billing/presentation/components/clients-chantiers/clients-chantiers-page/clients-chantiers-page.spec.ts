@@ -105,4 +105,35 @@ describe('ClientsChantiersPage', () => {
       expect(section.className).toContain('border-subtle');
     });
   });
+
+  it('restores focus to client edit trigger when closing modal', async () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const button = host.querySelector<HTMLButtonElement>('[aria-label="Editer le client Alice Martin"]');
+    expect(button).toBeTruthy();
+    button?.click();
+    fixture.detectChanges();
+
+    const closeButton = host.querySelector<HTMLButtonElement>('[aria-label="Fermer"]');
+    closeButton?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('restores focus to chantier edit trigger when closing modal', async () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const chantierEditButton = host.querySelector<HTMLButtonElement>('[aria-label="Editer le chantier Villa A"]');
+    expect(chantierEditButton).toBeTruthy();
+    chantierEditButton?.click();
+    fixture.detectChanges();
+
+    const closeButtons = host.querySelectorAll<HTMLButtonElement>('[aria-label="Fermer"]');
+    const closeButton = closeButtons[closeButtons.length - 1];
+    closeButton?.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.activeElement).toBe(chantierEditButton);
+  });
 });
