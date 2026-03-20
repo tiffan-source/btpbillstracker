@@ -101,6 +101,11 @@ export class Bill {
     return this;
   }
 
+  setStatus(status: BillStatus): this {
+    this._status = status;
+    return this;
+  }
+
   configureReminder(remindersAutoEnabled: boolean, reminderScenarioId?: string): this {
     this._remindersAutoEnabled = remindersAutoEnabled;
 

@@ -1,11 +1,11 @@
 # Billing Module
 
 ## 📍 Rôle (What)
-Gérer le cycle métier de création de facture, incluant la création enrichie avec validations des invariants de facturation.
+Gérer le cycle métier de création et modification de facture, incluant la création et la mise à jour enrichies avec validations des invariants de facturation.
 
 ## 📦 Contenu Clé (Inside)
 - Entité métier principale: `Bill`.
-- Use cases: `CreateDraftBillUseCase`, `CreateEnrichedBillUseCase`.
+- Use cases: `CreateDraftBillUseCase`, `CreateEnrichedBillUseCase`, `UpdateEnrichedBillUseCase`.
 - Composant UI majeur: `new-bill` (formulaire basé sur Form Object typed dans `presentation/forms/new-bill.form.ts`).
 
 ## ⚠️ Contraintes spécifiques
@@ -14,3 +14,4 @@ Gérer le cycle métier de création de facture, incluant la création enrichie 
 - Le formulaire `new-bill` affiche désormais des erreurs champ-par-champ et un style visuel d'erreur uniquement après une tentative de soumission invalide, pour un feedback utilisateur explicite sans bruit initial.
 - Après une création réussie, la présentation affiche une modal de succès accessible (fermeture explicite via bouton) et réinitialise complètement le formulaire pour une nouvelle saisie.
 - L'intégration Billing ↔ Clients passe par un port public (`QuickClientCreatorPort`) pour éviter la dépendance directe à une classe de use case concrète.
+- Le repository billing expose désormais une opération `update` et lève `BillNotFoundError` si la facture n'existe pas en persistance locale.

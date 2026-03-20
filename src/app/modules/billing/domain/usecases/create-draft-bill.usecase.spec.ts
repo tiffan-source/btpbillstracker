@@ -14,6 +14,8 @@ class MockBillRepository implements BillRepository {
   async list(): Promise<Bill[]> {
     return this.savedBill ? [this.savedBill] : [];
   }
+
+  async update(_bill: Bill): Promise<void> {}
 }
 
 class MockReferenceGenerator implements ReferenceGeneratorService {

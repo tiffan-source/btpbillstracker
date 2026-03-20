@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BillRepository } from '../../domain/ports/bill.repository';
-import { Bill } from '../../domain/entities/bill.entity';
+import { Bill, BillStatus } from '../../domain/entities/bill.entity';
+import { BillNotFoundError } from '../../domain/errors/bill-not-found.error';
 import { BillPersistenceError } from '../../domain/errors/bill-persistence.error';
 
 @Injectable({ providedIn: 'root' })
@@ -47,11 +48,33 @@ export class LocalBillRepository implements BillRepository {
         if (plainBill.chantier) {
           bill.setChantier(plainBill.chantier);
         }
+        if (this.isBillStatus(plainBill.status)) {
+          bill.setStatus(plainBill.status);
+        }
 
         return bill;
       });
     } catch (error: unknown) {
       throw new BillPersistenceError('Impossible de lire les factures.', { storageKey: this.storageKey }, error);
+    }
+  }
+
+  async update(bill: Bill): Promise<void> {
+    try {
+      const bills = this.readPlainBills();
+      const index = bills.findIndex((item) => item.id === bill.id);
+
+      if (index < 0) {
+        throw new BillNotFoundError(undefined, { billId: bill.id });
+      }
+
+      bills[index] = this.toPlainBill(bill);
+      localStorage.setItem(this.storageKey, JSON.stringify(bills));
+    } catch (error: unknown) {
+      if (error instanceof BillNotFoundError) {
+        throw error;
+      }
+      throw new BillPersistenceError(undefined, { storageKey: this.storageKey }, error);
     }
   }
 
@@ -95,5 +118,9 @@ export class LocalBillRepository implements BillRepository {
       paymentMode: bill.paymentMode,
       chantier: bill.chantier
     };
+  }
+
+  private isBillStatus(value: string | undefined): value is BillStatus {
+    return value === 'DRAFT' || value === 'VALIDATED' || value === 'PAID';
   }
 }

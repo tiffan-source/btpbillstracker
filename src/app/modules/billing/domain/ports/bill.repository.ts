@@ -12,4 +12,11 @@ export abstract class BillRepository {
    * @throws {BillPersistenceError} Quand la lecture échoue.
    */
   abstract list(): Promise<Bill[]>;
+
+  /**
+   * Mettre à jour une facture persistée.
+   * @throws {BillNotFoundError} Quand la facture n'existe pas.
+   * @throws {BillPersistenceError} Quand la persistance échoue.
+   */
+  abstract update(bill: Bill): Promise<void>;
 }

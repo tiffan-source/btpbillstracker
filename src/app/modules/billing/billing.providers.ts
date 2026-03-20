@@ -6,6 +6,7 @@ import { SimpleReferenceGenerator } from './infrastructure/simple-reference-gene
 import { BillStore } from './presentation/stores/bill.store';
 import { LocalBillStore } from './infrastructure/stores/local-bill.store';
 import { CreateEnrichedBillUseCase } from './domain/usecases/create-enriched-bill.usecase';
+import { UpdateEnrichedBillUseCase } from './domain/usecases/update-enriched-bill.usecase';
 import { ClientProviderPort } from './domain/ports/client-provider.port';
 import { CrossModuleClientProviderAdapter } from './infrastructure/adapters/cross-module-client-provider.adapter';
 import { ReminderAssociationRepository } from '../reminders/domain/ports/reminder-association.repository';
@@ -29,5 +30,10 @@ export const BILLING_PROVIDERS: Provider[] = [
       generator: ReferenceGeneratorService
     ) => new CreateEnrichedBillUseCase(clientProvider, repository, generator),
     deps: [ClientProviderPort, BillRepository, ReferenceGeneratorService]
+  },
+  {
+    provide: UpdateEnrichedBillUseCase,
+    useFactory: (repository: BillRepository) => new UpdateEnrichedBillUseCase(repository),
+    deps: [BillRepository]
   }
 ];
