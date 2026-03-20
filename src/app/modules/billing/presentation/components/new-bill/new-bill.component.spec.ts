@@ -43,7 +43,10 @@ describe('NewBillComponent', () => {
     fixture.detectChanges();
     component.onSubmit();
 
-    expect(mockFacade.createInvoice).toHaveBeenCalledWith(component.invoiceForm.value);
+    expect(mockFacade.createInvoice).toHaveBeenCalledWith({
+      ...component.invoiceForm.value,
+      pdfFile: null
+    });
   });
 
   it('should capture pdf metadata in form memory', () => {
@@ -56,7 +59,7 @@ describe('NewBillComponent', () => {
 
     component.onPdfSelected({ target: input } as unknown as Event);
 
-    expect(component.invoiceForm.controls.pdfFile.value).toEqual({
+    expect(component.selectedPdfFile).toEqual({
       name: 'devis.pdf',
       size: 8,
       type: 'application/pdf'
@@ -185,9 +188,9 @@ describe('NewBillComponent', () => {
       dueDate: '2026-09-01',
       invoiceNumber: 'FAC-RESET',
       type: 'Solde',
-      paymentMode: 'Chèque',
-      pdfFile: { name: 'facture.pdf', size: 1000, type: 'application/pdf' }
+      paymentMode: 'Chèque'
     });
+    component.selectedPdfFile = { name: 'facture.pdf', size: 1000, type: 'application/pdf' };
     component.toggleNewClientMode();
     component.invoiceForm.patchValue({ newClientName: 'Temp Client' });
 
@@ -214,7 +217,7 @@ describe('NewBillComponent', () => {
     expect(component.invoiceForm.controls.invoiceNumber.value).toBe('');
     expect(component.invoiceForm.controls.type.value).toBe('Situation');
     expect(component.invoiceForm.controls.paymentMode.value).toBe('Virement');
-    expect(component.invoiceForm.controls.pdfFile.value).toBeNull();
+    expect(component.selectedPdfFile).toBeNull();
   });
 
   // Test is removed since `.success-message` is not currently in the updated component HTML template.

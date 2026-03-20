@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { BillStore, BillPdfMemoryFile, BillViewModel } from '../../presentation/stores/bill.store';
+import { BillStore, BillViewModel } from '../../presentation/stores/bill.store';
+import { BillPdfMemoryFile } from '../../presentation/models/bill-pdf-memory-file.model';
 import { Bill } from '../../domain/entities/bill.entity';
 
 @Injectable({ providedIn: 'root' })

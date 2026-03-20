@@ -2,9 +2,12 @@ import { Result, success, failure } from '../../../../core/result/result';
 import { Client } from '../entities/client.entity';
 import { ClientRepository } from '../ports/client.repository';
 import { CreateQuickClientInput } from './create-quick-client.input';
+import { QuickClientCreatorPort } from '../ports/quick-client-creator.port';
 
-export class CreateQuickClientUseCase {
-  constructor(private readonly repository: ClientRepository) {}
+export class CreateQuickClientUseCase extends QuickClientCreatorPort {
+  constructor(private readonly repository: ClientRepository) {
+    super();
+  }
 
   async execute(input: CreateQuickClientInput): Promise<Result<Client>> {
     try {

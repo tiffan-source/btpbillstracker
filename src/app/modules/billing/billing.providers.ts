@@ -5,7 +5,6 @@ import { ReferenceGeneratorService } from './domain/ports/reference-generator.se
 import { SimpleReferenceGenerator } from './infrastructure/simple-reference-generator.service';
 import { BillStore } from './presentation/stores/bill.store';
 import { LocalBillStore } from './infrastructure/stores/local-bill.store';
-import { SubmitNewBillUseCase } from './domain/usecases/submit-new-bill.usecase';
 import { CreateEnrichedBillUseCase } from './domain/usecases/create-enriched-bill.usecase';
 import { ClientProviderPort } from './domain/ports/client-provider.port';
 import { CrossModuleClientProviderAdapter } from './infrastructure/adapters/cross-module-client-provider.adapter';
@@ -19,11 +18,6 @@ export const BILLING_PROVIDERS: Provider[] = [
   // Use cases are just pure TS classes, we can provide them as injectables manually or decorateur them
   // The Clean Arch spec states: "Le Use Case ne doit jamais utiliser le décorateur @Injectable()."
   // So we provide it here explicitly configuring its deps.
-  {
-    provide: SubmitNewBillUseCase,
-    useFactory: (createEnriched: CreateEnrichedBillUseCase) => new SubmitNewBillUseCase(createEnriched),
-    deps: [CreateEnrichedBillUseCase]
-  },
   {
     provide: CreateEnrichedBillUseCase,
     useFactory: (

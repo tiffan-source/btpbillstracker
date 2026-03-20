@@ -1,5 +1,9 @@
 import { AbstractControl, FormControl, FormGroup, Validators } from '@angular/forms';
-import { BillPdfMemoryFile } from '../stores/bill.store';
+import {
+  BILL_MIN_AMOUNT_TTC,
+  BILL_TYPES,
+  PAYMENT_MODES
+} from '../../domain/values/bill.constraints';
 
 export interface NewBillFormModel {
   [key: string]: AbstractControl;
@@ -11,7 +15,6 @@ export interface NewBillFormModel {
   invoiceNumber: FormControl<string>;
   type: FormControl<string>;
   paymentMode: FormControl<string>;
-  pdfFile: FormControl<BillPdfMemoryFile | null>;
 }
 
 export type NewBillFormValue = {
@@ -23,7 +26,6 @@ export type NewBillFormValue = {
   invoiceNumber: string;
   type: string;
   paymentMode: string;
-  pdfFile: BillPdfMemoryFile | null;
 };
 
 export class NewBillForm extends FormGroup<NewBillFormModel> {
@@ -32,12 +34,11 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
       clientId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       newClientName: new FormControl('', { nonNullable: true }),
       chantier: new FormControl('', { nonNullable: true }),
-      amountTTC: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(0)] }),
+      amountTTC: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(BILL_MIN_AMOUNT_TTC)] }),
       dueDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       invoiceNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-      type: new FormControl('Situation', { nonNullable: true, validators: [Validators.required] }),
-      paymentMode: new FormControl('Virement', { nonNullable: true, validators: [Validators.required] }),
-      pdfFile: new FormControl<BillPdfMemoryFile | null>(null)
+      type: new FormControl(BILL_TYPES[0], { nonNullable: true, validators: [Validators.required] }),
+      paymentMode: new FormControl(PAYMENT_MODES[0], { nonNullable: true, validators: [Validators.required] })
     });
   }
 

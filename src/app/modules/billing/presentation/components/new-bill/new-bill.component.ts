@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, effect, ElementRef, inject, viewChi
 import { ReactiveFormsModule } from '@angular/forms';
 import { BillingFacade } from '../../services/billing.facade';
 import { NewBillForm, NewBillFormModel } from '../../forms/new-bill.form';
+import { BillPdfMemoryFile } from '../../models/bill-pdf-memory-file.model';
+import { BILL_TYPES, PAYMENT_MODES } from '../../../domain/values/bill.constraints';
 
 @Component({
   selector: 'app-new-bill',
@@ -13,6 +15,9 @@ export class NewBillComponent {
   readonly facade = inject(BillingFacade);
   readonly invoiceForm = new NewBillForm();
   readonly successModalCloseButton = viewChild<ElementRef<HTMLButtonElement>>('successModalCloseButton');
+  selectedPdfFile: BillPdfMemoryFile | null = null;
+  readonly billTypes = BILL_TYPES;
+  readonly paymentModes = PAYMENT_MODES;
   isCreatingNewClient = false;
   private hasSubmittedInvalidForm = false;
   private hasHandledSuccess = false;
@@ -55,7 +60,10 @@ export class NewBillComponent {
       this.invoiceForm.markAllAsTouched();
       return;
     }
-    this.facade.createInvoice(this.invoiceForm.getPayload());
+    this.facade.createInvoice({
+      ...this.invoiceForm.getPayload(),
+      pdfFile: this.selectedPdfFile
+    });
   }
 
   hasFieldError(controlName: keyof NewBillFormModel): boolean {
@@ -81,17 +89,15 @@ export class NewBillComponent {
     const file = input.files?.[0];
 
     if (!file) {
-      this.invoiceForm.patchValue({ pdfFile: null });
+      this.selectedPdfFile = null;
       return;
     }
 
-    this.invoiceForm.patchValue({
-      pdfFile: {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      }
-    });
+    this.selectedPdfFile = {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    };
   }
 
   closeSuccessModal(): void {
@@ -109,9 +115,9 @@ export class NewBillComponent {
       dueDate: '',
       invoiceNumber: '',
       type: 'Situation',
-      paymentMode: 'Virement',
-      pdfFile: null
+      paymentMode: 'Virement'
     });
+    this.selectedPdfFile = null;
     this.invoiceForm.setClientMode(false);
   }
 }

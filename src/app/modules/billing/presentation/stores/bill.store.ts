@@ -1,11 +1,6 @@
 import { Bill } from '../../domain/entities/bill.entity';
 import { Signal } from '@angular/core';
-
-export type BillPdfMemoryFile = {
-  name: string;
-  size: number;
-  type: string;
-};
+import { BillPdfMemoryFile } from '../models/bill-pdf-memory-file.model';
 
 export type BillViewModel = {
   id: string;

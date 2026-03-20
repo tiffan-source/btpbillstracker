@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { BillPdfMemoryFile, BillStore, BillViewModel } from '../stores/bill.store';
+import { BillStore, BillViewModel } from '../stores/bill.store';
+import { BillPdfMemoryFile } from '../models/bill-pdf-memory-file.model';
 import { Bill } from '../../domain/entities/bill.entity';
-import { SubmitNewBillUseCase } from '../../domain/usecases/submit-new-bill.usecase';
+import { CreateEnrichedBillUseCase } from '../../domain/usecases/create-enriched-bill.usecase';
 import { BillingFacade } from './billing.facade';
 import { success, failure } from '../../../../core/result/result';
 
@@ -45,7 +46,7 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: SubmitNewBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
       ]
     });
 
@@ -70,14 +71,13 @@ describe('BillingFacade', () => {
     await promise;
 
     expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
-      clientMode: 'EXISTING',
-      clientId: 'c-1',
+      isNewClient: false,
+      clientIdOrName: 'c-1',
       amountTTC: 1400,
       dueDate: '2026-05-01',
       externalInvoiceReference: 'EXT-77',
       type: 'Situation',
-      paymentMode: 'Virement',
-      pdfFile: { name: 'facture.pdf', size: 2048, type: 'application/pdf' }
+      paymentMode: 'Virement'
     });
     expect(facade.isSubmitting()).toBe(false);
     expect(facade.error()).toBeNull();
@@ -107,7 +107,7 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: SubmitNewBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
       ]
     });
 
@@ -125,14 +125,13 @@ describe('BillingFacade', () => {
     });
 
     expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
-      clientMode: 'NEW',
-      newClientName: 'Alice',
+      isNewClient: true,
+      clientIdOrName: 'Alice',
       amountTTC: 0,
       dueDate: '',
       externalInvoiceReference: '',
       type: 'Situation',
-      paymentMode: 'Virement',
-      pdfFile: null
+      paymentMode: 'Virement'
     });
     expect(facade.error()).toBeNull();
     expect(mockStore.draftBill()?.clientId).toBe('new-client-id');
@@ -150,7 +149,7 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: SubmitNewBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
       ]
     });
 
@@ -184,7 +183,7 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: SubmitNewBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
       ]
     });
 
@@ -219,7 +218,7 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: SubmitNewBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
       ]
     });
 

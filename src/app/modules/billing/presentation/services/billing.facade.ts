@@ -1,23 +1,16 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { BillPdfMemoryFile, BillStore } from '../stores/bill.store';
-import { SubmitNewBillUseCase, SubmitNewBillInput } from '../../domain/usecases/submit-new-bill.usecase';
+import { BillStore } from '../stores/bill.store';
+import { BillPdfMemoryFile } from '../models/bill-pdf-memory-file.model';
+import { CreateEnrichedBillInput, CreateEnrichedBillUseCase } from '../../domain/usecases/create-enriched-bill.usecase';
+import { BillingInvoiceFormValue, mapInvoiceFormToCreateEnrichedBillInput } from './bill-submission.mapper';
 
-export type SubmitBillInput = SubmitNewBillInput & { pdfFile?: BillPdfMemoryFile | null };
-type InvoiceFormValue = {
-  clientId?: string | null;
-  newClientName?: string | null;
-  chantier?: string | null;
-  amountTTC?: number | null;
-  dueDate?: string | null;
-  invoiceNumber?: string | null;
-  type?: string | null;
-  paymentMode?: string | null;
+export type SubmitBillInput = BillingInvoiceFormValue & {
   pdfFile?: BillPdfMemoryFile | null;
 };
 
 @Injectable({ providedIn: 'root' })
 export class BillingFacade {
-  private readonly submitNewBillUseCase = inject(SubmitNewBillUseCase);
+  private readonly createEnrichedBillUseCase = inject(CreateEnrichedBillUseCase);
   private readonly store = inject(BillStore);
 
   readonly isSubmitting = signal(false);
@@ -31,7 +24,7 @@ export class BillingFacade {
     { id: 'client-2', name: 'Client 2' }
   ]);
 
-  async createInvoice(formValue: InvoiceFormValue): Promise<void> {
+  async createInvoice(formValue: SubmitBillInput): Promise<void> {
     this.isSuccess.set(false);
     this.isSubmitting.set(true);
     // Temporary implementation linking to old logic for compatibility if needed.
@@ -40,40 +33,19 @@ export class BillingFacade {
 
     console.log('Facture en cours de création', formValue);
 
-    const normalizedNewClientName = formValue.newClientName?.trim();
-    const input: SubmitBillInput = normalizedNewClientName
-      ? {
-          clientMode: 'NEW',
-          newClientName: normalizedNewClientName,
-          amountTTC: formValue.amountTTC ?? 0,
-          dueDate: formValue.dueDate ?? '',
-          externalInvoiceReference: formValue.invoiceNumber ?? '',
-          type: formValue.type ?? '',
-          paymentMode: formValue.paymentMode ?? '',
-          pdfFile: formValue.pdfFile ?? null
-        }
-      : {
-          clientMode: 'EXISTING',
-          clientId: formValue.clientId ?? 'unknown',
-          amountTTC: formValue.amountTTC ?? 0,
-          dueDate: formValue.dueDate ?? '',
-          externalInvoiceReference: formValue.invoiceNumber ?? '',
-          type: formValue.type ?? '',
-          paymentMode: formValue.paymentMode ?? '',
-          pdfFile: formValue.pdfFile ?? null
-        };
-    await this.submitNewBill(input);
+    const input = mapInvoiceFormToCreateEnrichedBillInput(formValue);
+    await this.submitNewBill(input, formValue.pdfFile ?? null);
 
     this.isSubmitting.set(false);
   }
 
-  async submitNewBill(input: SubmitBillInput): Promise<void> {
+  async submitNewBill(input: CreateEnrichedBillInput, pdfFile: BillPdfMemoryFile | null): Promise<void> {
     this.error.set(null);
 
-    const result = await this.submitNewBillUseCase.execute(input);
+    const result = await this.createEnrichedBillUseCase.execute(input);
 
     if (result.success) {
-      this.store.setDraftBill(result.data, input.pdfFile ?? null);
+      this.store.setDraftBill(result.data, pdfFile);
       this.isSuccess.set(true);
     } else {
       this.error.set(result.error.message);

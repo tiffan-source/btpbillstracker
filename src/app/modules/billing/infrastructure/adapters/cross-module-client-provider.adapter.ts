@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
 import { ClientProviderPort, ResolveClientInput } from '../../domain/ports/client-provider.port';
-import { CreateQuickClientUseCase } from '../../../clients';
+import { QuickClientCreatorPort } from '../../../clients';
 import { Result, success, failure } from '../../../../core/result/result';
 
 @Injectable()
 export class CrossModuleClientProviderAdapter implements ClientProviderPort {
-  constructor(private readonly createQuickClientUseCase: CreateQuickClientUseCase) {}
+  constructor(private readonly quickClientCreator: QuickClientCreatorPort) {}
 
   async resolveClient(input: ResolveClientInput): Promise<Result<string>> {
     if (!input.isNewClient) {
       return success(input.clientIdOrName);
     }
 
-    const clientResult = await this.createQuickClientUseCase.execute({
+    const clientResult = await this.quickClientCreator.execute({
       name: input.clientIdOrName,
       email: input.clientEmail
     });

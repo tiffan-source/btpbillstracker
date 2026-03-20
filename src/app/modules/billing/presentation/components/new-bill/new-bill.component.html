@@ -117,9 +117,9 @@
             <div>
               <label for="type" class="block text-sm font-medium text-foreground-muted mb-1">Type</label>
               <select id="type" formControlName="type" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
-                <option value="Situation">Situation</option>
-                <option value="Solde">Solde</option>
-                <option value="Acompte">Acompte</option>
+                @for (billType of billTypes; track billType) {
+                  <option [value]="billType">{{ billType }}</option>
+                }
               </select>
             </div>
           </div>
@@ -128,9 +128,9 @@
           <div>
             <label for="paymentMode" class="block text-sm font-medium text-foreground-muted mb-1">Mode de paiement prévu</label>
             <select id="paymentMode" formControlName="paymentMode" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
-              <option value="Virement">Virement</option>
-              <option value="Chèque">Chèque</option>
-              <option value="Espèces">Espèces</option>
+              @for (paymentMode of paymentModes; track paymentMode) {
+                <option [value]="paymentMode">{{ paymentMode }}</option>
+              }
             </select>
           </div>
 
@@ -151,7 +151,7 @@
                   <p class="pl-1">ou glisser-déposer</p>
                 </div>
                 <p class="text-xs text-subtle">PDF jusqu'à 10MB</p>
-                @if (invoiceForm.controls.pdfFile.value; as pdfFile) {
+                @if (selectedPdfFile; as pdfFile) {
                   <p class="text-xs text-foreground-muted">{{ pdfFile.name }} ({{ pdfFile.size }} octets)</p>
                 }
               </div>

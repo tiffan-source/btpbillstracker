@@ -1,6 +1,12 @@
 export type BillStatus = 'DRAFT' | 'VALIDATED' | 'PAID';
-export type BillType = 'Situation' | 'Solde' | 'Acompte';
-export type PaymentMode = 'Virement' | 'Chèque' | 'Espèces';
+import {
+  BILL_MIN_AMOUNT_TTC,
+  BILL_VALIDATION_MESSAGES,
+  BillType,
+  PaymentMode,
+  isBillType,
+  isPaymentMode
+} from '../values/bill.constraints';
 
 export class Bill {
   private readonly _id: string;
@@ -15,10 +21,10 @@ export class Bill {
 
   constructor(id: string, reference: string, clientId: string) {
     if (!reference || reference.trim().length === 0) {
-      throw new Error('Une facture doit avoir une référence valide.');
+      throw new Error(BILL_VALIDATION_MESSAGES.INVALID_REFERENCE);
     }
     if (!clientId || clientId.trim().length === 0) {
-      throw new Error('Une facture doit être associée à un client.');
+      throw new Error(BILL_VALIDATION_MESSAGES.CLIENT_REQUIRED);
     }
 
     this._id = id;
@@ -37,8 +43,8 @@ export class Bill {
   get paymentMode(): PaymentMode | undefined { return this._paymentMode; }
 
   setAmountTTC(amountTTC: number): this {
-    if (amountTTC < 0) {
-      throw new Error('Le montant TTC doit être supérieur ou égal à 0.');
+    if (amountTTC < BILL_MIN_AMOUNT_TTC) {
+      throw new Error(BILL_VALIDATION_MESSAGES.AMOUNT_MIN);
     }
     this._amountTTC = amountTTC;
     return this;
@@ -46,7 +52,7 @@ export class Bill {
 
   setDueDate(dueDate: string): this {
     if (!dueDate || dueDate.trim().length === 0) {
-      throw new Error("La date d'échéance est obligatoire.");
+      throw new Error(BILL_VALIDATION_MESSAGES.DUE_DATE_REQUIRED);
     }
     this._dueDate = dueDate;
     return this;
@@ -54,7 +60,7 @@ export class Bill {
 
   setExternalInvoiceReference(externalInvoiceReference: string): this {
     if (!externalInvoiceReference || externalInvoiceReference.trim().length === 0) {
-      throw new Error('La référence facture externe est obligatoire.');
+      throw new Error(BILL_VALIDATION_MESSAGES.EXTERNAL_REFERENCE_REQUIRED);
     }
     this._externalInvoiceReference = externalInvoiceReference;
     return this;
@@ -62,7 +68,7 @@ export class Bill {
 
   setType(type: string): this {
     if (!isBillType(type)) {
-      throw new Error("Le type de facture est invalide. Valeurs autorisées: Situation, Solde, Acompte.");
+      throw new Error(BILL_VALIDATION_MESSAGES.TYPE_INVALID);
     }
     this._type = type;
     return this;
@@ -70,17 +76,9 @@ export class Bill {
 
   setPaymentMode(paymentMode: string): this {
     if (!isPaymentMode(paymentMode)) {
-      throw new Error('Le mode de paiement est invalide. Valeurs autorisées: Virement, Chèque, Espèces.');
+      throw new Error(BILL_VALIDATION_MESSAGES.PAYMENT_MODE_INVALID);
     }
     this._paymentMode = paymentMode;
     return this;
   }
-}
-
-function isBillType(value: string): value is BillType {
-  return value === 'Situation' || value === 'Solde' || value === 'Acompte';
-}
-
-function isPaymentMode(value: string): value is PaymentMode {
-  return value === 'Virement' || value === 'Chèque' || value === 'Espèces';
 }
