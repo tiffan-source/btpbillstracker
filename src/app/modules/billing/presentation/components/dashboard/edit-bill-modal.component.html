@@ -1,0 +1,153 @@
+@if (open()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4" (click)="onOverlayClick()">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-bill-modal-title"
+      class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-card bg-surface p-6 shadow-xl"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="mb-6 flex items-center justify-between">
+        <h2 id="edit-bill-modal-title" class="text-2xl font-bold text-foreground">Modifier la facture</h2>
+        <button
+          type="button"
+          class="text-subtle hover:text-foreground cursor-pointer"
+          [disabled]="isSubmitting()"
+          data-testid="edit-modal-close"
+          aria-label="Fermer la modale de modification"
+          (click)="onCancel()"
+        >
+          ✕
+        </button>
+      </header>
+
+      <form [formGroup]="form()" class="flex flex-col gap-5" (ngSubmit)="onSubmit()">
+        <input type="hidden" formControlName="id" />
+        <input type="hidden" formControlName="reference" />
+
+        <div class="flex flex-col gap-2">
+          <label for="clientId" class="text-sm font-medium text-foreground-muted">Client</label>
+          <select id="clientId" formControlName="clientId" class="w-full rounded-input border border-input px-3 py-2">
+            @for (client of clients(); track client.id) {
+              <option [value]="client.id">{{ client.name }}</option>
+            }
+          </select>
+          <input
+            id="newClientName"
+            type="text"
+            formControlName="newClientName"
+            class="w-full rounded-input border border-input px-3 py-2"
+            placeholder="Marie Lambert"
+          />
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="chantier" class="text-sm font-medium text-foreground-muted">Chantier</label>
+          <input id="chantier" type="text" formControlName="chantier" class="w-full rounded-input border border-input px-3 py-2" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label for="amountTTC" class="text-sm font-medium text-foreground-muted">Montant TTC (€)</label>
+            <input id="amountTTC" type="number" formControlName="amountTTC" class="w-full rounded-input border border-input px-3 py-2" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="dueDate" class="text-sm font-medium text-foreground-muted">Date d'échéance</label>
+            <input id="dueDate" type="date" formControlName="dueDate" class="w-full rounded-input border border-input px-3 py-2" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label for="invoiceNumber" class="text-sm font-medium text-foreground-muted">N° de facture</label>
+            <input id="invoiceNumber" type="text" formControlName="invoiceNumber" class="w-full rounded-input border border-input px-3 py-2" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="type" class="text-sm font-medium text-foreground-muted">Type</label>
+            <select id="type" formControlName="type" class="w-full rounded-input border border-input px-3 py-2">
+              @for (billType of billTypes; track billType) {
+                <option [value]="billType">{{ billType }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex flex-col gap-2">
+            <label for="paymentMode" class="text-sm font-medium text-foreground-muted">Mode de paiement</label>
+            <select id="paymentMode" formControlName="paymentMode" class="w-full rounded-input border border-input px-3 py-2">
+              @for (paymentMode of paymentModes; track paymentMode) {
+                <option [value]="paymentMode">{{ paymentMode }}</option>
+              }
+            </select>
+          </div>
+          <div class="flex flex-col gap-2">
+            <label for="status" class="text-sm font-medium text-foreground-muted">Statut</label>
+            <select id="status" formControlName="status" class="w-full rounded-input border border-input px-3 py-2">
+              @for (status of statuses; track status) {
+                <option [value]="status">{{ status }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="reminderScenarioId" class="text-sm font-medium text-foreground-muted">Scénario de relance</label>
+          <select id="reminderScenarioId" formControlName="reminderScenarioId" class="w-full rounded-input border border-input px-3 py-2">
+            <option value="standard-reminder-scenario">{{ reminderScenarioLabel }}</option>
+          </select>
+        </div>
+
+        <div class="rounded-card bg-background p-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium text-foreground">Relances automatiques</p>
+              <p class="text-sm text-subtle">Désactivez si vous gérez à la main</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="form().controls.remindersAutoEnabled.value"
+              data-testid="reminder-toggle"
+              [class]="form().controls.remindersAutoEnabled.value
+                ? 'relative inline-flex h-6 w-11 items-center rounded-full bg-primary transition-colors'
+                : 'relative inline-flex h-6 w-11 items-center rounded-full bg-subtle transition-colors'"
+              (click)="toggleRemindersAuto(!form().controls.remindersAutoEnabled.value)"
+            >
+              <span
+                [class]="form().controls.remindersAutoEnabled.value
+                  ? 'inline-block h-4 w-4 transform rounded-full bg-primary-content transition translate-x-6'
+                  : 'inline-block h-4 w-4 transform rounded-full bg-primary-content transition translate-x-1'"
+              ></span>
+            </button>
+          </div>
+        </div>
+
+        <footer class="mt-8 flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-btn border border-input px-4 py-2 text-foreground"
+            [disabled]="isSubmitting()"
+            data-testid="edit-modal-cancel"
+            (click)="onCancel()"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            class="inline-flex items-center gap-2 rounded-btn bg-primary px-5 py-2 text-primary-content"
+            [disabled]="isSubmitting()"
+            data-testid="edit-modal-save"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8l4 4v12a2 2 0 0 1-2 2Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-8H7v8" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M7 3v5h8" />
+            </svg>
+            <span>Enregistrer</span>
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+}
