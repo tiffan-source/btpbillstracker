@@ -15,6 +15,13 @@ describe('App routes', () => {
     expect(newBillRoute?.loadComponent).toBeTypeOf('function');
   });
 
+  it('should expose clients-chantiers route', () => {
+    const clientsChantiersRoute = routes.find((route) => route.path === 'clients-chantiers');
+
+    expect(clientsChantiersRoute).toBeTruthy();
+    expect(clientsChantiersRoute?.loadComponent).toBeTypeOf('function');
+  });
+
   it('should redirect root to dashboard', () => {
     const rootRedirect = routes.find((route) => route.path === '');
 
@@ -22,4 +29,3 @@ describe('App routes', () => {
     expect(rootRedirect?.pathMatch).toBe('full');
   });
 });
-
