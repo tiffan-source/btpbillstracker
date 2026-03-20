@@ -1,0 +1,77 @@
+<section class="flex flex-col gap-3">
+  <h2 class="text-lg font-semibold text-foreground">Toutes les factures</h2>
+
+  <div class="overflow-x-auto rounded-card border border-subtle bg-surface">
+    <table class="min-w-full">
+      <thead>
+        <tr class="border-b border-subtle text-left text-xs uppercase text-subtle">
+          <th class="px-4 py-3">Client</th>
+          <th class="px-4 py-3">Chantier</th>
+          <th class="px-4 py-3">Montant</th>
+          <th class="px-4 py-3">Échéance</th>
+          <th class="px-4 py-3">Statut</th>
+          <th class="px-4 py-3">Prochaine relance</th>
+          <th class="px-4 py-3">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody class="divide-y divide-subtle text-sm">
+        @for (invoice of invoices(); track invoice.id) {
+          <tr>
+            <td class="px-4 py-3 font-semibold text-foreground">{{ invoice.client }}</td>
+            <td class="px-4 py-3 text-foreground-muted">{{ invoice.chantier }}</td>
+            <td class="px-4 py-3 font-semibold text-foreground">{{ invoice.amountTTC }} €</td>
+            <td class="px-4 py-3 text-foreground">
+              {{ invoice.dueDate }}
+              @if (invoice.overdueDays > 0 && invoice.status === 'EN_RETARD') {
+                <span class="ml-1 text-danger">+{{ invoice.overdueDays }}j</span>
+              }
+            </td>
+            <td class="px-4 py-3">
+              <span
+                class="inline-flex rounded-full border px-2 py-1 text-xs font-medium"
+                [class]="
+                  invoice.status === 'EN_RETARD'
+                    ? 'bg-danger-light border-danger-light text-danger'
+                    : invoice.status === 'PAYE'
+                      ? 'bg-success-light border-success-light text-success'
+                      : 'bg-surface border-subtle text-foreground-muted'
+                "
+              >
+                {{
+                  invoice.status === 'EN_RETARD'
+                    ? 'En retard'
+                    : invoice.status === 'PAYE'
+                      ? 'Payé'
+                      : 'En cours'
+                }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-subtle">{{ invoice.nextReminder }}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                @if (invoice.status !== 'PAYE') {
+                  <button
+                    type="button"
+                    class="rounded-btn border border-success-light bg-success-light px-2 py-1 text-xs font-medium text-success"
+                    (click)="onMarkPaid(invoice.id)"
+                  >
+                    Payé
+                  </button>
+                }
+                <button
+                  type="button"
+                  class="rounded-btn border border-subtle bg-background px-3 py-1 text-xs font-medium text-foreground-muted"
+                  (click)="onEdit(invoice.id)"
+                >
+                  Modifier
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>
+

@@ -74,8 +74,10 @@
       </div>
     </section>
 
-    <section class="rounded-card border border-subtle bg-surface p-6">
-      <p class="text-sm text-subtle">Tableau des factures à venir.</p>
-    </section>
+    <app-invoice-table
+      [invoices]="facade.invoices()"
+      (markPaid)="markPaid($event)"
+      (editInvoice)="editInvoice($event)"
+    />
   </div>
 </div>

@@ -75,4 +75,12 @@ describe('DashboardPageComponent', () => {
     expect(host.textContent).toContain('156 €');
     expect(host.textContent).toContain('1j de retard');
   });
+
+  it('should render invoice table section', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.textContent).toContain('Toutes les factures');
+    expect(host.textContent).toContain('Prochaine relance');
+    expect(host.textContent).toContain('Actions');
+  });
 });
