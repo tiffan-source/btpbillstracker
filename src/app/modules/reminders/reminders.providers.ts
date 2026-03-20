@@ -3,9 +3,12 @@ import { EnsureStandardReminderScenarioUseCase } from './domain/usecases/ensure-
 import { ListReminderScenariosUseCase } from './domain/usecases/list-reminder-scenarios.usecase';
 import { ReminderScenarioRepository } from './domain/ports/reminder-scenario.repository';
 import { LocalReminderScenarioRepository } from './infrastructure/repositories/local-reminder-scenario.repository';
+import { ReminderAssociationRepository } from './domain/ports/reminder-association.repository';
+import { LocalReminderAssociationRepository } from './infrastructure/repositories/local-reminder-association.repository';
 
 export const REMINDERS_PROVIDERS: Provider[] = [
   { provide: ReminderScenarioRepository, useClass: LocalReminderScenarioRepository },
+  { provide: ReminderAssociationRepository, useClass: LocalReminderAssociationRepository },
   {
     provide: EnsureStandardReminderScenarioUseCase,
     useFactory: (repository: ReminderScenarioRepository) => new EnsureStandardReminderScenarioUseCase(repository),

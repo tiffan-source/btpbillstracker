@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ReminderScenario } from '../../domain/entities/reminder-scenario.entity';
+import { ReminderPersistenceError } from '../../domain/errors/reminder-persistence.error';
 import { ReminderScenarioRepository } from '../../domain/ports/reminder-scenario.repository';
 
 @Injectable({ providedIn: 'root' })
@@ -12,28 +13,36 @@ export class LocalReminderScenarioRepository extends ReminderScenarioRepository 
   }
 
   async save(scenario: ReminderScenario): Promise<void> {
-    const rawData = localStorage.getItem(this.storageKey);
-    const scenarios = rawData
-      ? (JSON.parse(rawData) as Array<{ id: string; name: string; steps: number[] }>)
-      : [];
+    try {
+      const rawData = localStorage.getItem(this.storageKey);
+      const scenarios = rawData
+        ? (JSON.parse(rawData) as Array<{ id: string; name: string; steps: number[] }>)
+        : [];
 
-    scenarios.push({
-      id: scenario.id,
-      name: scenario.name,
-      steps: scenario.steps
-    });
+      scenarios.push({
+        id: scenario.id,
+        name: scenario.name,
+        steps: scenario.steps
+      });
 
-    localStorage.setItem(this.storageKey, JSON.stringify(scenarios));
+      localStorage.setItem(this.storageKey, JSON.stringify(scenarios));
+    } catch (error: unknown) {
+      throw new ReminderPersistenceError(undefined, { storageKey: this.storageKey }, error);
+    }
   }
 
   async list(): Promise<ReminderScenario[]> {
-    const rawData = localStorage.getItem(this.storageKey);
+    try {
+      const rawData = localStorage.getItem(this.storageKey);
 
-    if (!rawData) {
-      return [];
+      if (!rawData) {
+        return [];
+      }
+
+      const scenarios = JSON.parse(rawData) as Array<{ id: string; name: string; steps: number[] }>;
+      return scenarios.map((scenario) => new ReminderScenario(scenario.id, scenario.name, scenario.steps));
+    } catch (error: unknown) {
+      throw new ReminderPersistenceError(undefined, { storageKey: this.storageKey }, error);
     }
-
-    const scenarios = JSON.parse(rawData) as Array<{ id: string; name: string; steps: number[] }>;
-    return scenarios.map((scenario) => new ReminderScenario(scenario.id, scenario.name, scenario.steps));
   }
 }
