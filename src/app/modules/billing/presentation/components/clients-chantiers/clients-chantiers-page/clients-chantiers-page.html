@@ -29,7 +29,22 @@
 
     <section class="flex flex-col gap-4 rounded-card border border-subtle bg-surface p-4">
       <h2 class="mt-8 text-lg font-semibold text-foreground">Par chantier</h2>
-      <p class="text-sm text-subtle">La gestion détaillée des chantiers arrive dans la prochaine étape.</p>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2" data-testid="chantier-grid">
+        @for (chantier of facade.chantiers(); track chantier.id) {
+          <app-chantier-card
+            [chantier]="{
+              id: chantier.id,
+              name: chantier.name,
+              paid: chantier.paid,
+              pending: chantier.pending,
+              progressPercent: chantier.progressPercent
+            }"
+            (edit)="openChantierModal($event.id, $event.trigger)"
+          />
+        } @empty {
+          <p class="text-sm text-subtle">Aucun chantier disponible.</p>
+        }
+      </div>
     </section>
   </div>
 </div>
@@ -40,4 +55,12 @@
   [isSubmitting]="facade.isSubmitting()"
   (closed)="closeClientModal()"
   (saved)="saveClient($event)"
+/>
+
+<app-chantier-form-modal
+  [isOpen]="isChantierModalOpen()"
+  [chantier]="editedChantier()"
+  [isSubmitting]="facade.isSubmitting()"
+  (closed)="closeChantierModal()"
+  (saved)="saveChantier($event)"
 />

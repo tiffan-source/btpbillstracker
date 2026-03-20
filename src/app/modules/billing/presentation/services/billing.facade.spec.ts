@@ -80,6 +80,7 @@ describe('BillingFacade', () => {
       externalInvoiceReference: 'EXT-77',
       type: 'Situation',
       paymentMode: 'Virement',
+      chantier: '',
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -139,6 +140,7 @@ describe('BillingFacade', () => {
       externalInvoiceReference: '',
       type: 'Situation',
       paymentMode: 'Virement',
+      chantier: '',
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -371,11 +373,12 @@ describe('BillingFacade', () => {
         status: 'DRAFT',
         amountTTC: 2100,
         dueDate: '2026-05-14',
-        externalInvoiceReference: 'EXT-900',
-        type: 'Solde',
-        paymentMode: 'Chèque'
-      }
-    ]);
+         externalInvoiceReference: 'EXT-900',
+         type: 'Solde',
+         paymentMode: 'Chèque',
+         chantier: undefined
+       }
+     ]);
 
     getItemSpy.mockRestore();
     setItemSpy.mockRestore();

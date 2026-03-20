@@ -17,10 +17,21 @@ const mockFacade = {
       lastName: 'Martin'
     }
   ]),
+  chantiers: signal([
+    {
+      id: 'ch-1',
+      name: 'Villa A',
+      paid: 120,
+      pending: 300,
+      progressPercent: 29
+    }
+  ]),
   isSubmitting: signal(false),
   error: signal<string | null>(null),
   loadClients: vitest.fn().mockResolvedValue(undefined),
-  updateClient: vitest.fn().mockResolvedValue(true)
+  loadChantiers: vitest.fn().mockResolvedValue(undefined),
+  updateClient: vitest.fn().mockResolvedValue(true),
+  updateChantier: vitest.fn().mockResolvedValue(true)
 };
 
 describe('ClientsChantiersPage', () => {
@@ -38,6 +49,15 @@ describe('ClientsChantiersPage', () => {
         paid: 120,
         firstName: 'Alice',
         lastName: 'Martin'
+      }
+    ]);
+    mockFacade.chantiers.set([
+      {
+        id: 'ch-1',
+        name: 'Villa A',
+        paid: 120,
+        pending: 300,
+        progressPercent: 29
       }
     ]);
 
@@ -62,6 +82,7 @@ describe('ClientsChantiersPage', () => {
 
     expect(host.textContent).toContain('Par client');
     expect(host.textContent).toContain('Par chantier');
+    expect(host.querySelector('[data-testid="chantier-grid"]')).toBeTruthy();
   });
 
   it('renders a client management list placeholder for cards', () => {

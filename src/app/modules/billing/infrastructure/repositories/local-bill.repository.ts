@@ -44,6 +44,9 @@ export class LocalBillRepository implements BillRepository {
         if (plainBill.paymentMode) {
           bill.setPaymentMode(plainBill.paymentMode);
         }
+        if (plainBill.chantier) {
+          bill.setChantier(plainBill.chantier);
+        }
 
         return bill;
       });
@@ -62,6 +65,7 @@ export class LocalBillRepository implements BillRepository {
     externalInvoiceReference?: string;
     type?: string;
     paymentMode?: string;
+    chantier?: string;
   }> {
     const rawData = localStorage.getItem(this.storageKey);
     return rawData ? JSON.parse(rawData) : [];
@@ -77,6 +81,7 @@ export class LocalBillRepository implements BillRepository {
     externalInvoiceReference?: string;
     type?: string;
     paymentMode?: string;
+    chantier?: string;
   } {
     return {
       id: bill.id,
@@ -87,7 +92,8 @@ export class LocalBillRepository implements BillRepository {
       dueDate: bill.dueDate,
       externalInvoiceReference: bill.externalInvoiceReference,
       type: bill.type,
-      paymentMode: bill.paymentMode
+      paymentMode: bill.paymentMode,
+      chantier: bill.chantier
     };
   }
 }

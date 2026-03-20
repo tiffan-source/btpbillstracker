@@ -21,6 +21,7 @@ export type CreateEnrichedBillInput = {
   externalInvoiceReference: string;
   type: string;
   paymentMode: string;
+  chantier?: string;
   remindersAutoEnabled?: boolean;
   reminderScenarioId?: string;
 };
@@ -57,6 +58,7 @@ export class CreateEnrichedBillUseCase {
         .setExternalInvoiceReference(input.externalInvoiceReference)
         .setType(input.type)
         .setPaymentMode(input.paymentMode)
+        .setChantier(input.chantier ?? '')
         .configureReminder(input.remindersAutoEnabled ?? false, input.reminderScenarioId);
 
       await this.repository.save(bill);

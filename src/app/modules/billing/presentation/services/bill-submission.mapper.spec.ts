@@ -22,6 +22,7 @@ describe('bill-submission.mapper', () => {
       externalInvoiceReference: 'EXT-44',
       type: 'Situation',
       paymentMode: 'Virement',
+      chantier: '',
       remindersAutoEnabled: true,
       reminderScenarioId: 'standard-reminder-scenario'
     });
@@ -47,6 +48,7 @@ describe('bill-submission.mapper', () => {
       externalInvoiceReference: 'EXT-99',
       type: 'Solde',
       paymentMode: 'Chèque',
+      chantier: '',
       remindersAutoEnabled: true,
       reminderScenarioId: 'standard-reminder-scenario'
     });
@@ -72,6 +74,7 @@ describe('bill-submission.mapper', () => {
       externalInvoiceReference: '',
       type: '',
       paymentMode: '',
+      chantier: '',
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });

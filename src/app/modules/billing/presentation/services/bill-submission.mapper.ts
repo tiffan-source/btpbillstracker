@@ -30,6 +30,7 @@ export function mapInvoiceFormToCreateEnrichedBillInput(
       externalInvoiceReference: formValue.invoiceNumber ?? '',
       type: formValue.type ?? '',
       paymentMode: formValue.paymentMode ?? '',
+      chantier: formValue.chantier ?? '',
       remindersAutoEnabled: formValue.remindersAutoEnabled ?? false,
       reminderScenarioId: formValue.reminderScenarioId ?? ''
     };
@@ -43,6 +44,7 @@ export function mapInvoiceFormToCreateEnrichedBillInput(
     externalInvoiceReference: formValue.invoiceNumber ?? '',
     type: formValue.type ?? '',
     paymentMode: formValue.paymentMode ?? '',
+    chantier: formValue.chantier ?? '',
     remindersAutoEnabled: formValue.remindersAutoEnabled ?? false,
     reminderScenarioId: formValue.reminderScenarioId ?? ''
   };
