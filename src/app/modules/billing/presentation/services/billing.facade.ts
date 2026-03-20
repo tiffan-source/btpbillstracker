@@ -3,6 +3,8 @@ import { BillStore } from '../stores/bill.store';
 import { BillPdfMemoryFile } from '../models/bill-pdf-memory-file.model';
 import { CreateEnrichedBillInput, CreateEnrichedBillUseCase } from '../../domain/usecases/create-enriched-bill.usecase';
 import { BillingInvoiceFormValue, mapInvoiceFormToCreateEnrichedBillInput } from './bill-submission.mapper';
+import { ReminderAssociationRepository } from '../../../reminders/domain/ports/reminder-association.repository';
+import { ReminderAssociation } from '../../../reminders/domain/entities/reminder-association.entity';
 
 export type SubmitBillInput = BillingInvoiceFormValue & {
   pdfFile?: BillPdfMemoryFile | null;
@@ -12,6 +14,7 @@ export type SubmitBillInput = BillingInvoiceFormValue & {
 export class BillingFacade {
   private readonly createEnrichedBillUseCase = inject(CreateEnrichedBillUseCase);
   private readonly store = inject(BillStore);
+  private readonly reminderAssociationRepository = inject(ReminderAssociationRepository);
 
   readonly isSubmitting = signal(false);
   readonly error = signal<string | null>(null);
@@ -27,12 +30,6 @@ export class BillingFacade {
   async createInvoice(formValue: SubmitBillInput): Promise<void> {
     this.isSuccess.set(false);
     this.isSubmitting.set(true);
-    // Temporary implementation linking to old logic for compatibility if needed.
-    // Wait for 500ms to simulate network
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    console.log('Facture en cours de création', formValue);
-
     const input = mapInvoiceFormToCreateEnrichedBillInput(formValue);
     await this.submitNewBill(input, formValue.pdfFile ?? null);
 
@@ -45,6 +42,18 @@ export class BillingFacade {
     const result = await this.createEnrichedBillUseCase.execute(input);
 
     if (result.success) {
+      if (result.data.remindersAutoEnabled && result.data.reminderScenarioId) {
+        try {
+          await this.reminderAssociationRepository.save(
+            new ReminderAssociation(result.data.id, result.data.reminderScenarioId)
+          );
+        } catch {
+          this.error.set("La facture a été créée mais l'association de relance a échoué.");
+          this.isSuccess.set(false);
+          return;
+        }
+      }
+
       this.store.setDraftBill(result.data, pdfFile);
       this.isSuccess.set(true);
     } else {

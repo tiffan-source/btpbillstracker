@@ -6,6 +6,7 @@ import { Bill } from '../../domain/entities/bill.entity';
 import { CreateEnrichedBillUseCase } from '../../domain/usecases/create-enriched-bill.usecase';
 import { BillingFacade } from './billing.facade';
 import { success, failure } from '../../../../core/result/result';
+import { ReminderAssociationRepository } from '../../../reminders/domain/ports/reminder-association.repository';
 
 class MockBillStore implements BillStore {
   draftBill = signal<BillViewModel | null>(null);
@@ -46,7 +47,8 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } }
       ]
     });
 
@@ -109,7 +111,8 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } }
       ]
     });
 
@@ -155,7 +158,8 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } }
       ]
     });
 
@@ -191,7 +195,8 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } }
       ]
     });
 
@@ -228,7 +233,8 @@ describe('BillingFacade', () => {
       providers: [
         BillingFacade,
         { provide: BillStore, useValue: mockStore },
-        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill }
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } }
       ]
     });
 
@@ -238,6 +244,93 @@ describe('BillingFacade', () => {
     facade.dismissSuccess();
 
     expect(facade.isSuccess()).toBe(false);
+  });
+
+
+
+  it('persists reminder association when reminders are enabled', async () => {
+    const mockStore = new MockBillStore();
+    const mockAssociationRepository = { save: vitest.fn().mockResolvedValue(undefined), findByBillId: vitest.fn() };
+    const bill = new Bill('b-4', 'F-2026-0400', 'c-4')
+      .setAmountTTC(1000)
+      .setDueDate('2026-11-10')
+      .setExternalInvoiceReference('FAC-400')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .configureReminder(true, 'standard-reminder-scenario');
+    const mockSubmitNewBill = {
+      execute: vitest.fn().mockResolvedValue(success(bill))
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: mockAssociationRepository }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+
+    await facade.createInvoice({
+      clientId: 'c-4',
+      newClientName: '',
+      chantier: '',
+      amountTTC: 1000,
+      dueDate: '2026-11-10',
+      invoiceNumber: 'FAC-400',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
+    });
+
+    expect(mockAssociationRepository.save).toHaveBeenCalledTimes(1);
+    expect(facade.error()).toBeNull();
+    expect(facade.isSuccess()).toBe(true);
+  });
+
+  it('fails globally when reminder association persistence fails', async () => {
+    const mockStore = new MockBillStore();
+    const mockAssociationRepository = { save: vitest.fn().mockRejectedValue(new Error('storage fail')), findByBillId: vitest.fn() };
+    const bill = new Bill('b-5', 'F-2026-0500', 'c-5')
+      .setAmountTTC(1200)
+      .setDueDate('2026-12-10')
+      .setExternalInvoiceReference('FAC-500')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .configureReminder(true, 'standard-reminder-scenario');
+    const mockSubmitNewBill = {
+      execute: vitest.fn().mockResolvedValue(success(bill))
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: mockAssociationRepository }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+
+    await facade.createInvoice({
+      clientId: 'c-5',
+      newClientName: '',
+      chantier: '',
+      amountTTC: 1200,
+      dueDate: '2026-12-10',
+      invoiceNumber: 'FAC-500',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: true,
+      reminderScenarioId: 'standard-reminder-scenario'
+    });
+
+    expect(facade.isSuccess()).toBe(false);
+    expect(facade.error()).toBe("La facture a été créée mais l'association de relance a échoué.");
   });
 
   it('should persist enriched bill fields in local repository format', async () => {

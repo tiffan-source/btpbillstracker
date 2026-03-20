@@ -8,12 +8,15 @@ import { LocalBillStore } from './infrastructure/stores/local-bill.store';
 import { CreateEnrichedBillUseCase } from './domain/usecases/create-enriched-bill.usecase';
 import { ClientProviderPort } from './domain/ports/client-provider.port';
 import { CrossModuleClientProviderAdapter } from './infrastructure/adapters/cross-module-client-provider.adapter';
+import { ReminderAssociationRepository } from '../reminders/domain/ports/reminder-association.repository';
+import { LocalReminderAssociationRepository } from '../reminders/infrastructure/repositories/local-reminder-association.repository';
 
 export const BILLING_PROVIDERS: Provider[] = [
   { provide: BillRepository, useClass: LocalBillRepository },
   { provide: ReferenceGeneratorService, useClass: SimpleReferenceGenerator },
   { provide: BillStore, useClass: LocalBillStore },
   { provide: ClientProviderPort, useClass: CrossModuleClientProviderAdapter },
+  { provide: ReminderAssociationRepository, useClass: LocalReminderAssociationRepository },
 
   // Use cases are just pure TS classes, we can provide them as injectables manually or decorateur them
   // The Clean Arch spec states: "Le Use Case ne doit jamais utiliser le décorateur @Injectable()."
