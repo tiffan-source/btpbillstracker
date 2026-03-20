@@ -1,3 +1,5 @@
+import { InvalidClientNameError } from '../errors/invalid-client-name.error';
+
 export class Client {
   private readonly _id: string;
   private readonly _name: string;
@@ -5,7 +7,7 @@ export class Client {
 
   constructor(id: string, name: string) {
     if (!name || name.trim().length === 0) {
-      throw new Error('Un client doit avoir un nom valide.');
+      throw new InvalidClientNameError();
     }
     this._id = id;
     this._name = name;
@@ -20,4 +22,3 @@ export class Client {
     return this;
   }
 }
-

@@ -1,4 +1,5 @@
 import { Client } from './client.entity';
+import { InvalidClientNameError } from '../errors/invalid-client-name.error';
 
 describe('Client Entity', () => {
   it('should create a valid client with name and email', () => {
@@ -11,7 +12,7 @@ describe('Client Entity', () => {
   });
 
   it('should fail if name is empty or missing', () => {
-    expect(() => new Client('c-2', '')).toThrow('Un client doit avoir un nom valide.');
-    expect(() => new Client('c-2', '   ')).toThrow('Un client doit avoir un nom valide.');
+    expect(() => new Client('c-2', '')).toThrow(InvalidClientNameError);
+    expect(() => new Client('c-2', '   ')).toThrow(InvalidClientNameError);
   });
 });
