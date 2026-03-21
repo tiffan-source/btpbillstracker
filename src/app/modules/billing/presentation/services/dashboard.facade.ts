@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { ListClientsUseCase } from '../../../clients';
+import { ListChantiersUseCase } from '../../../chantiers';
 import { Bill, BillStatus } from '../../domain/entities/bill.entity';
 import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
 import { UpdateEnrichedBillInput, UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
@@ -48,11 +49,13 @@ export class DashboardFacade {
   private readonly router = inject(Router);
   private readonly listUserBillsUseCase = inject(ListUserBillsUseCase);
   private readonly listClientsUseCase = inject(ListClientsUseCase);
+  private readonly listChantiersUseCase = inject(ListChantiersUseCase);
   private readonly updateEnrichedBillUseCase = inject(UpdateEnrichedBillUseCase);
   private readonly clientDisplayResolver = inject(ClientDisplayResolver);
   private readonly markedPaid = signal<Record<string, true>>({});
   private readonly persistedBills = signal<Bill[]>([]);
   private readonly clientsById = signal<Record<string, { id: string; name?: string; firstName?: string; lastName?: string }>>({});
+  private readonly chantiersById = signal<Record<string, { id: string; name: string }>>({});
 
   readonly isEditModalOpen = signal(false);
   readonly isEditSubmitting = signal(false);
@@ -89,6 +92,19 @@ export class DashboardFacade {
     }
 
     return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  });
+
+  readonly chantiers = computed<{ id: string; name: string }[]>(() => {
+    const eligibleIds = new Set(
+      this.persistedBills()
+        .map((bill) => bill.chantierId?.trim() ?? '')
+        .filter((id) => id.length > 0)
+    );
+    const lookup = this.chantiersById();
+
+    return Object.values(lookup)
+      .filter((chantier) => eligibleIds.has(chantier.id))
+      .sort((first, second) => first.name.localeCompare(second.name, 'fr', { sensitivity: 'base' }));
   });
 
   readonly urgentInvoices = computed(() =>
@@ -254,9 +270,10 @@ export class DashboardFacade {
   }
 
   private async refreshPersistedInvoices(): Promise<void> {
-    const [billsResult, clientsResult] = await Promise.all([
+    const [billsResult, clientsResult, chantiersResult] = await Promise.all([
       this.listUserBillsUseCase.execute(),
-      this.listClientsUseCase.execute()
+      this.listClientsUseCase.execute(),
+      this.listChantiersUseCase.execute()
     ]);
 
     if (clientsResult.success) {
@@ -275,6 +292,19 @@ export class DashboardFacade {
       this.clientsById.set(byId);
     } else {
       this.clientsById.set({});
+    }
+
+    if (chantiersResult.success) {
+      const byId = chantiersResult.data.reduce<Record<string, { id: string; name: string }>>(
+        (acc, chantier) => {
+          acc[chantier.id] = { id: chantier.id, name: chantier.name };
+          return acc;
+        },
+        {}
+      );
+      this.chantiersById.set(byId);
+    } else {
+      this.chantiersById.set({});
     }
 
     if (billsResult.success) {

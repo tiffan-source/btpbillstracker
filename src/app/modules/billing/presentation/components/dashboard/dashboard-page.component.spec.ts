@@ -31,6 +31,7 @@ const mockDashboardFacade = {
   editError: signal<string | null>(null),
   editSuccess: signal(false),
   clients: signal([{ id: 'client-1', name: 'Marie Lambert' }]),
+  chantiers: signal([{ id: 'ch-1', name: 'Cadjehoun' }]),
   openEditInvoice: vitest.fn(async () => ({
     id: 'b-1',
     reference: 'F-2026-0100',
@@ -129,6 +130,13 @@ describe('DashboardPageComponent', () => {
     expect(mockDashboardFacade.openEditInvoice).toHaveBeenCalledWith('b-1');
     expect(component.editForm.controls.id.value).toBe('b-1');
     expect(component.editForm.controls.invoiceNumber.value).toBe('EXT-1');
+  });
+
+  it('passes chantier options to edit modal', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const modal = host.querySelector('app-edit-bill-modal');
+    expect(modal).toBeTruthy();
+    expect(component.facade.chantiers()).toEqual([{ id: 'ch-1', name: 'Cadjehoun' }]);
   });
 
   it('should wire modal save and close actions to facade orchestration', async () => {

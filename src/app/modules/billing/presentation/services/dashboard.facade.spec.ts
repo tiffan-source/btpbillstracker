@@ -4,6 +4,7 @@ import { Bill } from '../../domain/entities/bill.entity';
 import { BillNotFoundError } from '../../domain/errors/bill-not-found.error';
 import { BillRepository } from '../../domain/ports/bill.repository';
 import { ListClientsUseCase } from '../../../clients';
+import { ListChantiersUseCase } from '../../../chantiers';
 import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
 import { UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
 import { ClientDisplayResolver } from './client-display.resolver';
@@ -79,6 +80,18 @@ describe('DashboardFacade', () => {
       )
     }) as unknown as ListClientsUseCase;
 
+  const createListChantiersUseCase = (): ListChantiersUseCase =>
+    ({
+      execute: vi.fn().mockResolvedValue({
+        success: true,
+        data: [
+          { id: 'ch-1', name: 'Cadjehoun' },
+          { id: 'ch-2', name: 'Akpakpa' },
+          { id: 'ch-x', name: 'Hors scope' }
+        ]
+      })
+    }) as unknown as ListChantiersUseCase;
+
   it('should expose persisted invoices and relance placeholder', async () => {
     const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
@@ -87,6 +100,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -121,6 +135,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -159,6 +174,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -201,6 +217,43 @@ describe('DashboardFacade', () => {
     expect(updatedInvoice?.showsIncompleteClientIndicator).toBe(true);
   });
 
+  it('exposes chantier options only for chantier ids linked to user invoices', async () => {
+    const persisted = [
+      new Bill('b-1', 'F-2026-0100', 'client-1').setChantierId('ch-2'),
+      new Bill('b-2', 'F-2026-0101', 'client-2').setChantierId('ch-1'),
+      new Bill('b-3', 'F-2026-0102', 'client-2')
+    ];
+    const listUserBillsUseCase = {
+      execute: vi.fn().mockResolvedValue({ success: true, data: persisted })
+    } as unknown as ListUserBillsUseCase;
+    const repository = new InMemoryBillRepository(persisted);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+
+    expect(facade.chantiers()).toEqual([
+      { id: 'ch-2', name: 'Akpakpa' },
+      { id: 'ch-1', name: 'Cadjehoun' }
+    ]);
+  });
+
   it('keeps modal open and exposes error when update fails', async () => {
     const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
@@ -209,6 +262,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -253,6 +307,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -287,6 +342,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -323,6 +379,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -356,6 +413,7 @@ describe('DashboardFacade', () => {
         { provide: BillRepository, useValue: repository },
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {

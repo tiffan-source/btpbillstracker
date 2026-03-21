@@ -43,7 +43,12 @@
 
         <div class="flex flex-col gap-2">
           <label for="chantier" class="text-sm font-medium text-foreground-muted">Chantier</label>
-          <input id="chantier" type="text" formControlName="chantier" class="w-full rounded-input border border-input px-3 py-2" />
+          <select id="chantier" formControlName="chantier" class="w-full rounded-input border border-input px-3 py-2">
+            <option value="">Sélectionner un chantier</option>
+            @for (chantier of availableChantiers(); track chantier.id) {
+              <option [value]="chantier.id">{{ chantier.name }}</option>
+            }
+          </select>
         </div>
 
         <div class="grid grid-cols-2 gap-4">

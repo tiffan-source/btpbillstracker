@@ -15,6 +15,7 @@ export class EditBillModalComponent {
   readonly open = input(false);
   readonly isSubmitting = input(false);
   readonly clients = input<{ id: string; name: string }[]>([]);
+  readonly chantiers = input<{ id: string; name: string }[]>([]);
   readonly form = input.required<EditBillForm>();
 
   readonly requestClose = output<void>();
@@ -66,5 +67,14 @@ export class EditBillModalComponent {
   hasFieldError(controlName: keyof EditBillForm['controls']): boolean {
     const control = this.form().controls[controlName];
     return control.invalid;
+  }
+
+  availableChantiers(): { id: string; name: string }[] {
+    const fromScope = this.chantiers();
+    const selectedId = this.form().controls.chantier.value.trim();
+    if (!selectedId || fromScope.some((chantier) => chantier.id === selectedId)) {
+      return fromScope;
+    }
+    return [...fromScope, { id: selectedId, name: `${selectedId} (hors liste)` }];
   }
 }

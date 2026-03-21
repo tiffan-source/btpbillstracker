@@ -32,6 +32,7 @@ describe('EditBillModalComponent', () => {
     fixture.componentRef.setInput('form', form);
     fixture.componentRef.setInput('open', true);
     fixture.componentRef.setInput('clients', [{ id: 'client-1', name: 'Marie Lambert' }]);
+    fixture.componentRef.setInput('chantiers', [{ id: 'ch-1', name: 'Cadjehoun' }]);
     fixture.detectChanges();
   });
 
@@ -58,6 +59,29 @@ describe('EditBillModalComponent', () => {
     expect(host.querySelector('#status')).toBeTruthy();
     expect(host.querySelector('#reminderScenarioId')).toBeTruthy();
     expect(host.querySelector('[data-testid="reminder-toggle"]')).toBeTruthy();
+  });
+
+  it('renders chantier selector with provided scoped options', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const chantierSelect = host.querySelector<HTMLSelectElement>('#chantier');
+
+    expect(chantierSelect).toBeTruthy();
+    const options = chantierSelect ? Array.from(chantierSelect.options).map((option) => option.textContent?.trim()) : [];
+    expect(options).toContain('Cadjehoun');
+  });
+
+  it('keeps out-of-list chantier selected by appending a fallback option', () => {
+    form.controls.chantier.setValue('ch-out');
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    const chantierSelect = host.querySelector<HTMLSelectElement>('#chantier');
+    const optionValues = chantierSelect ? Array.from(chantierSelect.options).map((option) => option.value) : [];
+    const optionLabels = chantierSelect ? Array.from(chantierSelect.options).map((option) => option.textContent?.trim()) : [];
+
+    expect(optionValues).toContain('ch-out');
+    expect(optionLabels.some((label) => label?.includes('(hors liste)'))).toBe(true);
+    expect(form.controls.chantier.value).toBe('ch-out');
   });
 
   it('emits close request on escape when not submitting', () => {
