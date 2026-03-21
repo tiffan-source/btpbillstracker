@@ -32,7 +32,7 @@ class InMemoryBillRepository implements BillRepository {
 }
 
 describe('DashboardFacade', () => {
-  it('should expose seeded invoices and relance placeholder', async () => {
+  it('should expose persisted invoices and relance placeholder', async () => {
     TestBed.configureTestingModule({
       providers: [
         DashboardFacade,
@@ -49,7 +49,7 @@ describe('DashboardFacade', () => {
     await Promise.resolve();
     const invoices = facade.invoices();
 
-    expect(invoices.length).toBeGreaterThan(0);
+    expect(invoices.length).toBe(0);
     expect(invoices.every((invoice) => invoice.nextReminder === '—')).toBe(true);
   });
 

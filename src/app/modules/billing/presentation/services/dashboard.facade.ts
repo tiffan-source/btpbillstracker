@@ -41,15 +41,13 @@ export type EditableInvoiceViewModel = {
 
 @Injectable({ providedIn: 'root' })
 export class DashboardFacade {
+// This is strange, why facade comunicate with repository. There should have usecase to handle this logic
   private readonly repository = inject(BillRepository);
+
   private readonly updateEnrichedBillUseCase = inject(UpdateEnrichedBillUseCase);
   private readonly markedPaid = signal<Record<string, true>>({});
   private readonly persistedBills = signal<Bill[]>([]);
 
-
-  readonly clients = signal<{ id: string; name: string }[]>([
-  ]);
-  
   readonly isEditModalOpen = signal(false);
   readonly isEditSubmitting = signal(false);
   readonly editError = signal<string | null>(null);
@@ -67,6 +65,20 @@ export class DashboardFacade {
     return merged.map((invoice) =>
       paid[invoice.id] ? { ...invoice, status: 'PAYE' as const, overdueDays: 0 } : invoice
     );
+  });
+
+  readonly clients = computed<{ id: string; name: string }[]>(() => {
+    const uniqueByName = new Map<string, { id: string; name: string }>();
+
+    for (const bill of this.persistedBills()) {
+      const name = bill.clientId.trim();
+      if (!name || uniqueByName.has(name.toLowerCase())) {
+        continue;
+      }
+      uniqueByName.set(name.toLowerCase(), { id: name, name });
+    }
+
+    return Array.from(uniqueByName.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   });
 
   readonly urgentInvoices = computed(() =>
@@ -230,6 +242,7 @@ export class DashboardFacade {
 
   private async refreshPersistedInvoices(): Promise<void> {
     try {
+      // This is strange, why facade comunicate with repository. There should have usecase to handle this logic
       const bills = await this.repository.list();
       this.persistedBills.set(bills);
     } catch (error: unknown) {
