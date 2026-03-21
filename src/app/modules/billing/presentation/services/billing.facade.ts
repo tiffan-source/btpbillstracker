@@ -7,6 +7,7 @@ import { ReminderAssociationRepository } from '../../../reminders/domain/ports/r
 import { ReminderAssociation } from '../../../reminders/domain/entities/reminder-association.entity';
 import { ListReminderScenariosUseCase } from '../../../reminders/domain/usecases/list-reminder-scenarios.usecase';
 import { ListClientsUseCase } from '../../../clients';
+import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
 
 export type SubmitBillInput = BillingInvoiceFormValue & {
   pdfFile?: BillPdfMemoryFile | null;
@@ -27,6 +28,7 @@ export type ReminderScenarioOption = {
 export class BillingFacade {
   private readonly createEnrichedBillUseCase = inject(CreateEnrichedBillUseCase);
   private readonly listClientsUseCase = inject(ListClientsUseCase);
+  private readonly listUserBillsUseCase = inject(ListUserBillsUseCase);
   private readonly listReminderScenariosUseCase = inject(ListReminderScenariosUseCase);
   private readonly store = inject(BillStore);
   private readonly reminderAssociationRepository = inject(ReminderAssociationRepository);
@@ -49,14 +51,29 @@ export class BillingFacade {
     this.clientsLoadError.set(null);
     this.isClientsLoading.set(true);
 
-    const result = await this.listClientsUseCase.execute();
-    if (result.success) {
-      const sortedClients = result.data
+    const [clientsResult, userBillsResult] = await Promise.all([
+      this.listClientsUseCase.execute(),
+      this.listUserBillsUseCase.execute()
+    ]);
+
+    if (clientsResult.success && userBillsResult.success) {
+      const eligibleClientIds = new Set(
+        userBillsResult.data
+          .map((bill) => bill.clientId.trim())
+          .filter((clientId) => clientId.length > 0)
+      );
+
+      const sortedClients = clientsResult.data
+        .filter((client) => eligibleClientIds.has(client.id))
         .map((client) => ({ id: client.id, name: client.name }))
         .sort((first, second) => first.name.localeCompare(second.name, 'fr', { sensitivity: 'base' }));
       this.clientsState.set(sortedClients);
     } else {
-      this.clientsLoadError.set(result.error.message);
+      if (!clientsResult.success) {
+        this.clientsLoadError.set(clientsResult.error.message);
+      } else {
+        this.clientsLoadError.set('Impossible de charger les factures utilisateur.');
+      }
       this.clientsState.set([]);
     }
 
