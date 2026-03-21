@@ -59,7 +59,8 @@ describe('CreateEnrichedBillUseCase', () => {
       dueDate: '2026-04-20',
       externalInvoiceReference: 'EXT-7788',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      chantierId: 'chantier-1'
     });
 
     expect(result.success).toBe(true);
@@ -75,6 +76,7 @@ describe('CreateEnrichedBillUseCase', () => {
     expect(result.data.externalInvoiceReference).toBe('EXT-7788');
     expect(result.data.type).toBe('Situation');
     expect(result.data.paymentMode).toBe('Virement');
+    expect(result.data.chantierId).toBe('chantier-1');
     expect(repository.savedBill).toBe(result.data);
   });
 

@@ -25,7 +25,7 @@ export class Bill {
   private _externalInvoiceReference?: string;
   private _type?: BillType;
   private _paymentMode?: PaymentMode;
-  private _chantier?: string;
+  private _chantierId?: string;
   private _remindersAutoEnabled = false;
   private _reminderScenarioId?: string;
 
@@ -51,7 +51,8 @@ export class Bill {
   get externalInvoiceReference(): string | undefined { return this._externalInvoiceReference; }
   get type(): BillType | undefined { return this._type; }
   get paymentMode(): PaymentMode | undefined { return this._paymentMode; }
-  get chantier(): string | undefined { return this._chantier; }
+  get chantierId(): string | undefined { return this._chantierId; }
+  get chantier(): string | undefined { return this._chantierId; }
   get remindersAutoEnabled(): boolean { return this._remindersAutoEnabled; }
   get reminderScenarioId(): string | undefined { return this._reminderScenarioId; }
 
@@ -95,9 +96,14 @@ export class Bill {
     return this;
   }
 
+  setChantierId(chantierId: string): this {
+    const normalized = chantierId.trim();
+    this._chantierId = normalized.length > 0 ? normalized : undefined;
+    return this;
+  }
+
   setChantier(chantier: string): this {
-    const normalized = chantier.trim();
-    this._chantier = normalized.length > 0 ? normalized : undefined;
+    this.setChantierId(chantier);
     return this;
   }
 

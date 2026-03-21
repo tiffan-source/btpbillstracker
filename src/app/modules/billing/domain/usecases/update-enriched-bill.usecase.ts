@@ -20,7 +20,7 @@ export type UpdateEnrichedBillInput = {
   externalInvoiceReference: string;
   type: string;
   paymentMode: string;
-  chantier?: string;
+  chantierId?: string;
   remindersAutoEnabled?: boolean;
   reminderScenarioId?: string;
   status: BillStatus;
@@ -40,7 +40,7 @@ export class UpdateEnrichedBillUseCase {
         .setExternalInvoiceReference(input.externalInvoiceReference)
         .setType(input.type)
         .setPaymentMode(input.paymentMode)
-        .setChantier(input.chantier ?? '')
+        .setChantierId(input.chantierId ?? '')
         .setStatus(input.status)
         .configureReminder(input.remindersAutoEnabled ?? false, input.reminderScenarioId);
 

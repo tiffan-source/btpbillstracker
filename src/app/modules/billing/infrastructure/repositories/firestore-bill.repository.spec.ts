@@ -34,7 +34,7 @@ describe('FirestoreBillRepository', () => {
       externalInvoiceReference: undefined,
       type: undefined,
       paymentMode: undefined,
-      chantier: undefined
+      chantierId: undefined
     });
   });
 

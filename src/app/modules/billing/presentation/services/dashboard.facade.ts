@@ -171,7 +171,7 @@ export class DashboardFacade {
       externalInvoiceReference: payload.invoiceNumber,
       type: payload.type,
       paymentMode: payload.paymentMode,
-      chantier: payload.chantier,
+      chantierId: payload.chantier,
       status: payload.status,
       remindersAutoEnabled: payload.remindersAutoEnabled,
       reminderScenarioId: payload.reminderScenarioId

@@ -12,6 +12,14 @@ describe('Bill Entity', () => {
     expect(bill.status).toBe('DRAFT');
   });
 
+  it('stores chantier relation using chantierId', () => {
+    const bill = new Bill('bill-1', 'F-2026-0001', 'client-xyz')
+      .setChantierId('chantier-123');
+
+    expect(bill.chantierId).toBe('chantier-123');
+    expect(bill.chantier).toBe('chantier-123');
+  });
+
   it('should fail if reference is empty or missing', () => {
     expect(() => new Bill('bill-1', '', 'client-xyz')).toThrow(InvalidBillReferenceError);
     expect(() => new Bill('bill-1', '   ', 'client-xyz')).toThrow(InvalidBillReferenceError);

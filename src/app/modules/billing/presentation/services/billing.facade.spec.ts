@@ -247,7 +247,7 @@ describe('BillingFacade', () => {
       externalInvoiceReference: 'EXT-77',
       type: 'Situation',
       paymentMode: 'Virement',
-      chantier: '',
+      chantierId: '',
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -442,7 +442,7 @@ describe('BillingFacade', () => {
       externalInvoiceReference: 'FAC-88',
       type: 'Situation',
       paymentMode: 'Virement',
-      chantier: '',
+      chantierId: '',
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -491,7 +491,7 @@ describe('BillingFacade', () => {
       externalInvoiceReference: '',
       type: 'Situation',
       paymentMode: 'Virement',
-      chantier: '',
+      chantierId: '',
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -745,7 +745,7 @@ describe('BillingFacade', () => {
          externalInvoiceReference: 'EXT-900',
          type: 'Solde',
          paymentMode: 'Chèque',
-         chantier: undefined
+         chantierId: undefined
        }
      ]);
 

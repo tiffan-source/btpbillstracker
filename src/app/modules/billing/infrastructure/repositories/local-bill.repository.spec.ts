@@ -78,6 +78,7 @@ describe('LocalBillRepository', () => {
       .setExternalInvoiceReference('EXT-4B')
       .setType('Solde')
       .setPaymentMode('Chèque')
+      .setChantierId('chantier-44')
       .setStatus('PAID');
 
     await repository.update(updated);
@@ -88,6 +89,7 @@ describe('LocalBillRepository', () => {
     expect(bills[0]?.externalInvoiceReference).toBe('EXT-4B');
     expect(bills[0]?.type).toBe('Solde');
     expect(bills[0]?.paymentMode).toBe('Chèque');
+    expect(bills[0]?.chantierId).toBe('chantier-44');
     expect(bills[0]?.status).toBe('PAID');
   });
 

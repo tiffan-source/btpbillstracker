@@ -16,7 +16,7 @@ type LocalPlainBill = {
   externalInvoiceReference?: string;
   type?: string;
   paymentMode?: string;
-  chantier?: string;
+  chantierId?: string;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -93,8 +93,8 @@ export class LocalBillRepository implements BillRepository {
       if (plainBill.paymentMode) {
         bill.setPaymentMode(plainBill.paymentMode);
       }
-      if (plainBill.chantier) {
-        bill.setChantier(plainBill.chantier);
+      if (plainBill.chantierId) {
+        bill.setChantierId(plainBill.chantierId);
       }
       if (this.isBillStatus(plainBill.status)) {
         bill.setStatus(plainBill.status);
@@ -121,7 +121,7 @@ export class LocalBillRepository implements BillRepository {
       externalInvoiceReference: bill.externalInvoiceReference,
       type: bill.type,
       paymentMode: bill.paymentMode,
-      chantier: bill.chantier
+      chantierId: bill.chantierId
     };
   }
 

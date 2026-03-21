@@ -57,7 +57,7 @@ describe('UpdateEnrichedBillUseCase', () => {
       externalInvoiceReference: 'EXT-9',
       type: 'Situation',
       paymentMode: 'Chèque',
-      chantier: 'Cadjehoun',
+      chantierId: 'chantier-cadjehoun',
       remindersAutoEnabled: true,
       reminderScenarioId: 'standard-reminder-scenario',
       status: 'PAID'
@@ -71,7 +71,7 @@ describe('UpdateEnrichedBillUseCase', () => {
     expect(result.data.status).toBe('PAID');
     expect(result.data.amountTTC).toBe(480);
     expect(result.data.paymentMode).toBe('Chèque');
-    expect(result.data.chantier).toBe('Cadjehoun');
+    expect(result.data.chantierId).toBe('chantier-cadjehoun');
   });
 
   it('fails when updating a non persisted bill', async () => {

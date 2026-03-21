@@ -26,7 +26,7 @@ export type FirestorePlainBill = {
   externalInvoiceReference?: string;
   type?: string;
   paymentMode?: string;
-  chantier?: string;
+  chantierId?: string;
 };
 
 @Injectable({ providedIn: 'root' })
