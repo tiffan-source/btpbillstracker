@@ -11,12 +11,16 @@ export type AppFirebaseConfig = {
 export type AppEnvironment = {
   production: boolean;
   useFirebasePersistence: boolean;
+  firebaseAuthMode: 'none' | 'anonymous' | 'email-password';
+  firestoreSecurityMode: 'open' | 'owner-uid';
   firebase: AppFirebaseConfig;
 };
 
 export const environment: AppEnvironment = {
   production: true,
   useFirebasePersistence: false,
+  firebaseAuthMode: 'email-password',
+  firestoreSecurityMode: 'owner-uid',
   firebase: {
   apiKey: "demo-api-key",
 

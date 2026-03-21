@@ -3,6 +3,8 @@ import { AppEnvironment } from './environment';
 export const environment: AppEnvironment = {
   production: false,
   useFirebasePersistence: false,
+  firebaseAuthMode: 'none',
+  firestoreSecurityMode: 'open',
   firebase: {
     apiKey: 'demo-api-key',
     authDomain: 'demo-project.firebaseapp.com',
