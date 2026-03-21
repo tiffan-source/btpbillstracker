@@ -36,6 +36,7 @@ describe('App routes', () => {
 
     expect(dashboardRoute).toBeTruthy();
     expect(dashboardRoute?.loadComponent).toBeTypeOf('function');
+    expect(dashboardRoute?.canActivate).toHaveLength(1);
   });
 
   it('should keep new-bill route', () => {
@@ -43,6 +44,7 @@ describe('App routes', () => {
 
     expect(newBillRoute).toBeTruthy();
     expect(newBillRoute?.loadComponent).toBeTypeOf('function');
+    expect(newBillRoute?.canActivate).toHaveLength(1);
   });
 
   it('should expose clients-chantiers route', () => {
@@ -50,6 +52,7 @@ describe('App routes', () => {
 
     expect(clientsChantiersRoute).toBeTruthy();
     expect(clientsChantiersRoute?.loadComponent).toBeTypeOf('function');
+    expect(clientsChantiersRoute?.canActivate).toHaveLength(1);
   });
 
   it('should redirect root to dashboard', () => {
