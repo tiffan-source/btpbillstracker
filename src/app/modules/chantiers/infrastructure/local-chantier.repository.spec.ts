@@ -25,4 +25,18 @@ describe('LocalChantierRepository', () => {
     await expect(repository.existsByName('autre chantier')).resolves.toBe(false);
     await expect(repository.existsByName('villa a', 'ch-1')).resolves.toBe(false);
   });
+
+  it('rollback path keeps local repository functional for save/list/update/existsByName', async () => {
+    const repository = new LocalChantierRepository();
+    await repository.save(new Chantier('ch-rollback', 'Cadjehoun'));
+
+    const listed = await repository.list();
+    expect(listed.map((item) => item.id)).toContain('ch-rollback');
+
+    const updated = new Chantier('ch-rollback', 'Cadjehoun').setName('Cadjehoun Nord');
+    await repository.update(updated);
+
+    await expect(repository.existsByName('cadjehoun nord')).resolves.toBe(true);
+    await expect(repository.existsByName('cadjehoun nord', 'ch-rollback')).resolves.toBe(false);
+  });
 });

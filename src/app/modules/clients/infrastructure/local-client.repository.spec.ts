@@ -100,4 +100,27 @@ describe('LocalClientRepository', () => {
       }
     ]);
   });
+
+  it('rollback path keeps local repository functional for full CRUD flow', async () => {
+    const repository = new LocalClientRepository();
+    const created = new Client('c-rollback', 'Rollback User')
+      .setFirstName('Rollback')
+      .setLastName('User')
+      .setEmail('rollback@example.com');
+
+    await repository.save(created);
+    const beforeUpdate = await repository.list();
+    expect(beforeUpdate.map((item) => item.id)).toContain('c-rollback');
+
+    const updated = new Client('c-rollback', 'Rollback User')
+      .setFirstName('Roll')
+      .setLastName('Back')
+      .setPhone('+2290111111111');
+    await repository.update(updated);
+
+    const afterUpdate = await repository.list();
+    const persisted = afterUpdate.find((item) => item.id === 'c-rollback');
+    expect(persisted?.name).toBe('Roll Back');
+    expect(persisted?.phone).toBe('+2290111111111');
+  });
 });
