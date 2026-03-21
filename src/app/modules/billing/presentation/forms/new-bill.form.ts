@@ -9,7 +9,9 @@ export interface NewBillFormModel {
   [key: string]: AbstractControl;
   clientId: FormControl<string>;
   newClientName: FormControl<string>;
-  chantier: FormControl<string>;
+  chantierId: FormControl<string>;
+  chantierName: FormControl<string>;
+  shouldCreateChantier: FormControl<boolean>;
   amountTTC: FormControl<number | null>;
   dueDate: FormControl<string>;
   invoiceNumber: FormControl<string>;
@@ -22,7 +24,9 @@ export interface NewBillFormModel {
 export type NewBillFormValue = {
   clientId: string;
   newClientName: string;
-  chantier: string;
+  chantierId: string;
+  chantierName: string;
+  shouldCreateChantier: boolean;
   amountTTC: number | null;
   dueDate: string;
   invoiceNumber: string;
@@ -37,7 +41,9 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
     super({
       clientId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       newClientName: new FormControl('', { nonNullable: true }),
-      chantier: new FormControl('', { nonNullable: true }),
+      chantierId: new FormControl('', { nonNullable: true }),
+      chantierName: new FormControl('', { nonNullable: true }),
+      shouldCreateChantier: new FormControl(false, { nonNullable: true }),
       amountTTC: new FormControl<number | null>(null, { validators: [Validators.required, Validators.min(BILL_MIN_AMOUNT_TTC)] }),
       dueDate: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
       invoiceNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -74,6 +80,19 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
     this.controls.reminderScenarioId.updateValueAndValidity({ emitEvent: false });
   }
 
+  setChantierMode(isCreatingNewChantier: boolean): void {
+    this.controls.shouldCreateChantier.setValue(isCreatingNewChantier);
+    if (isCreatingNewChantier) {
+      this.controls.chantierId.clearValidators();
+      this.controls.chantierName.setValidators([Validators.required]);
+    } else {
+      this.controls.chantierId.clearValidators();
+      this.controls.chantierName.clearValidators();
+    }
+    this.controls.chantierId.updateValueAndValidity({ emitEvent: false });
+    this.controls.chantierName.updateValueAndValidity({ emitEvent: false });
+  }
+
   getErrorMessage(controlName: keyof NewBillFormModel): string | null {
     const control = this.controls[controlName];
 
@@ -89,6 +108,8 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
           return 'Le nom du nouveau client est obligatoire.';
         case 'amountTTC':
           return 'Le montant TTC est obligatoire.';
+        case 'chantierName':
+          return 'Le nom du nouveau chantier est obligatoire.';
         case 'dueDate':
           return "La date d'échéance est obligatoire.";
         case 'invoiceNumber':

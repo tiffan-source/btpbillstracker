@@ -5,6 +5,7 @@ import { ReferenceGeneratorService } from '../ports/reference-generator.service'
 import { CreateEnrichedBillUseCase } from './create-enriched-bill.usecase';
 import { Result, success } from '../../../../core/result/result';
 import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
+import { ResolveChantierIdInput, ResolveChantierIdPort } from '../ports/resolve-chantier-id.port';
 
 class InMemoryBillRepository implements BillRepository {
   savedBill: Bill | null = null;
@@ -44,13 +45,24 @@ class SuccessClientProvider implements ClientProviderPort {
   }
 }
 
+class ResolveChantierStub implements ResolveChantierIdPort {
+  execute = vitest.fn(async (input: ResolveChantierIdInput) => success(`created-${input.chantierName}`));
+}
+
 describe('CreateEnrichedBillUseCase', () => {
   it('creates and saves an enriched bill from a valid payload', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -60,7 +72,9 @@ describe('CreateEnrichedBillUseCase', () => {
       externalInvoiceReference: 'EXT-7788',
       type: 'Situation',
       paymentMode: 'Virement',
-      chantierId: 'chantier-1'
+      chantierId: 'chantier-1',
+      chantierName: '',
+      shouldCreateChantier: false
     });
 
     expect(result.success).toBe(true);
@@ -85,7 +99,14 @@ describe('CreateEnrichedBillUseCase', () => {
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -94,7 +115,9 @@ describe('CreateEnrichedBillUseCase', () => {
       dueDate: '2026-04-20',
       externalInvoiceReference: 'EXT-7788',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      chantierName: '',
+      shouldCreateChantier: false
     });
 
     expect(result.success).toBe(false);
@@ -112,7 +135,14 @@ describe('CreateEnrichedBillUseCase', () => {
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -121,7 +151,9 @@ describe('CreateEnrichedBillUseCase', () => {
       dueDate: ' ',
       externalInvoiceReference: 'EXT-7788',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      chantierName: '',
+      shouldCreateChantier: false
     });
 
     expect(result.success).toBe(false);
@@ -139,7 +171,14 @@ describe('CreateEnrichedBillUseCase', () => {
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -148,7 +187,9 @@ describe('CreateEnrichedBillUseCase', () => {
       dueDate: '2026-04-20',
       externalInvoiceReference: '',
       type: 'Situation',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      chantierName: '',
+      shouldCreateChantier: false
     });
 
     expect(result.success).toBe(false);
@@ -166,7 +207,14 @@ describe('CreateEnrichedBillUseCase', () => {
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -175,7 +223,9 @@ describe('CreateEnrichedBillUseCase', () => {
       dueDate: '2026-04-20',
       externalInvoiceReference: 'EXT-7788',
       type: 'InvalidType',
-      paymentMode: 'Virement'
+      paymentMode: 'Virement',
+      chantierName: '',
+      shouldCreateChantier: false
     });
 
     expect(result.success).toBe(false);
@@ -191,7 +241,14 @@ describe('CreateEnrichedBillUseCase', () => {
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -200,7 +257,9 @@ describe('CreateEnrichedBillUseCase', () => {
       dueDate: '2026-04-20',
       externalInvoiceReference: 'EXT-7788',
       type: 'Situation',
-      paymentMode: 'Carte'
+      paymentMode: 'Carte',
+      chantierName: '',
+      shouldCreateChantier: false
     });
 
     expect(result.success).toBe(false);
@@ -216,7 +275,14 @@ describe('CreateEnrichedBillUseCase', () => {
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -226,6 +292,8 @@ describe('CreateEnrichedBillUseCase', () => {
       externalInvoiceReference: 'EXT-7788',
       type: 'Situation',
       paymentMode: 'Virement',
+      chantierName: '',
+      shouldCreateChantier: false,
       remindersAutoEnabled: true,
       reminderScenarioId: ''
     });
@@ -244,7 +312,14 @@ describe('CreateEnrichedBillUseCase', () => {
     const referenceGenerator = new StaticReferenceGenerator();
     const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -254,6 +329,8 @@ describe('CreateEnrichedBillUseCase', () => {
       externalInvoiceReference: 'EXT-7788',
       type: 'Situation',
       paymentMode: 'Virement',
+      chantierName: '',
+      shouldCreateChantier: false,
       remindersAutoEnabled: true,
       reminderScenarioId: 'standard-reminder-scenario'
     });
@@ -265,6 +342,42 @@ describe('CreateEnrichedBillUseCase', () => {
 
     expect(result.data.remindersAutoEnabled).toBe(true);
     expect(result.data.reminderScenarioId).toBe('standard-reminder-scenario');
+  });
+
+  it('resolves chantier id through port when creating a new chantier from bill creation', async () => {
+    const repository = new InMemoryBillRepository();
+    const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
+    const clientProvider = new SuccessClientProvider();
+    const chantierResolver = new ResolveChantierStub();
+    const useCase = new CreateEnrichedBillUseCase(
+      clientProvider,
+      repository,
+      referenceGenerator,
+      idGenerator,
+      chantierResolver
+    );
+
+    const result = await useCase.execute({
+      isNewClient: false,
+      clientIdOrName: 'client-123',
+      amountTTC: 3200,
+      dueDate: '2026-04-20',
+      externalInvoiceReference: 'EXT-7788',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      chantierId: '',
+      chantierName: 'Lot A',
+      shouldCreateChantier: true,
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(result.success).toBe(true);
+    expect(chantierResolver.execute).toHaveBeenCalledWith({
+      chantierName: 'Lot A'
+    });
+    expect(repository.savedBill?.chantierId).toBe('created-Lot A');
   });
 
 });

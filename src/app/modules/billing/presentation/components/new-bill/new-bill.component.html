@@ -61,12 +61,32 @@
 
           <div>
             <label for="chantier" class="block text-sm font-medium text-foreground-muted mb-1">Chantier</label>
-            <select id="chantier" formControlName="chantier" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
-              <option value="">Sélectionner un chantier</option>
-              @for (chantier of facade.chantiers(); track chantier.id) {
-                <option [value]="chantier.id">{{ chantier.name }}</option>
+            <div class="flex gap-3">
+              @if (!isCreatingNewChantier) {
+                <select id="chantier" formControlName="chantierId" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+                  <option value="">Sélectionner un chantier</option>
+                  @for (chantier of facade.chantiers(); track chantier.id) {
+                    <option [value]="chantier.id">{{ chantier.name }}</option>
+                  }
+                </select>
+              } @else {
+                <input
+                  id="chantierName"
+                  type="text"
+                  formControlName="chantierName"
+                  placeholder="Nom du nouveau chantier"
+                  [class]="hasFieldError('chantierName')
+                    ? 'block w-full rounded-input border-danger shadow-sm focus:border-danger focus:ring-danger sm:text-sm px-3 py-2 border'
+                    : 'block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border'"
+                >
               }
-            </select>
+              <button type="button" data-testid="toggle-new-chantier-mode" (click)="toggleNewChantierMode()" class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted shadow-sm hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap">
+                {{ isCreatingNewChantier ? 'Chantier existant' : '+ Nouveau' }}
+              </button>
+            </div>
+            @if (fieldErrorMessage('chantierName'); as chantierErrorMessage) {
+              <p class="mt-2 text-sm text-danger">{{ chantierErrorMessage }}</p>
+            }
             @if (facade.chantiersLoadError(); as chantiersLoadError) {
               <p class="mt-2 text-sm text-danger" role="status">{{ chantiersLoadError }}</p>
             }
@@ -311,6 +331,52 @@
           class="inline-flex items-center rounded-btn bg-primary px-4 py-2 text-sm font-medium text-primary-content hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
         >
           Creer un nouveau client
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (facade.duplicateChantierPrompt(); as duplicatePrompt) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-foreground/50 px-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="duplicate-chantier-modal-title"
+      aria-describedby="duplicate-chantier-modal-description"
+      class="w-full max-w-lg rounded-card bg-surface p-6 shadow-lg"
+    >
+      <h2 id="duplicate-chantier-modal-title" class="text-lg font-bold text-foreground">
+        Chantier similaire detecte
+      </h2>
+      <p id="duplicate-chantier-modal-description" class="mt-2 text-sm text-foreground-muted">
+        Un chantier existant "{{ duplicatePrompt.existingChantierName }}" semble correspondre.
+        Voulez-vous utiliser ce chantier existant ou creer un nouveau chantier ?
+      </p>
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <button
+          data-testid="duplicate-chantier-cancel"
+          type="button"
+          (click)="closeDuplicateChantierModal()"
+          class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Annuler
+        </button>
+        <button
+          data-testid="duplicate-chantier-use-existing"
+          type="button"
+          (click)="onUseExistingChantier()"
+          class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Utiliser le chantier existant
+        </button>
+        <button
+          data-testid="duplicate-chantier-create-new"
+          type="button"
+          (click)="onCreateNewChantierAnyway()"
+          class="inline-flex items-center rounded-btn bg-primary px-4 py-2 text-sm font-medium text-primary-content hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Creer un nouveau chantier
         </button>
       </div>
     </div>

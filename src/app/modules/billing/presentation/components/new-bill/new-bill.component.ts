@@ -19,11 +19,13 @@ export class NewBillComponent {
   readonly billTypes = BILL_TYPES;
   readonly paymentModes = PAYMENT_MODES;
   isCreatingNewClient = false;
+  isCreatingNewChantier = false;
   private hasSubmittedInvalidForm = false;
   private hasHandledSuccess = false;
 
   constructor() {
     this.invoiceForm.setClientMode(this.isCreatingNewClient);
+    this.invoiceForm.setChantierMode(this.isCreatingNewChantier);
     void this.facade.loadClients();
     void this.facade.loadChantiers();
     void this.facade.loadReminderScenarios();
@@ -65,6 +67,11 @@ export class NewBillComponent {
   toggleNewClientMode(): void {
     this.isCreatingNewClient = !this.isCreatingNewClient;
     this.invoiceForm.setClientMode(this.isCreatingNewClient);
+  }
+
+  toggleNewChantierMode(): void {
+    this.isCreatingNewChantier = !this.isCreatingNewChantier;
+    this.invoiceForm.setChantierMode(this.isCreatingNewChantier);
   }
 
 
@@ -142,13 +149,28 @@ export class NewBillComponent {
     this.facade.dismissDuplicateClientPrompt();
   }
 
+  onUseExistingChantier(): void {
+    void this.facade.confirmUseExistingChantier();
+  }
+
+  onCreateNewChantierAnyway(): void {
+    void this.facade.confirmCreateNewChantier();
+  }
+
+  closeDuplicateChantierModal(): void {
+    this.facade.dismissDuplicateChantierPrompt();
+  }
+
   private resetFormAfterSuccess(): void {
     this.isCreatingNewClient = false;
+    this.isCreatingNewChantier = false;
     this.hasSubmittedInvalidForm = false;
     this.invoiceForm.reset({
       clientId: '',
       newClientName: '',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: null,
       dueDate: '',
       invoiceNumber: '',
@@ -159,5 +181,6 @@ export class NewBillComponent {
     });
     this.selectedPdfFile = null;
     this.invoiceForm.setClientMode(false);
+    this.invoiceForm.setChantierMode(false);
   }
 }

@@ -20,6 +20,12 @@ export type DuplicateClientPrompt = {
   pendingForm: SubmitBillInput;
 };
 
+export type DuplicateChantierPrompt = {
+  existingChantierId: string;
+  existingChantierName: string;
+  pendingForm: SubmitBillInput;
+};
+
 export type ReminderScenarioOption = {
   id: string;
   name: string;
@@ -52,6 +58,7 @@ export class BillingFacade {
   readonly isReminderScenariosLoading = signal(false);
   readonly reminderScenariosLoadError = signal<string | null>(null);
   readonly duplicateClientPrompt = signal<DuplicateClientPrompt | null>(null);
+  readonly duplicateChantierPrompt = signal<DuplicateChantierPrompt | null>(null);
 
   async loadClients(): Promise<void> {
     this.clientsLoadError.set(null);
@@ -147,13 +154,17 @@ export class BillingFacade {
   }
 
   async requestInvoiceCreation(formValue: SubmitBillInput): Promise<void> {
+    this.error.set(null);
     if (!this.ensureExistingClientIsAuthorized(formValue)) {
+      return;
+    }
+    if (!this.ensureExistingChantierIsAuthorized(formValue)) {
       return;
     }
 
     const normalizedNewClientName = this.normalizeClientName(formValue.newClientName);
     if (!normalizedNewClientName) {
-      await this.createInvoice(formValue);
+      await this.requestCreationWithChantierValidation(formValue);
       return;
     }
 
@@ -162,7 +173,7 @@ export class BillingFacade {
     );
 
     if (!matchingClient) {
-      await this.createInvoice(formValue);
+      await this.requestCreationWithChantierValidation(formValue);
       return;
     }
 
@@ -180,7 +191,7 @@ export class BillingFacade {
     }
 
     this.duplicateClientPrompt.set(null);
-    await this.createInvoice({
+    await this.requestCreationWithChantierValidation({
       ...prompt.pendingForm,
       clientId: prompt.existingClientId,
       newClientName: ''
@@ -199,6 +210,35 @@ export class BillingFacade {
 
   dismissDuplicateClientPrompt(): void {
     this.duplicateClientPrompt.set(null);
+  }
+
+  async confirmUseExistingChantier(): Promise<void> {
+    const prompt = this.duplicateChantierPrompt();
+    if (!prompt) {
+      return;
+    }
+
+    this.duplicateChantierPrompt.set(null);
+    await this.createInvoice({
+      ...prompt.pendingForm,
+      chantierId: prompt.existingChantierId,
+      chantierName: '',
+      shouldCreateChantier: false
+    });
+  }
+
+  async confirmCreateNewChantier(): Promise<void> {
+    const prompt = this.duplicateChantierPrompt();
+    if (!prompt) {
+      return;
+    }
+
+    this.duplicateChantierPrompt.set(null);
+    await this.createInvoice(prompt.pendingForm);
+  }
+
+  dismissDuplicateChantierPrompt(): void {
+    this.duplicateChantierPrompt.set(null);
   }
 
   async submitNewBill(input: CreateEnrichedBillInput, pdfFile: BillPdfMemoryFile | null): Promise<void> {
@@ -221,6 +261,7 @@ export class BillingFacade {
 
       this.store.setDraftBill(result.data, pdfFile);
       await this.loadClients();
+      await this.loadChantiers();
       this.isSuccess.set(true);
     } else {
       this.error.set(result.error.message);
@@ -232,6 +273,15 @@ export class BillingFacade {
   }
 
   private normalizeClientName(name: string | null | undefined): string {
+    return (name ?? '')
+      .trim()
+      .normalize('NFKD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
+  }
+
+  private normalizeChantierName(name: string | null | undefined): string {
     return (name ?? '')
       .trim()
       .normalize('NFKD')
@@ -256,5 +306,47 @@ export class BillingFacade {
     this.error.set('Le client sélectionné n’est pas autorisé pour votre périmètre facture.');
     this.isSuccess.set(false);
     return false;
+  }
+
+  private ensureExistingChantierIsAuthorized(formValue: SubmitBillInput): boolean {
+    const selectedChantierId = formValue.chantierId?.trim();
+
+    if (formValue.shouldCreateChantier || !selectedChantierId) {
+      return true;
+    }
+
+    const isAuthorized = this.chantiers().some((chantier) => chantier.id === selectedChantierId);
+    if (isAuthorized) {
+      return true;
+    }
+
+    this.error.set('Le chantier sélectionné n’est pas autorisé pour votre périmètre facture.');
+    this.isSuccess.set(false);
+    return false;
+  }
+
+  private async requestCreationWithChantierValidation(formValue: SubmitBillInput): Promise<void> {
+    const shouldCreateChantier = !!formValue.shouldCreateChantier;
+    const normalizedName = this.normalizeChantierName(formValue.chantierName);
+
+    if (!shouldCreateChantier || !normalizedName) {
+      await this.createInvoice(formValue);
+      return;
+    }
+
+    const matchingChantier = this.chantiers().find(
+      (chantier) => this.normalizeChantierName(chantier.name) === normalizedName
+    );
+
+    if (!matchingChantier) {
+      await this.createInvoice(formValue);
+      return;
+    }
+
+    this.duplicateChantierPrompt.set({
+      existingChantierId: matchingChantier.id,
+      existingChantierName: matchingChantier.name,
+      pendingForm: formValue
+    });
   }
 }

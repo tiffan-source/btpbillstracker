@@ -154,6 +154,7 @@ describe('BillingFacade', () => {
     });
 
     const facade = TestBed.inject(BillingFacade);
+    await facade.loadClients();
     await facade.loadChantiers();
 
     expect(facade.chantiers()).toEqual([
@@ -198,7 +199,9 @@ describe('BillingFacade', () => {
     await facade.requestInvoiceCreation({
       clientId: 'c-9',
       newClientName: '',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 250,
       dueDate: '2026-12-11',
       invoiceNumber: 'FAC-UNAUTH',
@@ -274,7 +277,9 @@ describe('BillingFacade', () => {
     const promise = facade.createInvoice({
       clientId: 'c-1',
       newClientName: '',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 1400,
       dueDate: '2026-05-01',
       invoiceNumber: 'EXT-77',
@@ -296,6 +301,8 @@ describe('BillingFacade', () => {
       type: 'Situation',
       paymentMode: 'Virement',
       chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -362,7 +369,9 @@ describe('BillingFacade', () => {
     await facade.createInvoice({
       clientId: '',
       newClientName: 'Alice Client',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 300,
       dueDate: '2026-10-01',
       invoiceNumber: 'FAC-12',
@@ -410,7 +419,9 @@ describe('BillingFacade', () => {
     await facade.requestInvoiceCreation({
       clientId: '',
       newClientName: ' alice   martin ',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 100,
       dueDate: '2026-10-10',
       invoiceNumber: 'FAC-77',
@@ -427,7 +438,9 @@ describe('BillingFacade', () => {
       pendingForm: {
         clientId: '',
         newClientName: ' alice   martin ',
-        chantier: '',
+        chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
         amountTTC: 100,
         dueDate: '2026-10-10',
         invoiceNumber: 'FAC-77',
@@ -472,7 +485,9 @@ describe('BillingFacade', () => {
     await facade.requestInvoiceCreation({
       clientId: '',
       newClientName: 'Alice Martin',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 300,
       dueDate: '2026-10-01',
       invoiceNumber: 'FAC-88',
@@ -494,6 +509,138 @@ describe('BillingFacade', () => {
       type: 'Situation',
       paymentMode: 'Virement',
       chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+  });
+
+  it('opens duplicate prompt when new chantier name matches existing chantier', async () => {
+    const mockStore = new MockBillStore();
+    const listUserBillsUseCase = {
+      execute: vitest
+        .fn()
+        .mockResolvedValue(success([new Bill('b-77', 'F-77', 'c-1').setChantierId('ch-1')]))
+    };
+    const listChantiersUseCase = {
+      execute: vitest.fn().mockResolvedValue(success([{ id: 'ch-1', name: 'Lot principal' }]))
+    };
+    const mockSubmitNewBill = { execute: vitest.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([{ id: 'c-1', name: 'Client A' }])) } },
+        { provide: ListChantiersUseCase, useValue: listChantiersUseCase },
+        { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+    await facade.loadClients();
+    await facade.loadChantiers();
+
+    await facade.requestInvoiceCreation({
+      clientId: 'c-1',
+      newClientName: '',
+      chantierId: '',
+      chantierName: '  lot  principal ',
+      shouldCreateChantier: true,
+      amountTTC: 100,
+      dueDate: '2026-10-10',
+      invoiceNumber: 'FAC-77',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(mockSubmitNewBill.execute).not.toHaveBeenCalled();
+    expect(facade.duplicateChantierPrompt()).toEqual({
+      existingChantierId: 'ch-1',
+      existingChantierName: 'Lot principal',
+      pendingForm: {
+        clientId: 'c-1',
+        newClientName: '',
+        chantierId: '',
+        chantierName: '  lot  principal ',
+        shouldCreateChantier: true,
+        amountTTC: 100,
+        dueDate: '2026-10-10',
+        invoiceNumber: 'FAC-77',
+        type: 'Situation',
+        paymentMode: 'Virement',
+        remindersAutoEnabled: false,
+        reminderScenarioId: ''
+      }
+    });
+  });
+
+  it('uses existing chantier when duplicate chantier prompt is confirmed', async () => {
+    const mockStore = new MockBillStore();
+    const listUserBillsUseCase = {
+      execute: vitest
+        .fn()
+        .mockResolvedValue(success([new Bill('b-88', 'F-88', 'c-1').setChantierId('ch-1')]))
+    };
+    const listChantiersUseCase = {
+      execute: vitest.fn().mockResolvedValue(success([{ id: 'ch-1', name: 'Lot principal' }]))
+    };
+    const mockSubmitNewBill = {
+      execute: vitest.fn().mockResolvedValue(success(new Bill('b-88', 'F-2026-0088', 'c-1')))
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([{ id: 'c-1', name: 'Client A' }])) } },
+        { provide: ListChantiersUseCase, useValue: listChantiersUseCase },
+        { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+    await facade.loadClients();
+    await facade.loadChantiers();
+
+    await facade.requestInvoiceCreation({
+      clientId: 'c-1',
+      newClientName: '',
+      chantierId: '',
+      chantierName: 'Lot principal',
+      shouldCreateChantier: true,
+      amountTTC: 300,
+      dueDate: '2026-10-01',
+      invoiceNumber: 'FAC-88',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    await facade.confirmUseExistingChantier();
+
+    expect(facade.duplicateChantierPrompt()).toBeNull();
+    expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
+      isNewClient: false,
+      clientIdOrName: 'c-1',
+      amountTTC: 300,
+      dueDate: '2026-10-01',
+      externalInvoiceReference: 'FAC-88',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      chantierId: 'ch-1',
+      chantierName: '',
+      shouldCreateChantier: false,
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -525,7 +672,9 @@ describe('BillingFacade', () => {
     await facade.createInvoice({
       clientId: '',
       newClientName: 'Alice',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: null,
       dueDate: '',
       invoiceNumber: '',
@@ -544,6 +693,8 @@ describe('BillingFacade', () => {
       type: 'Situation',
       paymentMode: 'Virement',
       chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });
@@ -620,7 +771,9 @@ describe('BillingFacade', () => {
     await facade.createInvoice({
       clientId: 'c-9',
       newClientName: '',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 1000,
       dueDate: '2026-08-01',
       invoiceNumber: 'FAC-9',
@@ -697,7 +850,9 @@ describe('BillingFacade', () => {
     await facade.createInvoice({
       clientId: 'c-4',
       newClientName: '',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 1000,
       dueDate: '2026-11-10',
       invoiceNumber: 'FAC-400',
@@ -744,7 +899,9 @@ describe('BillingFacade', () => {
     await facade.createInvoice({
       clientId: 'c-5',
       newClientName: '',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 1200,
       dueDate: '2026-12-10',
       invoiceNumber: 'FAC-500',

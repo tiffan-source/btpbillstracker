@@ -15,6 +15,8 @@ Gérer le cycle métier de création et modification de facture, incluant la cr�
 - Le formulaire `new-bill` affiche désormais des erreurs champ-par-champ et un style visuel d'erreur uniquement après une tentative de soumission invalide, pour un feedback utilisateur explicite sans bruit initial.
 - Après une création réussie, la présentation affiche une modal de succès accessible (fermeture explicite via bouton) et réinitialise complètement le formulaire pour une nouvelle saisie.
 - L'intégration Billing ↔ Clients passe par un port public (`QuickClientCreatorPort`) pour éviter la dépendance directe à une classe de use case concrète.
+- L'intégration Billing ↔ Chantiers passe par un port de résolution (`ResolveChantierIdPort`) branché sur `QuickChantierCreatorPort` pour gérer la création rapide depuis la facture.
 - Le repository billing expose désormais une opération `update` et lève `BillNotFoundError` si la facture n'existe pas en persistance locale.
 - En mode Firestore, les écritures/lectures billing sont strictement isolées par `ownerUid` (uid de session courant).
 - La relation facture ↔ chantier est désormais portée par `chantierId` (clé stable), avec conservation du mapping legacy via l’alias `bill.chantier` pour compatibilité transitoire.
+- En création facture, le formulaire supporte `+ Nouveau chantier` avec détection de doublon (trim + casse/accents ignorés) et modal de confirmation.

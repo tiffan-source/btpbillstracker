@@ -23,6 +23,8 @@ describe('bill-submission.mapper', () => {
       type: 'Situation',
       paymentMode: 'Virement',
       chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       remindersAutoEnabled: true,
       reminderScenarioId: 'standard-reminder-scenario'
     });
@@ -49,6 +51,8 @@ describe('bill-submission.mapper', () => {
       type: 'Solde',
       paymentMode: 'Chèque',
       chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       remindersAutoEnabled: true,
       reminderScenarioId: 'standard-reminder-scenario'
     });
@@ -75,6 +79,39 @@ describe('bill-submission.mapper', () => {
       type: '',
       paymentMode: '',
       chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+  });
+
+  it('maps new chantier payload to enriched input', () => {
+    const result = mapInvoiceFormToCreateEnrichedBillInput({
+      clientId: 'client-1',
+      chantierId: '',
+      chantierName: '  Lot A  ',
+      shouldCreateChantier: true,
+      amountTTC: 1200,
+      dueDate: '2026-06-01',
+      invoiceNumber: 'FAC-22',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(result).toEqual({
+      isNewClient: false,
+      clientIdOrName: 'client-1',
+      chantierId: '',
+      chantierName: 'Lot A',
+      shouldCreateChantier: true,
+      amountTTC: 1200,
+      dueDate: '2026-06-01',
+      externalInvoiceReference: 'FAC-22',
+      type: 'Situation',
+      paymentMode: 'Virement',
       remindersAutoEnabled: false,
       reminderScenarioId: ''
     });

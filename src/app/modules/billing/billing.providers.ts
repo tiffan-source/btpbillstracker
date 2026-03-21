@@ -19,6 +19,8 @@ import { environment } from '../../../environments/environment';
 import { GetCurrentUserUseCase } from '../auth/domain/usecases/get-current-user.usecase';
 import { IdGeneratorPort } from '../../core/ids/id-generator.port';
 import { UuidIdGeneratorService } from '../../core/ids/uuid-id-generator.service';
+import { ResolveChantierIdPort } from './domain/ports/resolve-chantier-id.port';
+import { CrossModuleChantierProviderAdapter } from './infrastructure/adapters/cross-module-chantier-provider.adapter';
 
 /**
  * Résoudre l'implémentation de repository billing selon le feature flag de persistance.
@@ -34,6 +36,7 @@ export const BILLING_PROVIDERS: Provider[] = [
   { provide: ClientProviderPort, useClass: CrossModuleClientProviderAdapter },
   { provide: ReminderAssociationRepository, useClass: LocalReminderAssociationRepository },
   { provide: CurrentUserPort, useClass: CrossModuleCurrentUserAdapter },
+  { provide: ResolveChantierIdPort, useClass: CrossModuleChantierProviderAdapter },
 
   // Use cases are just pure TS classes, we can provide them as injectables manually or decorateur them
   // The Clean Arch spec states: "Le Use Case ne doit jamais utiliser le décorateur @Injectable()."
@@ -44,9 +47,10 @@ export const BILLING_PROVIDERS: Provider[] = [
       clientProvider: ClientProviderPort,
       repository: BillRepository,
       generator: ReferenceGeneratorService,
-      idGenerator: IdGeneratorPort
-    ) => new CreateEnrichedBillUseCase(clientProvider, repository, generator, idGenerator),
-    deps: [ClientProviderPort, BillRepository, ReferenceGeneratorService, IdGeneratorPort]
+      idGenerator: IdGeneratorPort,
+      chantierResolver: ResolveChantierIdPort
+    ) => new CreateEnrichedBillUseCase(clientProvider, repository, generator, idGenerator, chantierResolver),
+    deps: [ClientProviderPort, BillRepository, ReferenceGeneratorService, IdGeneratorPort, ResolveChantierIdPort]
   },
   {
     provide: ListUserBillsUseCase,

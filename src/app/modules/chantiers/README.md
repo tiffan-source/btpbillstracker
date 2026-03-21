@@ -7,6 +7,7 @@ Gérer le référentiel des chantiers (identité minimale) pour la présentation
 - Entité métier principale: `Chantier`.
 - Use case: `CreateChantierUseCase`.
 - Repository port: `ChantierRepository` avec persistance locale `LocalChantierRepository` et Firestore `FirestoreChantierRepository`.
+- Port public cross-module: `QuickChantierCreatorPort` (alias de création rapide basé sur `CreateChantierUseCase`).
 
 ## ⚠️ Contraintes spécifiques
 - Le nom du chantier est obligatoire et considéré unique sans distinction de casse.

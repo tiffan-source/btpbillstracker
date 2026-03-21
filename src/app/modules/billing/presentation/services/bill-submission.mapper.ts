@@ -3,7 +3,9 @@ import { CreateEnrichedBillInput } from '../../domain/usecases/create-enriched-b
 export type BillingInvoiceFormValue = {
   clientId?: string | null;
   newClientName?: string | null;
-  chantier?: string | null;
+  chantierId?: string | null;
+  chantierName?: string | null;
+  shouldCreateChantier?: boolean | null;
   amountTTC?: number | null;
   dueDate?: string | null;
   invoiceNumber?: string | null;
@@ -30,7 +32,9 @@ export function mapInvoiceFormToCreateEnrichedBillInput(
       externalInvoiceReference: formValue.invoiceNumber ?? '',
       type: formValue.type ?? '',
       paymentMode: formValue.paymentMode ?? '',
-      chantierId: formValue.chantier ?? '',
+      chantierId: formValue.chantierId ?? '',
+      chantierName: formValue.chantierName?.trim() ?? '',
+      shouldCreateChantier: formValue.shouldCreateChantier ?? false,
       remindersAutoEnabled: formValue.remindersAutoEnabled ?? false,
       reminderScenarioId: formValue.reminderScenarioId ?? ''
     };
@@ -44,7 +48,9 @@ export function mapInvoiceFormToCreateEnrichedBillInput(
     externalInvoiceReference: formValue.invoiceNumber ?? '',
     type: formValue.type ?? '',
     paymentMode: formValue.paymentMode ?? '',
-    chantierId: formValue.chantier ?? '',
+    chantierId: formValue.chantierId ?? '',
+    chantierName: formValue.chantierName?.trim() ?? '',
+    shouldCreateChantier: formValue.shouldCreateChantier ?? false,
     remindersAutoEnabled: formValue.remindersAutoEnabled ?? false,
     reminderScenarioId: formValue.reminderScenarioId ?? ''
   };

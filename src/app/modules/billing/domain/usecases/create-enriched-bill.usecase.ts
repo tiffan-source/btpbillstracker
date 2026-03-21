@@ -12,6 +12,8 @@ import { ReminderScenarioRequiredError } from '../errors/reminder-scenario-requi
 import { ClientProviderPort } from '../ports/client-provider.port';
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
 import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
+import { ResolveChantierIdPort } from '../ports/resolve-chantier-id.port';
+import { ChantierResolutionError } from '../errors/chantier-resolution-error';
 
 export type CreateEnrichedBillInput = {
   isNewClient: boolean;
@@ -23,6 +25,8 @@ export type CreateEnrichedBillInput = {
   type: string;
   paymentMode: string;
   chantierId?: string;
+  chantierName?: string;
+  shouldCreateChantier?: boolean;
   remindersAutoEnabled?: boolean;
   reminderScenarioId?: string;
 };
@@ -35,7 +39,8 @@ export class CreateEnrichedBillUseCase {
     private readonly clientProvider: ClientProviderPort,
     private readonly repository: BillRepository,
     private readonly referenceGenerator: ReferenceGeneratorService,
-    private readonly idGenerator: IdGeneratorPort
+    private readonly idGenerator: IdGeneratorPort,
+    private readonly chantierResolver: ResolveChantierIdPort
   ) {}
 
   /**
@@ -54,13 +59,17 @@ export class CreateEnrichedBillUseCase {
       }
 
       const reference = await this.referenceGenerator.generate();
+      const chantierResult = await this.resolveChantierId(input);
+      if (!chantierResult.success) {
+        return failure(chantierResult.error.code, chantierResult.error.message, chantierResult.error.metadata);
+      }
       const bill = new Bill(this.idGenerator.generate(), reference, clientResult.data)
         .setAmountTTC(input.amountTTC)
         .setDueDate(input.dueDate)
         .setExternalInvoiceReference(input.externalInvoiceReference)
         .setType(input.type)
         .setPaymentMode(input.paymentMode)
-        .setChantierId(input.chantierId ?? '')
+        .setChantierId(chantierResult.data)
         .configureReminder(input.remindersAutoEnabled ?? false, input.reminderScenarioId);
 
       await this.repository.save(bill);
@@ -74,7 +83,8 @@ export class CreateEnrichedBillUseCase {
         error instanceof InvalidBillTypeError ||
         error instanceof InvalidPaymentModeError ||
         error instanceof BillPersistenceError ||
-        error instanceof ReminderScenarioRequiredError
+        error instanceof ReminderScenarioRequiredError ||
+        error instanceof ChantierResolutionError
       ) {
         return failure(error.code, error.message, error.metadata);
       }
@@ -82,5 +92,16 @@ export class CreateEnrichedBillUseCase {
       const message = error instanceof Error ? error.message : 'Une erreur inattendue est survenue';
       return failure('UNKNOWN_ERROR', message);
     }
+  }
+
+  private async resolveChantierId(input: CreateEnrichedBillInput): Promise<Result<string>> {
+    if (!input.shouldCreateChantier) {
+      return success(input.chantierId ?? '');
+    }
+    const chantierName = input.chantierName?.trim() ?? '';
+    if (!chantierName) {
+      return failure('CHANTIER_NAME_REQUIRED', 'Le nom du chantier est obligatoire.');
+    }
+    return this.chantierResolver.execute({ chantierName });
   }
 }

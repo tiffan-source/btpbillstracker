@@ -17,6 +17,7 @@ describe('NewBillComponent', () => {
       chantiersLoadError: signal(null),
       reminderScenariosLoadError: signal(null),
       duplicateClientPrompt: signal(null),
+      duplicateChantierPrompt: signal(null),
       draftBill: signal(null),
       clients: signal([]),
       chantiers: signal([]),
@@ -27,6 +28,9 @@ describe('NewBillComponent', () => {
       confirmUseExistingClient: vitest.fn(),
       confirmCreateNewClient: vitest.fn(),
       dismissDuplicateClientPrompt: vitest.fn(),
+      confirmUseExistingChantier: vitest.fn(),
+      confirmCreateNewChantier: vitest.fn(),
+      dismissDuplicateChantierPrompt: vitest.fn(),
       loadClients: vitest.fn().mockResolvedValue(undefined),
       loadChantiers: vitest.fn().mockResolvedValue(undefined),
       loadReminderScenarios: vitest.fn().mockResolvedValue(undefined),
@@ -55,6 +59,39 @@ describe('NewBillComponent', () => {
 
   it('loads chantier options on init', () => {
     expect(mockFacade.loadChantiers).toHaveBeenCalledTimes(1);
+  });
+
+  it('toggles new chantier mode and keeps chantier name data when hidden', () => {
+    const host: HTMLElement = fixture.nativeElement;
+    const toggleButton = host.querySelector<HTMLButtonElement>('[data-testid="toggle-new-chantier-mode"]');
+    expect(toggleButton).toBeTruthy();
+    if (!toggleButton) {
+      return;
+    }
+
+    expect(host.querySelector<HTMLInputElement>('#chantierName')).toBeNull();
+
+    toggleButton.click();
+    fixture.detectChanges();
+
+    const chantierNameInput = host.querySelector<HTMLInputElement>('#chantierName');
+    expect(chantierNameInput).toBeTruthy();
+    if (!chantierNameInput) {
+      return;
+    }
+
+    chantierNameInput.value = 'Lot A';
+    chantierNameInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(component.invoiceForm.controls.chantierName.value).toBe('Lot A');
+
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLInputElement>('#chantierName')).toBeNull();
+
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLInputElement>('#chantierName')?.value).toBe('Lot A');
   });
 
   it('should call requestInvoiceCreation when form is populated', () => {
@@ -157,7 +194,9 @@ describe('NewBillComponent', () => {
       paymentMode: 'Virement',
       remindersAutoEnabled: false,
       reminderScenarioId: '',
-      chantier: ''
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false
     });
 
     component.onSubmit();
@@ -168,7 +207,9 @@ describe('NewBillComponent', () => {
     expect(payload['amountTTC']).toBe(900);
     expect(payload['dueDate']).toBe('2026-07-01');
     expect(payload['invoiceNumber']).toBe('FAC-LEGACY');
-    expect(payload['chantier']).toBe('');
+    expect(payload['chantierId']).toBe('');
+    expect(payload['chantierName']).toBe('');
+    expect(payload['shouldCreateChantier']).toBe(false);
   });
 
   it('should show field-level errors only after an invalid submit attempt', () => {
@@ -326,10 +367,32 @@ describe('NewBillComponent', () => {
     expect(mockFacade.dismissDuplicateClientPrompt).toHaveBeenCalledTimes(1);
   });
 
+  it('renders duplicate chantier modal and routes actions to facade', () => {
+    mockFacade.duplicateChantierPrompt.set({
+      existingChantierId: 'ch-1',
+      existingChantierName: 'Lot A',
+      pendingForm: { chantierName: 'Lot A' }
+    });
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid=\"duplicate-chantier-use-existing\"]')).toBeTruthy();
+
+    host.querySelector<HTMLButtonElement>('[data-testid=\"duplicate-chantier-use-existing\"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid=\"duplicate-chantier-create-new\"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid=\"duplicate-chantier-cancel\"]')?.click();
+
+    expect(mockFacade.confirmUseExistingChantier).toHaveBeenCalledTimes(1);
+    expect(mockFacade.confirmCreateNewChantier).toHaveBeenCalledTimes(1);
+    expect(mockFacade.dismissDuplicateChantierPrompt).toHaveBeenCalledTimes(1);
+  });
+
   it('should reset the entire form after successful invoice creation', () => {
     component.invoiceForm.patchValue({
       clientId: 'client-1',
-      chantier: 'Lot A',
+      chantierId: 'ch-1',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 2400,
       dueDate: '2026-09-01',
       invoiceNumber: 'FAC-RESET',
@@ -357,7 +420,9 @@ describe('NewBillComponent', () => {
 
     expect(component.invoiceForm.controls.clientId.value).toBe('');
     expect(component.invoiceForm.controls.newClientName.value).toBe('');
-    expect(component.invoiceForm.controls.chantier.value).toBe('');
+    expect(component.invoiceForm.controls.chantierId.value).toBe('');
+    expect(component.invoiceForm.controls.chantierName.value).toBe('');
+    expect(component.invoiceForm.controls.shouldCreateChantier.value).toBe(false);
     expect(component.invoiceForm.controls.amountTTC.value).toBeNull();
     expect(component.invoiceForm.controls.dueDate.value).toBe('');
     expect(component.invoiceForm.controls.invoiceNumber.value).toBe('');
