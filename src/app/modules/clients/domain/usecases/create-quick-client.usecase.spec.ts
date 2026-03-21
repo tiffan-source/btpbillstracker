@@ -2,6 +2,7 @@ import { Client } from '../entities/client.entity';
 import { ClientRepository } from '../ports/client.repository';
 import { CreateQuickClientUseCase } from './create-quick-client.usecase';
 import { ClientPersistenceError } from '../errors/client-persistence.error';
+import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
 
 class MockClientRepository implements ClientRepository {
   savedClient: Client | null = null;
@@ -25,10 +26,17 @@ class MockClientRepository implements ClientRepository {
   async update(_client: Client): Promise<void> {}
 }
 
+class StaticIdGenerator implements IdGeneratorPort {
+  generate(): string {
+    return 'client-id-123';
+  }
+}
+
 describe('CreateQuickClientUseCase', () => {
   it('should successfully create and save a new client', async () => {
     const repository = new MockClientRepository();
-    const useCase = new CreateQuickClientUseCase(repository);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateQuickClientUseCase(repository, idGenerator);
 
     const result = await useCase.execute({
       firstName: 'Jane',
@@ -45,6 +53,7 @@ describe('CreateQuickClientUseCase', () => {
       expect(result.data.email).toBe('jane@example.com');
       expect(result.data.phone).toBe('+2290100000000');
       expect(result.data.id).toBeDefined();
+      expect(result.data.id).toBe('client-id-123');
 
       expect(repository.savedClient).toBe(result.data);
     }
@@ -52,7 +61,8 @@ describe('CreateQuickClientUseCase', () => {
 
   it('should return failure with specific code when name is empty', async () => {
     const repository = new MockClientRepository();
-    const useCase = new CreateQuickClientUseCase(repository);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateQuickClientUseCase(repository, idGenerator);
 
     const result = await useCase.execute({ firstName: '   ', lastName: 'Doe' });
 
@@ -66,7 +76,8 @@ describe('CreateQuickClientUseCase', () => {
   it('should map known persistence error to its exact code', async () => {
     const repository = new MockClientRepository();
     repository.throwPersistenceError = true;
-    const useCase = new CreateQuickClientUseCase(repository);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateQuickClientUseCase(repository, idGenerator);
 
     const result = await useCase.execute({ firstName: 'Jane', lastName: 'Doe' });
 
@@ -79,7 +90,8 @@ describe('CreateQuickClientUseCase', () => {
   it('should map unknown errors to UNKNOWN_ERROR', async () => {
     const repository = new MockClientRepository();
     repository.throwUnknown = true;
-    const useCase = new CreateQuickClientUseCase(repository);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateQuickClientUseCase(repository, idGenerator);
 
     const result = await useCase.execute({ firstName: 'Jane', lastName: 'Doe' });
 

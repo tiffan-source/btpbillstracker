@@ -11,6 +11,7 @@ import { BillRepository } from '../ports/bill.repository';
 import { ReminderScenarioRequiredError } from '../errors/reminder-scenario-required.error';
 import { ClientProviderPort } from '../ports/client-provider.port';
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
+import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
 
 export type CreateEnrichedBillInput = {
   isNewClient: boolean;
@@ -33,7 +34,8 @@ export class CreateEnrichedBillUseCase {
   constructor(
     private readonly clientProvider: ClientProviderPort,
     private readonly repository: BillRepository,
-    private readonly referenceGenerator: ReferenceGeneratorService
+    private readonly referenceGenerator: ReferenceGeneratorService,
+    private readonly idGenerator: IdGeneratorPort
   ) {}
 
   /**
@@ -52,7 +54,7 @@ export class CreateEnrichedBillUseCase {
       }
 
       const reference = await this.referenceGenerator.generate();
-      const bill = new Bill(crypto.randomUUID(), reference, clientResult.data)
+      const bill = new Bill(this.idGenerator.generate(), reference, clientResult.data)
         .setAmountTTC(input.amountTTC)
         .setDueDate(input.dueDate)
         .setExternalInvoiceReference(input.externalInvoiceReference)

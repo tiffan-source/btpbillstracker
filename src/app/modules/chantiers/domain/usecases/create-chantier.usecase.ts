@@ -1,4 +1,5 @@
 import { failure, Result, success } from '../../../../core/result/result';
+import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
 import { Chantier } from '../entities/chantier.entity';
 import { ChantierNameAlreadyExistsError } from '../errors/chantier-name-already-exists.error';
 import { ChantierPersistenceError } from '../errors/chantier-persistence.error';
@@ -7,7 +8,10 @@ import { ChantierRepository } from '../ports/chantier.repository';
 import { CreateChantierInput } from './create-chantier.input';
 
 export class CreateChantierUseCase {
-  constructor(private readonly repository: ChantierRepository) {}
+  constructor(
+    private readonly repository: ChantierRepository,
+    private readonly idGenerator: IdGeneratorPort
+  ) {}
 
   async execute(input: CreateChantierInput): Promise<Result<Chantier>> {
     try {
@@ -16,7 +20,7 @@ export class CreateChantierUseCase {
         throw new ChantierNameAlreadyExistsError();
       }
 
-      const chantier = new Chantier(crypto.randomUUID(), input.name);
+      const chantier = new Chantier(this.idGenerator.generate(), input.name);
       await this.repository.save(chantier);
       return success(chantier);
     } catch (error: unknown) {
@@ -33,4 +37,3 @@ export class CreateChantierUseCase {
     }
   }
 }
-

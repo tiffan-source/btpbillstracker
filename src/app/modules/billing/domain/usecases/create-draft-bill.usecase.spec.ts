@@ -3,6 +3,7 @@ import { BillPersistenceError } from '../errors/bill-persistence.error';
 import { BillRepository } from '../ports/bill.repository';
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
 import { CreateDraftBillUseCase } from './create-draft-bill.usecase';
+import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
 
 class MockBillRepository implements BillRepository {
   savedBill: Bill | null = null;
@@ -24,11 +25,18 @@ class MockReferenceGenerator implements ReferenceGeneratorService {
   }
 }
 
+class StaticIdGenerator implements IdGeneratorPort {
+  generate(): string {
+    return 'bill-id-123';
+  }
+}
+
 describe('CreateDraftBillUseCase', () => {
   it('should successfully create a draft bill and save it', async () => {
     const repository = new MockBillRepository();
     const generator = new MockReferenceGenerator();
-    const useCase = new CreateDraftBillUseCase(repository, generator);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateDraftBillUseCase(repository, generator, idGenerator);
 
     const result = await useCase.execute('client-123');
 
@@ -36,6 +44,7 @@ describe('CreateDraftBillUseCase', () => {
     if (result.success) {
       expect(result.data.clientId).toBe('client-123');
       expect(result.data.reference).toBe('F-2026-0001');
+      expect(result.data.id).toBe('bill-id-123');
       expect(result.data.status).toBe('DRAFT');
 
       expect(repository.savedBill).toBe(result.data);
@@ -47,7 +56,8 @@ describe('CreateDraftBillUseCase', () => {
     repository.save = vitest.fn().mockRejectedValue(new BillPersistenceError('DB failure'));
 
     const generator = new MockReferenceGenerator();
-    const useCase = new CreateDraftBillUseCase(repository, generator);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateDraftBillUseCase(repository, generator, idGenerator);
 
     const result = await useCase.execute('client-123');
 
@@ -63,7 +73,8 @@ describe('CreateDraftBillUseCase', () => {
     repository.save = vitest.fn().mockRejectedValue('unexpected');
 
     const generator = new MockReferenceGenerator();
-    const useCase = new CreateDraftBillUseCase(repository, generator);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateDraftBillUseCase(repository, generator, idGenerator);
 
     const result = await useCase.execute('client-123');
 

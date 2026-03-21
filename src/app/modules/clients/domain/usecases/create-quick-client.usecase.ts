@@ -1,4 +1,5 @@
 import { Result, success, failure } from '../../../../core/result/result';
+import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
 import { Client } from '../entities/client.entity';
 import { ClientPersistenceError } from '../errors/client-persistence.error';
 import { InvalidClientNameError } from '../errors/invalid-client-name.error';
@@ -7,13 +8,16 @@ import { CreateQuickClientInput } from './create-quick-client.input';
 import { QuickClientCreatorPort } from '../ports/quick-client-creator.port';
 
 export class CreateQuickClientUseCase extends QuickClientCreatorPort {
-  constructor(private readonly repository: ClientRepository) {
+  constructor(
+    private readonly repository: ClientRepository,
+    private readonly idGenerator: IdGeneratorPort
+  ) {
     super();
   }
 
   async execute(input: CreateQuickClientInput): Promise<Result<Client>> {
     try {
-      const id = crypto.randomUUID();
+      const id = this.idGenerator.generate();
       const fullName = `${input.firstName} ${input.lastName}`.trim();
       const client = new Client(id, fullName)
         .setFirstName(input.firstName)

@@ -13,6 +13,8 @@ import { CrossModuleClientProviderAdapter } from './infrastructure/adapters/cros
 import { ReminderAssociationRepository } from '../reminders/domain/ports/reminder-association.repository';
 import { LocalReminderAssociationRepository } from '../reminders/infrastructure/repositories/local-reminder-association.repository';
 import { environment } from '../../../environments/environment';
+import { IdGeneratorPort } from '../../core/ids/id-generator.port';
+import { UuidIdGeneratorService } from '../../core/ids/uuid-id-generator.service';
 
 /**
  * Résoudre l'implémentation de repository billing selon le feature flag de persistance.
@@ -21,6 +23,7 @@ export const resolveBillRepositoryClass = (useFirebasePersistence: boolean) =>
   useFirebasePersistence ? FirestoreBillRepository : LocalBillRepository;
 
 export const BILLING_PROVIDERS: Provider[] = [
+  { provide: IdGeneratorPort, useClass: UuidIdGeneratorService },
   { provide: BillRepository, useClass: resolveBillRepositoryClass(environment.useFirebasePersistence) },
   { provide: ReferenceGeneratorService, useClass: SimpleReferenceGenerator },
   { provide: BillStore, useClass: LocalBillStore },
@@ -35,9 +38,10 @@ export const BILLING_PROVIDERS: Provider[] = [
     useFactory: (
       clientProvider: ClientProviderPort,
       repository: BillRepository,
-      generator: ReferenceGeneratorService
-    ) => new CreateEnrichedBillUseCase(clientProvider, repository, generator),
-    deps: [ClientProviderPort, BillRepository, ReferenceGeneratorService]
+      generator: ReferenceGeneratorService,
+      idGenerator: IdGeneratorPort
+    ) => new CreateEnrichedBillUseCase(clientProvider, repository, generator, idGenerator),
+    deps: [ClientProviderPort, BillRepository, ReferenceGeneratorService, IdGeneratorPort]
   },
   {
     provide: UpdateEnrichedBillUseCase,

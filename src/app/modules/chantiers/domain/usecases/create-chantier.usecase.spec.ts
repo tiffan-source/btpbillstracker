@@ -1,6 +1,7 @@
 import { Chantier } from '../entities/chantier.entity';
 import { ChantierRepository } from '../ports/chantier.repository';
 import { CreateChantierUseCase } from './create-chantier.usecase';
+import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
 
 class InMemoryChantierRepository extends ChantierRepository {
   readonly chantiers: Chantier[] = [];
@@ -26,24 +27,32 @@ class InMemoryChantierRepository extends ChantierRepository {
   }
 }
 
+class StaticIdGenerator implements IdGeneratorPort {
+  generate(): string {
+    return 'chantier-id-123';
+  }
+}
+
 describe('CreateChantierUseCase', () => {
   it('creates chantier with unique name (case-insensitive)', async () => {
     const repository = new InMemoryChantierRepository();
-    const useCase = new CreateChantierUseCase(repository);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateChantierUseCase(repository, idGenerator);
 
     const result = await useCase.execute({ name: 'Villa A' });
 
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.name).toBe('Villa A');
-      expect(result.data.id).toBeDefined();
+      expect(result.data.id).toBe('chantier-id-123');
     }
   });
 
   it('fails when chantier name already exists', async () => {
     const repository = new InMemoryChantierRepository();
     await repository.save(new Chantier('ch-1', 'Villa A'));
-    const useCase = new CreateChantierUseCase(repository);
+    const idGenerator = new StaticIdGenerator();
+    const useCase = new CreateChantierUseCase(repository, idGenerator);
 
     const result = await useCase.execute({ name: 'vIlLa a' });
 

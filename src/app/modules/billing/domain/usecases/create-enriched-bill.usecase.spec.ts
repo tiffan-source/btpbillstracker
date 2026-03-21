@@ -4,6 +4,7 @@ import { ClientProviderPort, ResolveClientInput } from '../ports/client-provider
 import { ReferenceGeneratorService } from '../ports/reference-generator.service';
 import { CreateEnrichedBillUseCase } from './create-enriched-bill.usecase';
 import { Result, success } from '../../../../core/result/result';
+import { IdGeneratorPort } from '../../../../core/ids/id-generator.port';
 
 class InMemoryBillRepository implements BillRepository {
   savedBill: Bill | null = null;
@@ -27,6 +28,12 @@ class StaticReferenceGenerator implements ReferenceGeneratorService {
   }
 }
 
+class StaticIdGenerator implements IdGeneratorPort {
+  generate(): string {
+    return 'bill-id-456';
+  }
+}
+
 class SuccessClientProvider implements ClientProviderPort {
   async resolveClient(input: ResolveClientInput): Promise<Result<string>> {
     return success(input.clientIdOrName === 'Alice' ? 'client-new' : input.clientIdOrName);
@@ -37,8 +44,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it('creates and saves an enriched bill from a valid payload', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -56,6 +64,7 @@ describe('CreateEnrichedBillUseCase', () => {
     }
 
     expect(result.data.clientId).toBe('client-123');
+    expect(result.data.id).toBe('bill-id-456');
     expect(result.data.reference).toBe('F-2026-0100');
     expect(result.data.amountTTC).toBe(3200);
     expect(result.data.dueDate).toBe('2026-04-20');
@@ -68,8 +77,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it('fails when amount TTC is negative', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -94,8 +104,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it("fails when due date is missing", async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -120,8 +131,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it('fails when external invoice reference is missing', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -146,8 +158,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it('fails when bill type is not coherent', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -170,8 +183,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it('fails when payment mode is not coherent', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -194,8 +208,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it('fails when reminders are enabled without scenario id', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
@@ -221,8 +236,9 @@ describe('CreateEnrichedBillUseCase', () => {
   it('persists reminder relation when enabled with scenario id', async () => {
     const repository = new InMemoryBillRepository();
     const referenceGenerator = new StaticReferenceGenerator();
+    const idGenerator = new StaticIdGenerator();
     const clientProvider = new SuccessClientProvider();
-    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator);
+    const useCase = new CreateEnrichedBillUseCase(clientProvider, repository, referenceGenerator, idGenerator);
 
     const result = await useCase.execute({
       isNewClient: false,
