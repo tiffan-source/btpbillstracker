@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Bill, BillStatus } from '../../domain/entities/bill.entity';
-import { BillRepository } from '../../domain/ports/bill.repository';
+import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
 import { UpdateEnrichedBillInput, UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
 import { EditBillFormValue } from '../forms/edit-bill.form';
 
@@ -41,9 +42,8 @@ export type EditableInvoiceViewModel = {
 
 @Injectable({ providedIn: 'root' })
 export class DashboardFacade {
-// This is strange, why facade comunicate with repository. There should have usecase to handle this logic
-  private readonly repository = inject(BillRepository);
-
+  private readonly router = inject(Router);
+  private readonly listUserBillsUseCase = inject(ListUserBillsUseCase);
   private readonly updateEnrichedBillUseCase = inject(UpdateEnrichedBillUseCase);
   private readonly markedPaid = signal<Record<string, true>>({});
   private readonly persistedBills = signal<Bill[]>([]);
@@ -241,14 +241,19 @@ export class DashboardFacade {
   }
 
   private async refreshPersistedInvoices(): Promise<void> {
-    try {
-      // This is strange, why facade comunicate with repository. There should have usecase to handle this logic
-      const bills = await this.repository.list();
-      this.persistedBills.set(bills);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Impossible de charger les factures persistées.';
-      this.editError.set(message);
-      this.persistedBills.set([]);
+    const result = await this.listUserBillsUseCase.execute();
+
+    if (result.success) {
+      this.persistedBills.set(result.data);
+      return;
     }
+
+    this.persistedBills.set([]);
+    if (result.error.code === 'AUTH_USER_NOT_FOUND' || result.error.code.startsWith('AUTH_')) {
+      await this.router.navigateByUrl('/login?returnUrl=/dashboard');
+      return;
+    }
+
+    this.editError.set(result.error.message);
   }
 }

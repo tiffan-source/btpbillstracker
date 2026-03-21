@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { Bill } from '../../domain/entities/bill.entity';
 import { BillNotFoundError } from '../../domain/errors/bill-not-found.error';
 import { BillRepository } from '../../domain/ports/bill.repository';
+import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
 import { UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
 import { DashboardFacade } from './dashboard.facade';
 
@@ -36,11 +38,27 @@ class InMemoryBillRepository implements BillRepository {
 }
 
 describe('DashboardFacade', () => {
+  const createListUserBillsUseCase = (repository: BillRepository): ListUserBillsUseCase =>
+    ({
+      execute: vi.fn().mockImplementation(async () => {
+        const bills = await repository.listByOwner('owner-1');
+        return { success: true, data: bills };
+      })
+    }) as unknown as ListUserBillsUseCase;
+
+  const createRouter = (): Router =>
+    ({
+      navigateByUrl: vi.fn().mockResolvedValue(true)
+    }) as unknown as Router;
+
   it('should expose persisted invoices and relance placeholder', async () => {
+    const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
       providers: [
         DashboardFacade,
-        { provide: BillRepository, useValue: new InMemoryBillRepository() },
+        { provide: BillRepository, useValue: repository },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
         {
           provide: UpdateEnrichedBillUseCase,
           useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
@@ -71,6 +89,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
         {
           provide: UpdateEnrichedBillUseCase,
           useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
@@ -105,6 +125,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
         {
           provide: UpdateEnrichedBillUseCase,
           useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
@@ -144,10 +166,13 @@ describe('DashboardFacade', () => {
   });
 
   it('keeps modal open and exposes error when update fails', async () => {
+    const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
       providers: [
         DashboardFacade,
-        { provide: BillRepository, useValue: new InMemoryBillRepository() },
+        { provide: BillRepository, useValue: repository },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
         {
           provide: UpdateEnrichedBillUseCase,
           useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
@@ -183,10 +208,13 @@ describe('DashboardFacade', () => {
   });
 
   it('does not close edit modal while a submit is in progress', () => {
+    const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
       providers: [
         DashboardFacade,
-        { provide: BillRepository, useValue: new InMemoryBillRepository() },
+        { provide: BillRepository, useValue: repository },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
         {
           provide: UpdateEnrichedBillUseCase,
           useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
@@ -201,5 +229,35 @@ describe('DashboardFacade', () => {
     facade.closeEditModal();
 
     expect(facade.isEditModalOpen()).toBe(true);
+  });
+
+  it('redirects to login when no authenticated user', async () => {
+    const repository = new InMemoryBillRepository();
+    const router = createRouter();
+    const listUserBillsUseCase = {
+      execute: vi.fn().mockResolvedValue({
+        success: false,
+        error: { code: 'AUTH_USER_NOT_FOUND', message: 'Utilisateur non authentifié.' }
+      })
+    } as unknown as ListUserBillsUseCase;
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
+        { provide: Router, useValue: router },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    TestBed.inject(DashboardFacade);
+    await Promise.resolve();
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/login?returnUrl=/dashboard');
   });
 });
