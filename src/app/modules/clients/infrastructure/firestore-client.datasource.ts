@@ -13,9 +13,12 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { getAppFirestore } from '../../../core/firebase/firebase-app';
+import { User } from 'firebase/auth';
+import { getAppAuth } from '../../../core/firebase/firebase-app';
 
 export type FirestorePlainClient = {
   id: string;
+  ownerUid: string;
   name: string;
   firstName?: string;
   lastName?: string;
@@ -29,6 +32,11 @@ export type FirestorePlainClient = {
 @Injectable({ providedIn: 'root' })
 export class FirestoreClientDataSource {
   private readonly collectionName = 'clients';
+  private readonly auth = getAppAuth();
+
+  getCurrentUser(): User | null {
+    return this.auth.currentUser;
+  }
 
   getCollection(): CollectionReference<DocumentData> {
     const firestore: Firestore = getAppFirestore();

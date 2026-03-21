@@ -9,6 +9,7 @@ describe('FirestoreChantierRepository', () => {
       saveById: vi.fn(),
       readAll: vi.fn(),
       readById: vi.fn(),
+      getCurrentUser: vi.fn().mockReturnValue({ uid: 'owner-1' }),
       getCollection: vi.fn(),
       getChantierDocRef: vi.fn()
     }) as unknown as FirestoreChantierDataSource;
@@ -23,6 +24,7 @@ describe('FirestoreChantierRepository', () => {
 
     expect(dataSource.saveById).toHaveBeenCalledWith('ch-1', {
       id: 'ch-1',
+      ownerUid: 'owner-1',
       name: 'Villa A'
     });
   });
@@ -34,12 +36,14 @@ describe('FirestoreChantierRepository', () => {
         {
           data: () => ({
             id: 'ch-1',
+            ownerUid: 'owner-1',
             name: 'Villa A'
           })
         },
         {
           data: () => ({
             id: 'ch-2',
+            ownerUid: 'owner-1',
             name: 'Akpakpa'
           })
         }
@@ -73,8 +77,8 @@ describe('FirestoreChantierRepository', () => {
     const dataSource = createDataSource();
     vi.mocked(dataSource.readAll).mockResolvedValue({
       docs: [
-        { data: () => ({ id: 'ch-1', name: 'Villa A' }) },
-        { data: () => ({ id: 'ch-2', name: 'Calavi' }) }
+        { data: () => ({ id: 'ch-1', ownerUid: 'owner-1', name: 'Villa A' }) },
+        { data: () => ({ id: 'ch-2', ownerUid: 'owner-1', name: 'Calavi' }) }
       ]
     } as never);
     const repository = new FirestoreChantierRepository(dataSource);
@@ -91,5 +95,37 @@ describe('FirestoreChantierRepository', () => {
     const chantier = new Chantier('ch-9', 'Failure');
 
     await expect(repository.save(chantier)).rejects.toThrow(ChantierPersistenceError);
+  });
+
+  it('does not return chantiers from another owner', async () => {
+    const dataSource = createDataSource();
+    vi.mocked(dataSource.readAll).mockResolvedValue({
+      docs: [
+        { data: () => ({ id: 'ch-1', ownerUid: 'owner-1', name: 'Villa A' }) },
+        { data: () => ({ id: 'ch-2', ownerUid: 'owner-2', name: 'Other Owner' }) },
+        { data: () => ({ id: 'ch-3', name: 'No owner' }) }
+      ]
+    } as never);
+    const repository = new FirestoreChantierRepository(dataSource);
+
+    const chantiers = await repository.list();
+
+    expect(chantiers).toHaveLength(1);
+    expect(chantiers[0]?.id).toBe('ch-1');
+  });
+
+  it('rejects update when existing chantier belongs to another owner', async () => {
+    const dataSource = createDataSource();
+    vi.mocked(dataSource.readById).mockResolvedValue({
+      exists: () => true,
+      data: () => ({ id: 'ch-1', ownerUid: 'owner-2', name: 'Other Owner' })
+    } as never);
+    const repository = new FirestoreChantierRepository(dataSource);
+    const chantier = new Chantier('ch-1', 'Villa A');
+
+    await expect(repository.update(chantier)).rejects.toMatchObject({
+      code: 'CHANTIER_PERSISTENCE_ERROR',
+      message: 'Chantier introuvable pour mise à jour.'
+    });
   });
 });

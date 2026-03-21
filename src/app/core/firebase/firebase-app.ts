@@ -1,4 +1,5 @@
 import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
+import { Auth, getAuth } from 'firebase/auth';
 import { Firestore, getFirestore } from 'firebase/firestore';
 import { environment } from '../../../environments/environment';
 
@@ -12,3 +13,8 @@ export const getFirebaseApp = (): FirebaseApp =>
  * Retourne l'instance Firestore associée à l'application Firebase.
  */
 export const getAppFirestore = (): Firestore => getFirestore(getFirebaseApp());
+
+/**
+ * Retourne l'instance Auth associée à l'application Firebase.
+ */
+export const getAppAuth = (): Auth => getAuth(getFirebaseApp());
