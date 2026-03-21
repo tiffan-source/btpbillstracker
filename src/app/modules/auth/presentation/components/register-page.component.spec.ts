@@ -82,6 +82,18 @@ describe('RegisterPageComponent', () => {
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/new-bill');
   });
 
+  it('does not redirect when register submission fails', async () => {
+    component.form.patchValue({
+      email: 'user@example.com',
+      password: 'password123',
+      confirmPassword: 'password123'
+    });
+
+    await component.onSubmit();
+
+    expect(routerMock.navigateByUrl).not.toHaveBeenCalled();
+  });
+
   it('falls back to /dashboard when returnUrl is empty', async () => {
     await TestBed.resetTestingModule();
     facadeMock = {

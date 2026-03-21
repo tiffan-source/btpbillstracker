@@ -90,6 +90,13 @@ describe('LoginPageComponent', () => {
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/clients-chantiers');
   });
 
+  it('does not redirect when social login fails', async () => {
+    await component.onGoogleLogin();
+    await component.onFacebookLogin();
+
+    expect(routerMock.navigateByUrl).not.toHaveBeenCalled();
+  });
+
   it('falls back to /dashboard when returnUrl is empty', async () => {
     await TestBed.resetTestingModule();
     facadeMock = {

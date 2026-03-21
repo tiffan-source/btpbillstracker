@@ -99,4 +99,17 @@ describe('ProtectedShellComponent', () => {
     fixture.detectChanges();
     expect(host.querySelector(drawerSelector)).toBeNull();
   });
+
+  it('keeps navigation landmark labels for desktop and mobile', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const desktopNav = host.querySelector('nav[aria-label="Navigation principale"]');
+    const openButton = host.querySelector<HTMLButtonElement>('[data-testid="mobile-menu-open"]');
+
+    expect(desktopNav).toBeTruthy();
+    openButton?.click();
+    fixture.detectChanges();
+
+    const mobileNav = host.querySelector('nav[aria-label="Navigation principale mobile"]');
+    expect(mobileNav).toBeTruthy();
+  });
 });
