@@ -14,6 +14,12 @@ export abstract class BillRepository {
   abstract list(): Promise<Bill[]>;
 
   /**
+   * Lister les factures persistées pour un propriétaire donné.
+   * @throws {BillPersistenceError} Quand la lecture échoue.
+   */
+  abstract listByOwner(userId: string): Promise<Bill[]>;
+
+  /**
    * Mettre à jour une facture persistée.
    * @throws {BillNotFoundError} Quand la facture n'existe pas.
    * @throws {BillPersistenceError} Quand la persistance échoue.

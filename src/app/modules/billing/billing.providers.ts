@@ -11,8 +11,12 @@ import { UpdateEnrichedBillUseCase } from './domain/usecases/update-enriched-bil
 import { ClientProviderPort } from './domain/ports/client-provider.port';
 import { CrossModuleClientProviderAdapter } from './infrastructure/adapters/cross-module-client-provider.adapter';
 import { ReminderAssociationRepository } from '../reminders/domain/ports/reminder-association.repository';
+import { CurrentUserPort } from './domain/ports/current-user.port';
+import { ListUserBillsUseCase } from './domain/usecases/list-user-bills.usecase';
+import { CrossModuleCurrentUserAdapter } from './infrastructure/adapters/cross-module-current-user.adapter';
 import { LocalReminderAssociationRepository } from '../reminders/infrastructure/repositories/local-reminder-association.repository';
 import { environment } from '../../../environments/environment';
+import { GetCurrentUserUseCase } from '../auth/domain/usecases/get-current-user.usecase';
 import { IdGeneratorPort } from '../../core/ids/id-generator.port';
 import { UuidIdGeneratorService } from '../../core/ids/uuid-id-generator.service';
 
@@ -29,6 +33,7 @@ export const BILLING_PROVIDERS: Provider[] = [
   { provide: BillStore, useClass: LocalBillStore },
   { provide: ClientProviderPort, useClass: CrossModuleClientProviderAdapter },
   { provide: ReminderAssociationRepository, useClass: LocalReminderAssociationRepository },
+  { provide: CurrentUserPort, useClass: CrossModuleCurrentUserAdapter },
 
   // Use cases are just pure TS classes, we can provide them as injectables manually or decorateur them
   // The Clean Arch spec states: "Le Use Case ne doit jamais utiliser le décorateur @Injectable()."
@@ -42,6 +47,12 @@ export const BILLING_PROVIDERS: Provider[] = [
       idGenerator: IdGeneratorPort
     ) => new CreateEnrichedBillUseCase(clientProvider, repository, generator, idGenerator),
     deps: [ClientProviderPort, BillRepository, ReferenceGeneratorService, IdGeneratorPort]
+  },
+  {
+    provide: ListUserBillsUseCase,
+    useFactory: (repository: BillRepository, currentUserPort: CurrentUserPort) =>
+      new ListUserBillsUseCase(repository, currentUserPort),
+    deps: [BillRepository, CurrentUserPort]
   },
   {
     provide: UpdateEnrichedBillUseCase,

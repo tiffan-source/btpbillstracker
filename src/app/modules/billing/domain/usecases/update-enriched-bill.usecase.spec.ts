@@ -23,6 +23,10 @@ class InMemoryBillRepository implements BillRepository {
     return Array.from(this.byId.values());
   }
 
+  async listByOwner(userId: string): Promise<Bill[]> {
+    return this.list();
+  }
+
   async update(bill: Bill): Promise<void> {
     if (this.throwUnknown) {
       throw 'unexpected';

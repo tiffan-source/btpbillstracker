@@ -16,6 +16,10 @@ class MockBillRepository implements BillRepository {
     return this.savedBill ? [this.savedBill] : [];
   }
 
+  async listByOwner(userId: string): Promise<Bill[]> {
+    return this.list();
+  }
+
   async update(_bill: Bill): Promise<void> {}
 }
 

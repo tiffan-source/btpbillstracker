@@ -22,6 +22,10 @@ class InMemoryBillRepository implements BillRepository {
     return Array.from(this.bills.values());
   }
 
+  async listByOwner(userId: string): Promise<Bill[]> {
+    return this.list();
+  }
+
   async update(bill: Bill): Promise<void> {
     if (!this.bills.has(bill.id)) {
       throw new BillNotFoundError(undefined, { billId: bill.id });

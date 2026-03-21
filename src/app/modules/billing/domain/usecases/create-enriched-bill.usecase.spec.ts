@@ -17,6 +17,10 @@ class InMemoryBillRepository implements BillRepository {
     return this.savedBill ? [this.savedBill] : [];
   }
 
+  async listByOwner(userId: string): Promise<Bill[]> {
+    return this.list();
+  }
+
   async update(bill: Bill): Promise<void> {
     this.savedBill = bill;
   }

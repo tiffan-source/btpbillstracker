@@ -33,6 +33,11 @@ export class FirestoreBillRepository implements BillRepository {
     }
   }
 
+
+  async listByOwner(userId: string): Promise<Bill[]> {
+    return this.list();
+  }
+
   async update(bill: Bill): Promise<void> {
     try {
       const ownerUid = this.getOwnerUid();

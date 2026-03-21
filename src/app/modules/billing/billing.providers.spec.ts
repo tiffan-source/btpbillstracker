@@ -2,6 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { BillRepository } from './domain/ports/bill.repository';
 import { BILLING_PROVIDERS, resolveBillRepositoryClass } from './billing.providers';
 import { FirestoreBillRepository } from './infrastructure/repositories/firestore-bill.repository';
+import { CurrentUserPort } from './domain/ports/current-user.port';
+import { ListUserBillsUseCase } from './domain/usecases/list-user-bills.usecase';
 import { LocalBillRepository } from './infrastructure/repositories/local-bill.repository';
 
 describe('BILLING_PROVIDERS', () => {
@@ -25,6 +27,11 @@ describe('BILLING_PROVIDERS', () => {
 
     const repository = TestBed.inject(BillRepository);
     expect(repository instanceof LocalBillRepository).toBe(true);
+  });
+
+  it('registers ListUserBillsUseCase factory dependencies', () => {
+    const binding = BILLING_PROVIDERS.find((provider) => 'provide' in provider && provider.provide === ListUserBillsUseCase);
+    expect(binding && 'deps' in binding ? binding.deps : null).toEqual([BillRepository, CurrentUserPort]);
   });
 
   it('resolves Firestore implementation via DI when flag is ON', () => {
