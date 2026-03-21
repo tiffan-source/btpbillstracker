@@ -646,6 +646,71 @@ describe('BillingFacade', () => {
     });
   });
 
+  it('creates a new chantier when duplicate chantier prompt is confirmed as new', async () => {
+    const mockStore = new MockBillStore();
+    const listUserBillsUseCase = {
+      execute: vitest
+        .fn()
+        .mockResolvedValue(success([new Bill('b-89', 'F-89', 'c-1').setChantierId('ch-1')]))
+    };
+    const listChantiersUseCase = {
+      execute: vitest.fn().mockResolvedValue(success([{ id: 'ch-1', name: 'Lot principal' }]))
+    };
+    const mockSubmitNewBill = {
+      execute: vitest.fn().mockResolvedValue(success(new Bill('b-89', 'F-2026-0089', 'c-1')))
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([{ id: 'c-1', name: 'Client A' }])) } },
+        { provide: ListChantiersUseCase, useValue: listChantiersUseCase },
+        { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+    await facade.loadClients();
+    await facade.loadChantiers();
+
+    await facade.requestInvoiceCreation({
+      clientId: 'c-1',
+      newClientName: '',
+      chantierId: '',
+      chantierName: 'Lot principal',
+      shouldCreateChantier: true,
+      amountTTC: 300,
+      dueDate: '2026-10-01',
+      invoiceNumber: 'FAC-89',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    await facade.confirmCreateNewChantier();
+
+    expect(facade.duplicateChantierPrompt()).toBeNull();
+    expect(mockSubmitNewBill.execute).toHaveBeenCalledWith({
+      isNewClient: false,
+      clientIdOrName: 'c-1',
+      amountTTC: 300,
+      dueDate: '2026-10-01',
+      externalInvoiceReference: 'FAC-89',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      chantierId: '',
+      chantierName: 'Lot principal',
+      shouldCreateChantier: true,
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+  });
+
   it('should format correctly for new client inputs', async () => {
     const mockStore = new MockBillStore();
     const mockSubmitNewBill = {

@@ -564,4 +564,62 @@ describe('DashboardFacade', () => {
     expect(facade.duplicateChantierPrompt()).toBeNull();
     expect(updated?.chantierId).toBe('ch-1');
   });
+
+  it('shows resolve chantier error and keeps edit modal open when chantier creation fails', async () => {
+    const persisted = new Bill('b-6', 'F-2026-0106', 'client-1')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+    const resolveChantierIdPort = {
+      execute: vi.fn().mockResolvedValue({
+        success: false,
+        error: { code: 'CHANTIER_PERSISTENCE_ERROR', message: 'Impossible de créer le chantier.' }
+      })
+    } as unknown as ResolveChantierIdPort;
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: resolveChantierIdPort },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-6');
+
+    await facade.submitEditedInvoice({
+      id: 'b-6',
+      reference: 'F-2026-0106',
+      clientId: 'client-1',
+      newClientName: '',
+      chantierId: '',
+      chantierName: 'Nouveau chantier',
+      shouldCreateChantier: true,
+      amountTTC: 100,
+      dueDate: '2099-12-30',
+      invoiceNumber: 'EXT-6',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(facade.isEditModalOpen()).toBe(true);
+    expect(facade.editError()).toBe('Impossible de créer le chantier.');
+    expect(facade.isEditSubmitting()).toBe(false);
+  });
 });
