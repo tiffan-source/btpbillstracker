@@ -17,9 +17,13 @@ export class EditBillModalComponent {
   readonly clients = input<{ id: string; name: string }[]>([]);
   readonly chantiers = input<{ id: string; name: string }[]>([]);
   readonly form = input.required<EditBillForm>();
+  readonly duplicateChantierPrompt = input<{ existingChantierName: string } | null>(null);
 
   readonly requestClose = output<void>();
   readonly save = output<void>();
+  readonly useExistingChantier = output<void>();
+  readonly createNewChantier = output<void>();
+  readonly closeDuplicateChantierPrompt = output<void>();
 
   readonly billTypes = BILL_TYPES;
   readonly paymentModes = PAYMENT_MODES;
@@ -64,6 +68,10 @@ export class EditBillModalComponent {
     this.form().setRemindersAutoEnabled(isEnabled);
   }
 
+  toggleNewChantierMode(): void {
+    this.form().setChantierMode(!this.form().controls.shouldCreateChantier.value);
+  }
+
   hasFieldError(controlName: keyof EditBillForm['controls']): boolean {
     const control = this.form().controls[controlName];
     return control.invalid;
@@ -71,10 +79,22 @@ export class EditBillModalComponent {
 
   availableChantiers(): { id: string; name: string }[] {
     const fromScope = this.chantiers();
-    const selectedId = this.form().controls.chantier.value.trim();
+    const selectedId = this.form().controls.chantierId.value.trim();
     if (!selectedId || fromScope.some((chantier) => chantier.id === selectedId)) {
       return fromScope;
     }
     return [...fromScope, { id: selectedId, name: `${selectedId} (hors liste)` }];
+  }
+
+  onUseExistingChantier(): void {
+    this.useExistingChantier.emit();
+  }
+
+  onCreateNewChantierAnyway(): void {
+    this.createNewChantier.emit();
+  }
+
+  onCloseDuplicateChantierPrompt(): void {
+    this.closeDuplicateChantierPrompt.emit();
   }
 }

@@ -28,6 +28,7 @@ export class DashboardPageComponent {
 
     this.editForm.reset(editable);
     this.editForm.setClientMode(false);
+    this.editForm.setChantierMode(editable.shouldCreateChantier);
     this.editForm.setRemindersAutoEnabled(editable.remindersAutoEnabled);
   }
 
@@ -37,5 +38,17 @@ export class DashboardPageComponent {
 
   async saveEditInvoice(): Promise<void> {
     await this.facade.submitEditedInvoice(this.editForm.getPayload());
+  }
+
+  async useExistingChantierForEdit(): Promise<void> {
+    await this.facade.confirmUseExistingChantierForEdit();
+  }
+
+  async createNewChantierForEdit(): Promise<void> {
+    await this.facade.confirmCreateNewChantierForEdit();
+  }
+
+  closeDuplicateChantierPromptForEdit(): void {
+    this.facade.dismissDuplicateChantierPromptForEdit();
   }
 }

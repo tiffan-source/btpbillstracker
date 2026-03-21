@@ -7,6 +7,7 @@ import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usec
 import { UpdateEnrichedBillInput, UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
 import { EditBillFormValue } from '../forms/edit-bill.form';
 import { ClientDisplayResolver } from './client-display.resolver';
+import { ResolveChantierIdPort } from '../../domain/ports/resolve-chantier-id.port';
 
 export type DashboardInvoiceStatus = 'EN_RETARD' | 'EN_COURS' | 'PAYE';
 
@@ -33,7 +34,9 @@ export type EditableInvoiceViewModel = {
   id: string;
   reference: string;
   clientId: string;
-  chantier: string;
+  chantierId: string;
+  chantierName: string;
+  shouldCreateChantier: boolean;
   amountTTC: number | null;
   dueDate: string;
   invoiceNumber: string;
@@ -51,6 +54,7 @@ export class DashboardFacade {
   private readonly listClientsUseCase = inject(ListClientsUseCase);
   private readonly listChantiersUseCase = inject(ListChantiersUseCase);
   private readonly updateEnrichedBillUseCase = inject(UpdateEnrichedBillUseCase);
+  private readonly resolveChantierIdPort = inject(ResolveChantierIdPort);
   private readonly clientDisplayResolver = inject(ClientDisplayResolver);
   private readonly markedPaid = signal<Record<string, true>>({});
   private readonly persistedBills = signal<Bill[]>([]);
@@ -61,6 +65,8 @@ export class DashboardFacade {
   readonly isEditSubmitting = signal(false);
   readonly editError = signal<string | null>(null);
   readonly editSuccess = signal(false);
+  readonly duplicateChantierPrompt = signal<{ existingChantierId: string; existingChantierName: string } | null>(null);
+  private pendingEditPayload: EditBillFormValue | null = null;
 
   constructor() {
     void this.refreshPersistedInvoices();
@@ -174,9 +180,56 @@ export class DashboardFacade {
   }
 
   async submitEditedInvoice(payload: EditBillFormValue): Promise<void> {
+    if (this.isSubmittingNewChantierDuplicate(payload)) {
+      return;
+    }
+
+    await this.executeEditedInvoiceSubmit(payload);
+  }
+
+  async confirmUseExistingChantierForEdit(): Promise<void> {
+    const prompt = this.duplicateChantierPrompt();
+    if (!prompt || !this.pendingEditPayload) {
+      return;
+    }
+
+    const payload = {
+      ...this.pendingEditPayload,
+      chantierId: prompt.existingChantierId,
+      chantierName: '',
+      shouldCreateChantier: false
+    };
+    this.duplicateChantierPrompt.set(null);
+    this.pendingEditPayload = null;
+    await this.executeEditedInvoiceSubmit(payload);
+  }
+
+  async confirmCreateNewChantierForEdit(): Promise<void> {
+    if (!this.pendingEditPayload) {
+      return;
+    }
+    const payload = this.pendingEditPayload;
+    this.duplicateChantierPrompt.set(null);
+    this.pendingEditPayload = null;
+    await this.executeEditedInvoiceSubmit(payload);
+  }
+
+  dismissDuplicateChantierPromptForEdit(): void {
+    this.duplicateChantierPrompt.set(null);
+    this.pendingEditPayload = null;
+  }
+
+  private async executeEditedInvoiceSubmit(payload: EditBillFormValue): Promise<void> {
     this.editError.set(null);
     this.editSuccess.set(false);
     this.isEditSubmitting.set(true);
+
+    const chantierIdResult = await this.resolveEditedChantierId(payload);
+    if (!chantierIdResult.success) {
+      this.editError.set(chantierIdResult.error.message);
+      this.isEditSubmitting.set(false);
+      return;
+    }
 
     const input: UpdateEnrichedBillInput = {
       id: payload.id,
@@ -187,7 +240,7 @@ export class DashboardFacade {
       externalInvoiceReference: payload.invoiceNumber,
       type: payload.type,
       paymentMode: payload.paymentMode,
-      chantierId: payload.chantier,
+      chantierId: chantierIdResult.data,
       status: payload.status,
       remindersAutoEnabled: payload.remindersAutoEnabled,
       reminderScenarioId: payload.reminderScenarioId
@@ -218,11 +271,16 @@ export class DashboardFacade {
     const profile = this.clientsById()[bill.clientId] ?? { id: bill.clientId };
     const resolvedClient = this.clientDisplayResolver.resolve(profile);
 
+    const chantierId = bill.chantierId?.trim() ?? '';
+    const chantierLabel = chantierId
+      ? this.chantiersById()[chantierId]?.name ?? chantierId
+      : 'Chantier non renseigné';
+
     return {
       id: bill.id,
       client: resolvedClient.label,
       showsIncompleteClientIndicator: resolvedClient.showsIncompleteIndicator,
-      chantier: bill.chantier ?? 'Chantier non renseigné',
+      chantier: chantierLabel,
       amountTTC: amount,
       dueDate,
       status,
@@ -236,7 +294,9 @@ export class DashboardFacade {
       id: bill.id,
       reference: bill.reference,
       clientId: bill.clientId,
-      chantier: bill.chantier ?? '',
+      chantierId: bill.chantierId ?? '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: bill.amountTTC ?? null,
       dueDate: bill.dueDate ?? '',
       invoiceNumber: bill.externalInvoiceReference ?? '',
@@ -319,5 +379,46 @@ export class DashboardFacade {
     }
 
     this.editError.set(billsResult.error.message);
+  }
+
+  private isSubmittingNewChantierDuplicate(payload: EditBillFormValue): boolean {
+    if (!payload.shouldCreateChantier) {
+      return false;
+    }
+    const chantierName = payload.chantierName.trim();
+    if (!chantierName) {
+      return false;
+    }
+    const normalized = this.normalizeName(chantierName);
+    const duplicate = this.chantiers().find((chantier) => this.normalizeName(chantier.name) === normalized);
+    if (!duplicate) {
+      return false;
+    }
+    this.pendingEditPayload = payload;
+    this.duplicateChantierPrompt.set({
+      existingChantierId: duplicate.id,
+      existingChantierName: duplicate.name
+    });
+    return true;
+  }
+
+  private async resolveEditedChantierId(payload: EditBillFormValue) {
+    if (!payload.shouldCreateChantier) {
+      return { success: true as const, data: payload.chantierId };
+    }
+    const chantierName = payload.chantierName.trim();
+    if (!chantierName) {
+      return { success: false as const, error: { code: 'CHANTIER_NAME_REQUIRED', message: 'Le nom du chantier est obligatoire.' } };
+    }
+    return this.resolveChantierIdPort.execute({ chantierName });
+  }
+
+  private normalizeName(value: string): string {
+    return value
+      .trim()
+      .normalize('NFKD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
   }
 }

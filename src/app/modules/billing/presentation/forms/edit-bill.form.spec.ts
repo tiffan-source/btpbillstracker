@@ -55,7 +55,9 @@ describe('EditBillForm', () => {
       id: 'b-1',
       reference: 'F-2026-0008',
       clientId: 'client-1',
-      chantier: 'Cadjehoun',
+      chantierId: 'ch-1',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 380,
       dueDate: '2026-05-20',
       invoiceNumber: 'EXT-88',
@@ -71,5 +73,18 @@ describe('EditBillForm', () => {
     expect(payload.status).toBe('PAID');
     expect(payload.id).toBe('b-1');
     expect(payload.remindersAutoEnabled).toBe(false);
+  });
+
+  it('switches chantier mode validators for creation flow', () => {
+    const form = new EditBillForm();
+
+    form.setChantierMode(true);
+    form.controls.chantierName.setValue('');
+    form.controls.chantierName.updateValueAndValidity();
+    expect(form.controls.chantierName.invalid).toBe(true);
+
+    form.setChantierMode(false);
+    form.controls.chantierName.updateValueAndValidity();
+    expect(form.controls.chantierName.valid).toBe(true);
   });
 });

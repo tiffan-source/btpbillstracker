@@ -96,8 +96,12 @@
       [form]="editForm"
       [clients]="facade.clients()"
       [chantiers]="facade.chantiers()"
+      [duplicateChantierPrompt]="facade.duplicateChantierPrompt()"
       (requestClose)="closeEditModal()"
       (save)="saveEditInvoice()"
+      (useExistingChantier)="useExistingChantierForEdit()"
+      (createNewChantier)="createNewChantierForEdit()"
+      (closeDuplicateChantierPrompt)="closeDuplicateChantierPromptForEdit()"
     />
   </div>
 </div>

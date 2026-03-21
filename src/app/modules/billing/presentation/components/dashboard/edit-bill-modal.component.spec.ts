@@ -19,7 +19,9 @@ describe('EditBillModalComponent', () => {
       id: 'b-1',
       reference: 'F-2026-0011',
       clientId: 'client-1',
-      chantier: 'Cadjehoun',
+      chantierId: 'ch-1',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 156,
       dueDate: '2026-03-19',
       invoiceNumber: 'EXT-11',
@@ -33,6 +35,7 @@ describe('EditBillModalComponent', () => {
     fixture.componentRef.setInput('open', true);
     fixture.componentRef.setInput('clients', [{ id: 'client-1', name: 'Marie Lambert' }]);
     fixture.componentRef.setInput('chantiers', [{ id: 'ch-1', name: 'Cadjehoun' }]);
+    fixture.componentRef.setInput('duplicateChantierPrompt', null);
     fixture.detectChanges();
   });
 
@@ -51,6 +54,7 @@ describe('EditBillModalComponent', () => {
     expect(host.querySelector('#clientId')).toBeTruthy();
     expect(host.querySelector('#newClientName')).toBeTruthy();
     expect(host.querySelector('#chantier')).toBeTruthy();
+    expect(host.querySelector('[data-testid="edit-toggle-new-chantier-mode"]')).toBeTruthy();
     expect(host.querySelector('#amountTTC')).toBeTruthy();
     expect(host.querySelector('#dueDate')).toBeTruthy();
     expect(host.querySelector('#invoiceNumber')).toBeTruthy();
@@ -71,7 +75,7 @@ describe('EditBillModalComponent', () => {
   });
 
   it('keeps out-of-list chantier selected by appending a fallback option', () => {
-    form.controls.chantier.setValue('ch-out');
+    form.controls.chantierId.setValue('ch-out');
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
@@ -81,7 +85,58 @@ describe('EditBillModalComponent', () => {
 
     expect(optionValues).toContain('ch-out');
     expect(optionLabels.some((label) => label?.includes('(hors liste)'))).toBe(true);
-    expect(form.controls.chantier.value).toBe('ch-out');
+    expect(form.controls.chantierId.value).toBe('ch-out');
+  });
+
+  it('toggles new chantier mode and keeps chantier name when hidden', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const toggleButton = host.querySelector<HTMLButtonElement>('[data-testid="edit-toggle-new-chantier-mode"]');
+    expect(toggleButton).toBeTruthy();
+    if (!toggleButton) {
+      return;
+    }
+
+    toggleButton.click();
+    fixture.detectChanges();
+
+    const chantierNameInput = host.querySelector<HTMLInputElement>('#chantierName');
+    expect(chantierNameInput).toBeTruthy();
+    if (!chantierNameInput) {
+      return;
+    }
+
+    chantierNameInput.value = 'Lot A';
+    chantierNameInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(form.controls.chantierName.value).toBe('Lot A');
+
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLInputElement>('#chantierName')).toBeNull();
+
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector<HTMLInputElement>('#chantierName')?.value).toBe('Lot A');
+  });
+
+  it('renders duplicate chantier modal and emits corresponding actions', () => {
+    const useExistingSpy = vitest.fn();
+    const createNewSpy = vitest.fn();
+    const closeSpy = vitest.fn();
+    component.useExistingChantier.subscribe(useExistingSpy);
+    component.createNewChantier.subscribe(createNewSpy);
+    component.closeDuplicateChantierPrompt.subscribe(closeSpy);
+    fixture.componentRef.setInput('duplicateChantierPrompt', { existingChantierName: 'Cadjehoun' });
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-chantier-use-existing"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-chantier-create-new"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-chantier-cancel"]')?.click();
+
+    expect(useExistingSpy).toHaveBeenCalledTimes(1);
+    expect(createNewSpy).toHaveBeenCalledTimes(1);
+    expect(closeSpy).toHaveBeenCalledTimes(1);
   });
 
   it('emits close request on escape when not submitting', () => {

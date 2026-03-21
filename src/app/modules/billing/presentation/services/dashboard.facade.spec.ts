@@ -9,6 +9,7 @@ import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usec
 import { UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
 import { ClientDisplayResolver } from './client-display.resolver';
 import { DashboardFacade } from './dashboard.facade';
+import { ResolveChantierIdPort } from '../../domain/ports/resolve-chantier-id.port';
 
 class InMemoryBillRepository implements BillRepository {
   private readonly bills = new Map<string, Bill>();
@@ -92,6 +93,14 @@ describe('DashboardFacade', () => {
       })
     }) as unknown as ListChantiersUseCase;
 
+  const createResolveChantierIdPort = (): ResolveChantierIdPort =>
+    ({
+      execute: vi.fn().mockImplementation(async ({ chantierName }: { chantierName: string }) => ({
+        success: true,
+        data: `created-${chantierName}`
+      }))
+    }) as unknown as ResolveChantierIdPort;
+
   it('should expose persisted invoices and relance placeholder', async () => {
     const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
@@ -101,6 +110,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -136,6 +146,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -175,6 +186,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -193,7 +205,9 @@ describe('DashboardFacade', () => {
       reference: 'F-2026-0101',
       clientId: 'client-2',
       newClientName: '',
-      chantier: 'Akpakpa',
+      chantierId: 'ch-2',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 777,
       dueDate: '2099-12-28',
       invoiceNumber: 'EXT-2B',
@@ -235,6 +249,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: createRouter() },
         {
@@ -263,6 +278,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -282,7 +298,9 @@ describe('DashboardFacade', () => {
       reference: 'F-2026-9999',
       clientId: 'client-2',
       newClientName: '',
-      chantier: '',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
       amountTTC: 777,
       dueDate: '2099-12-28',
       invoiceNumber: 'EXT-2B',
@@ -308,6 +326,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -343,6 +362,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -380,6 +400,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -414,6 +435,7 @@ describe('DashboardFacade', () => {
         { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -431,5 +453,115 @@ describe('DashboardFacade', () => {
     expect(facade.invoices()[0]?.client).toBe('Alice Martin');
     expect(facade.invoices()[0]?.client).not.toBe('client-1');
     expect(facade.invoices()[0]?.showsIncompleteClientIndicator).toBe(false);
+  });
+
+  it('opens duplicate prompt when edited chantier name matches existing chantier', async () => {
+    const persisted = new Bill('b-4', 'F-2026-0104', 'client-1')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setChantierId('ch-1')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-4');
+
+    await facade.submitEditedInvoice({
+      id: 'b-4',
+      reference: 'F-2026-0104',
+      clientId: 'client-1',
+      newClientName: '',
+      chantierId: '',
+      chantierName: '  cadjehoun ',
+      shouldCreateChantier: true,
+      amountTTC: 100,
+      dueDate: '2099-12-30',
+      invoiceNumber: 'EXT-4',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(facade.duplicateChantierPrompt()).toEqual({
+      existingChantierId: 'ch-1',
+      existingChantierName: 'Cadjehoun'
+    });
+    expect(facade.isEditSubmitting()).toBe(false);
+  });
+
+  it('uses existing chantier on confirmation and updates bill chantierId', async () => {
+    const persisted = new Bill('b-5', 'F-2026-0105', 'client-2')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setChantierId('ch-1')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-5');
+
+    await facade.submitEditedInvoice({
+      id: 'b-5',
+      reference: 'F-2026-0105',
+      clientId: 'client-2',
+      newClientName: '',
+      chantierId: '',
+      chantierName: 'Cadjehoun',
+      shouldCreateChantier: true,
+      amountTTC: 100,
+      dueDate: '2099-12-30',
+      invoiceNumber: 'EXT-5',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    await facade.confirmUseExistingChantierForEdit();
+    const updated = (await repository.list()).find((bill) => bill.id === 'b-5');
+
+    expect(facade.duplicateChantierPrompt()).toBeNull();
+    expect(updated?.chantierId).toBe('ch-1');
   });
 });

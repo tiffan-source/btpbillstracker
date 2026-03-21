@@ -32,11 +32,14 @@ const mockDashboardFacade = {
   editSuccess: signal(false),
   clients: signal([{ id: 'client-1', name: 'Marie Lambert' }]),
   chantiers: signal([{ id: 'ch-1', name: 'Cadjehoun' }]),
+  duplicateChantierPrompt: signal(null),
   openEditInvoice: vitest.fn(async () => ({
     id: 'b-1',
     reference: 'F-2026-0100',
     clientId: 'client-1',
-    chantier: 'Cadjehoun',
+    chantierId: 'ch-1',
+    chantierName: '',
+    shouldCreateChantier: false,
     amountTTC: 156,
     dueDate: '2026-03-19',
     invoiceNumber: 'EXT-1',
@@ -47,7 +50,10 @@ const mockDashboardFacade = {
     reminderScenarioId: 'standard-reminder-scenario'
   })),
   closeEditModal: vitest.fn(),
-  submitEditedInvoice: vitest.fn(async () => {})
+  submitEditedInvoice: vitest.fn(async () => {}),
+  confirmUseExistingChantierForEdit: vitest.fn(async () => {}),
+  confirmCreateNewChantierForEdit: vitest.fn(async () => {}),
+  dismissDuplicateChantierPromptForEdit: vitest.fn()
 };
 
 describe('DashboardPageComponent', () => {
@@ -145,5 +151,15 @@ describe('DashboardPageComponent', () => {
 
     expect(mockDashboardFacade.submitEditedInvoice).toHaveBeenCalled();
     expect(mockDashboardFacade.closeEditModal).toHaveBeenCalled();
+  });
+
+  it('should wire duplicate chantier modal actions in edit flow', async () => {
+    await component.useExistingChantierForEdit();
+    await component.createNewChantierForEdit();
+    component.closeDuplicateChantierPromptForEdit();
+
+    expect(mockDashboardFacade.confirmUseExistingChantierForEdit).toHaveBeenCalledTimes(1);
+    expect(mockDashboardFacade.confirmCreateNewChantierForEdit).toHaveBeenCalledTimes(1);
+    expect(mockDashboardFacade.dismissDuplicateChantierPromptForEdit).toHaveBeenCalledTimes(1);
   });
 });

@@ -43,12 +43,32 @@
 
         <div class="flex flex-col gap-2">
           <label for="chantier" class="text-sm font-medium text-foreground-muted">Chantier</label>
-          <select id="chantier" formControlName="chantier" class="w-full rounded-input border border-input px-3 py-2">
-            <option value="">Sélectionner un chantier</option>
-            @for (chantier of availableChantiers(); track chantier.id) {
-              <option [value]="chantier.id">{{ chantier.name }}</option>
+          <div class="flex gap-3">
+            @if (!form().controls.shouldCreateChantier.value) {
+              <select id="chantier" formControlName="chantierId" class="w-full rounded-input border border-input px-3 py-2">
+                <option value="">Sélectionner un chantier</option>
+                @for (chantier of availableChantiers(); track chantier.id) {
+                  <option [value]="chantier.id">{{ chantier.name }}</option>
+                }
+              </select>
+            } @else {
+              <input
+                id="chantierName"
+                type="text"
+                formControlName="chantierName"
+                class="w-full rounded-input border border-input px-3 py-2"
+                placeholder="Nom du nouveau chantier"
+              />
             }
-          </select>
+            <button
+              type="button"
+              data-testid="edit-toggle-new-chantier-mode"
+              (click)="toggleNewChantierMode()"
+              class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted shadow-sm hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap"
+            >
+              {{ form().controls.shouldCreateChantier.value ? 'Chantier existant' : '+ Nouveau' }}
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -153,6 +173,52 @@
           </button>
         </footer>
       </form>
+    </div>
+  </div>
+}
+
+@if (duplicateChantierPrompt(); as duplicatePrompt) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/50 px-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="duplicate-chantier-modal-title"
+      aria-describedby="duplicate-chantier-modal-description"
+      class="w-full max-w-lg rounded-card bg-surface p-6 shadow-lg"
+    >
+      <h2 id="duplicate-chantier-modal-title" class="text-lg font-bold text-foreground">
+        Chantier similaire detecte
+      </h2>
+      <p id="duplicate-chantier-modal-description" class="mt-2 text-sm text-foreground-muted">
+        Un chantier existant "{{ duplicatePrompt.existingChantierName }}" semble correspondre.
+        Voulez-vous utiliser ce chantier existant ou creer un nouveau chantier ?
+      </p>
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <button
+          data-testid="edit-duplicate-chantier-cancel"
+          type="button"
+          (click)="onCloseDuplicateChantierPrompt()"
+          class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Annuler
+        </button>
+        <button
+          data-testid="edit-duplicate-chantier-use-existing"
+          type="button"
+          (click)="onUseExistingChantier()"
+          class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Utiliser le chantier existant
+        </button>
+        <button
+          data-testid="edit-duplicate-chantier-create-new"
+          type="button"
+          (click)="onCreateNewChantierAnyway()"
+          class="inline-flex items-center rounded-btn bg-primary px-4 py-2 text-sm font-medium text-primary-content hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Creer un nouveau chantier
+        </button>
+      </div>
     </div>
   </div>
 }
