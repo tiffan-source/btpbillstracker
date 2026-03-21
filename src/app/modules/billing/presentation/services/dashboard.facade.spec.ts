@@ -260,4 +260,42 @@ describe('DashboardFacade', () => {
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login?returnUrl=/dashboard');
   });
+
+  it('denies edit when invoice is outside user-scoped listing', async () => {
+    const persisted = new Bill('b-owner-2', 'F-2026-0999', 'client-2')
+      .setAmountTTC(999)
+      .setDueDate('2099-12-31')
+      .setExternalInvoiceReference('EXT-OUT')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+    const router = createRouter();
+    const listUserBillsUseCase = {
+      execute: vi.fn().mockResolvedValue({ success: true, data: [] })
+    } as unknown as ListUserBillsUseCase;
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
+        { provide: Router, useValue: router },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await Promise.resolve();
+
+    const editable = await facade.openEditInvoice('b-owner-2');
+
+    expect(editable).toBeNull();
+    expect(facade.isEditModalOpen()).toBe(false);
+    expect(facade.editError()).toContain('Seules les factures persistées');
+  });
 });
