@@ -154,6 +154,57 @@ describe('BillingFacade', () => {
     });
   });
 
+  it('refreshes clients list after successful invoice creation', async () => {
+    const mockStore = new MockBillStore();
+    const listClientsUseCase = {
+      execute: vitest
+        .fn()
+        .mockResolvedValueOnce(success([{ id: 'c-9', name: 'Zed Client' }]))
+        .mockResolvedValueOnce(
+          success([
+            { id: 'c-1', name: 'Alice Client' },
+            { id: 'c-9', name: 'Zed Client' }
+          ])
+        )
+    };
+    const mockSubmitNewBill = {
+      execute: vitest.fn().mockResolvedValue(success(new Bill('b-12', 'F-2026-0012', 'c-1')))
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
+        { provide: ListClientsUseCase, useValue: listClientsUseCase }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+    await facade.loadClients();
+    expect(facade.clients()).toEqual([{ id: 'c-9', name: 'Zed Client' }]);
+
+    await facade.createInvoice({
+      clientId: '',
+      newClientName: 'Alice Client',
+      chantier: '',
+      amountTTC: 300,
+      dueDate: '2026-10-01',
+      invoiceNumber: 'FAC-12',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(listClientsUseCase.execute).toHaveBeenCalledTimes(2);
+    expect(facade.clients()).toEqual([
+      { id: 'c-1', name: 'Alice Client' },
+      { id: 'c-9', name: 'Zed Client' }
+    ]);
+  });
+
   it('should format correctly for new client inputs', async () => {
     const mockStore = new MockBillStore();
     const mockSubmitNewBill = {

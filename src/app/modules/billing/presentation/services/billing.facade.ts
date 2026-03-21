@@ -73,6 +73,7 @@ export class BillingFacade {
       }
 
       this.store.setDraftBill(result.data, pdfFile);
+      await this.loadClients();
       this.isSuccess.set(true);
     } else {
       this.error.set(result.error.message);
