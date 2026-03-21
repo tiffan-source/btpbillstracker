@@ -14,10 +14,12 @@ describe('NewBillComponent', () => {
       isSuccess: signal(false),
       error: signal(null),
       clientsLoadError: signal(null),
+      chantiersLoadError: signal(null),
       reminderScenariosLoadError: signal(null),
       duplicateClientPrompt: signal(null),
       draftBill: signal(null),
       clients: signal([]),
+      chantiers: signal([]),
       reminderScenarios: signal([{ id: 'sc-1', name: 'Standard – J-3, J+3, J+10' }]),
       isReminderScenariosLoading: signal(false),
       createInvoice: vitest.fn(),
@@ -26,6 +28,7 @@ describe('NewBillComponent', () => {
       confirmCreateNewClient: vitest.fn(),
       dismissDuplicateClientPrompt: vitest.fn(),
       loadClients: vitest.fn().mockResolvedValue(undefined),
+      loadChantiers: vitest.fn().mockResolvedValue(undefined),
       loadReminderScenarios: vitest.fn().mockResolvedValue(undefined),
       dismissSuccess: vitest.fn()
     };
@@ -48,6 +51,10 @@ describe('NewBillComponent', () => {
 
   it('loads reminder scenarios on init', () => {
     expect(mockFacade.loadReminderScenarios).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads chantier options on init', () => {
+    expect(mockFacade.loadChantiers).toHaveBeenCalledTimes(1);
   });
 
   it('should call requestInvoiceCreation when form is populated', () => {

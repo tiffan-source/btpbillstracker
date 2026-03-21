@@ -8,6 +8,7 @@ import { ReminderAssociation } from '../../../reminders/domain/entities/reminder
 import { ListReminderScenariosUseCase } from '../../../reminders/domain/usecases/list-reminder-scenarios.usecase';
 import { ListClientsUseCase } from '../../../clients';
 import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
+import { ListChantiersUseCase } from '../../../chantiers';
 
 export type SubmitBillInput = BillingInvoiceFormValue & {
   pdfFile?: BillPdfMemoryFile | null;
@@ -28,11 +29,13 @@ export type ReminderScenarioOption = {
 export class BillingFacade {
   private readonly createEnrichedBillUseCase = inject(CreateEnrichedBillUseCase);
   private readonly listClientsUseCase = inject(ListClientsUseCase);
+  private readonly listChantiersUseCase = inject(ListChantiersUseCase);
   private readonly listUserBillsUseCase = inject(ListUserBillsUseCase);
   private readonly listReminderScenariosUseCase = inject(ListReminderScenariosUseCase);
   private readonly store = inject(BillStore);
   private readonly reminderAssociationRepository = inject(ReminderAssociationRepository);
   private readonly clientsState = signal<{ id: string; name: string }[]>([]);
+  private readonly chantiersState = signal<{ id: string; name: string }[]>([]);
   private readonly reminderScenariosState = signal<ReminderScenarioOption[]>([]);
 
   readonly isSubmitting = signal(false);
@@ -40,8 +43,11 @@ export class BillingFacade {
   readonly isSuccess = signal(false);
   readonly draftBill = this.store.draftBill;
   readonly clients = computed(() => this.clientsState());
+  readonly chantiers = computed(() => this.chantiersState());
   readonly isClientsLoading = signal(false);
   readonly clientsLoadError = signal<string | null>(null);
+  readonly isChantiersLoading = signal(false);
+  readonly chantiersLoadError = signal<string | null>(null);
   readonly reminderScenarios = computed(() => this.reminderScenariosState());
   readonly isReminderScenariosLoading = signal(false);
   readonly reminderScenariosLoadError = signal<string | null>(null);
@@ -78,6 +84,39 @@ export class BillingFacade {
     }
 
     this.isClientsLoading.set(false);
+  }
+
+  async loadChantiers(): Promise<void> {
+    this.chantiersLoadError.set(null);
+    this.isChantiersLoading.set(true);
+
+    const [chantiersResult, userBillsResult] = await Promise.all([
+      this.listChantiersUseCase.execute(),
+      this.listUserBillsUseCase.execute()
+    ]);
+
+    if (chantiersResult.success && userBillsResult.success) {
+      const eligibleChantierIds = new Set(
+        userBillsResult.data
+          .map((bill) => bill.chantierId?.trim() ?? '')
+          .filter((chantierId) => chantierId.length > 0)
+      );
+
+      const sortedChantiers = chantiersResult.data
+        .filter((chantier) => eligibleChantierIds.has(chantier.id))
+        .map((chantier) => ({ id: chantier.id, name: chantier.name }))
+        .sort((first, second) => first.name.localeCompare(second.name, 'fr', { sensitivity: 'base' }));
+      this.chantiersState.set(sortedChantiers);
+    } else {
+      if (!chantiersResult.success) {
+        this.chantiersLoadError.set(chantiersResult.error.message);
+      } else {
+        this.chantiersLoadError.set('Impossible de charger les factures utilisateur.');
+      }
+      this.chantiersState.set([]);
+    }
+
+    this.isChantiersLoading.set(false);
   }
 
   async loadReminderScenarios(): Promise<void> {

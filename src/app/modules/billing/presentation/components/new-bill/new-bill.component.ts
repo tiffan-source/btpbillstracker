@@ -25,6 +25,7 @@ export class NewBillComponent {
   constructor() {
     this.invoiceForm.setClientMode(this.isCreatingNewClient);
     void this.facade.loadClients();
+    void this.facade.loadChantiers();
     void this.facade.loadReminderScenarios();
 
     effect(() => {

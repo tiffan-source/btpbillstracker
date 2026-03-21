@@ -61,7 +61,15 @@
 
           <div>
             <label for="chantier" class="block text-sm font-medium text-foreground-muted mb-1">Chantier</label>
-            <input type="text" id="chantier" formControlName="chantier" placeholder="Nom ou adresse du chantier" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+            <select id="chantier" formControlName="chantier" class="block w-full rounded-input border-input shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border">
+              <option value="">Sélectionner un chantier</option>
+              @for (chantier of facade.chantiers(); track chantier.id) {
+                <option [value]="chantier.id">{{ chantier.name }}</option>
+              }
+            </select>
+            @if (facade.chantiersLoadError(); as chantiersLoadError) {
+              <p class="mt-2 text-sm text-danger" role="status">{{ chantiersLoadError }}</p>
+            }
           </div>
 
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
