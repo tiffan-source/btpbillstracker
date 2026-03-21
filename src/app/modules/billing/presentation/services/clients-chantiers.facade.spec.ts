@@ -15,13 +15,13 @@ describe('ClientsChantiersFacade', () => {
     clientId: string;
     status: 'DRAFT' | 'VALIDATED' | 'PAID';
     amountTTC: number;
-    chantier?: string;
+    chantierId?: string;
   }): Bill =>
     ({
       clientId: input.clientId,
       status: input.status,
       amountTTC: input.amountTTC,
-      chantier: input.chantier
+      chantierId: input.chantierId
     }) as unknown as Bill;
 
   it('loads client view models with bill aggregates', async () => {
@@ -71,8 +71,8 @@ describe('ClientsChantiersFacade', () => {
 
   it('loads chantier view models with paid/pending progress', async () => {
     const chantier = new Chantier('ch-1', 'Villa A');
-    const paidBill = billLike({ clientId: 'c-1', status: 'PAID', amountTTC: 200, chantier: 'Villa A' });
-    const pendingBill = billLike({ clientId: 'c-1', status: 'DRAFT', amountTTC: 300, chantier: 'Villa A' });
+    const paidBill = billLike({ clientId: 'c-1', status: 'PAID', amountTTC: 200, chantierId: 'ch-1' });
+    const pendingBill = billLike({ clientId: 'c-1', status: 'DRAFT', amountTTC: 300, chantierId: 'ch-1' });
 
     const listClientsUseCase = { execute: vitest.fn().mockResolvedValue(success([])) };
     const listChantiersUseCase = { execute: vitest.fn().mockResolvedValue(success([chantier])) };
@@ -102,6 +102,46 @@ describe('ClientsChantiersFacade', () => {
         paid: 200,
         pending: 300,
         progressPercent: 40
+      }
+    ]);
+  });
+
+  it('does not match chantier stats by chantier name anymore', async () => {
+    const chantier = new Chantier('ch-1', 'Villa A');
+    const sameNameButDifferentIdBill = billLike({
+      clientId: 'c-1',
+      status: 'PAID',
+      amountTTC: 500,
+      chantierId: 'ch-2'
+    });
+
+    const listClientsUseCase = { execute: vitest.fn().mockResolvedValue(success([])) };
+    const listChantiersUseCase = { execute: vitest.fn().mockResolvedValue(success([chantier])) };
+    const updateClientUseCase = { execute: vitest.fn() };
+    const updateChantierUseCase = { execute: vitest.fn() };
+    const billRepository = { list: vitest.fn().mockResolvedValue([sameNameButDifferentIdBill]), save: vitest.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [
+        ClientsChantiersFacade,
+        { provide: ListClientsUseCase, useValue: listClientsUseCase },
+        { provide: UpdateClientUseCase, useValue: updateClientUseCase },
+        { provide: ListChantiersUseCase, useValue: listChantiersUseCase },
+        { provide: UpdateChantierUseCase, useValue: updateChantierUseCase },
+        { provide: BillRepository, useValue: billRepository }
+      ]
+    });
+
+    const facade = TestBed.inject(ClientsChantiersFacade);
+    await facade.loadChantiers();
+
+    expect(facade.chantiers()).toEqual([
+      {
+        id: 'ch-1',
+        name: 'Villa A',
+        paid: 0,
+        pending: 0,
+        progressPercent: 0
       }
     ]);
   });

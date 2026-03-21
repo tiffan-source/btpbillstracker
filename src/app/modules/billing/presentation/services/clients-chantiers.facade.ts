@@ -92,7 +92,7 @@ export class ClientsChantiersFacade {
     }
 
     const mapped = chantiersResult.data.map((chantier) => {
-      const relatedBills = bills.filter((bill) => (bill.chantier ?? '').trim() === chantier.name);
+      const relatedBills = bills.filter((bill) => (bill.chantierId ?? '').trim() === chantier.id);
       const paid = relatedBills
         .filter((bill) => bill.status === 'PAID')
         .reduce((sum, bill) => sum + (bill.amountTTC ?? 0), 0);
