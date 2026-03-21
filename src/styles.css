@@ -33,6 +33,11 @@
   --color-border-danger-light: #fecaca;
   --color-border-warning-light: #fde68a;
   --color-border-success-light: #bbf7d0;
+  --color-sidebar: #0f172a;
+  --color-sidebar-foreground: #e2e8f0;
+  --color-sidebar-muted: #94a3b8;
+  --color-sidebar-hover: #1e293b;
+  --color-border-sidebar-subtle: #334155;
 
   /* Radius */
   --radius-card: 0.75rem;

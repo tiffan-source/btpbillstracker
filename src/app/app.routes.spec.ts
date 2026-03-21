@@ -32,7 +32,8 @@ describe('App routes', () => {
   });
 
   it('should expose dashboard route', () => {
-    const dashboardRoute = routes.find((route) => route.path === 'dashboard');
+    const shellRoute = routes.find((route) => route.path === '' && route.children?.length);
+    const dashboardRoute = shellRoute?.children?.find((route) => route.path === 'dashboard');
 
     expect(dashboardRoute).toBeTruthy();
     expect(dashboardRoute?.loadComponent).toBeTypeOf('function');
@@ -40,7 +41,8 @@ describe('App routes', () => {
   });
 
   it('should keep new-bill route', () => {
-    const newBillRoute = routes.find((route) => route.path === 'new-bill');
+    const shellRoute = routes.find((route) => route.path === '' && route.children?.length);
+    const newBillRoute = shellRoute?.children?.find((route) => route.path === 'new-bill');
 
     expect(newBillRoute).toBeTruthy();
     expect(newBillRoute?.loadComponent).toBeTypeOf('function');
@@ -48,7 +50,8 @@ describe('App routes', () => {
   });
 
   it('should expose clients-chantiers route', () => {
-    const clientsChantiersRoute = routes.find((route) => route.path === 'clients-chantiers');
+    const shellRoute = routes.find((route) => route.path === '' && route.children?.length);
+    const clientsChantiersRoute = shellRoute?.children?.find((route) => route.path === 'clients-chantiers');
 
     expect(clientsChantiersRoute).toBeTruthy();
     expect(clientsChantiersRoute?.loadComponent).toBeTypeOf('function');
@@ -56,7 +59,7 @@ describe('App routes', () => {
   });
 
   it('should redirect root to dashboard', () => {
-    const rootRedirect = routes.find((route) => route.path === '');
+    const rootRedirect = routes.find((route) => route.path === '' && route.redirectTo);
 
     expect(rootRedirect?.redirectTo).toBe('dashboard');
     expect(rootRedirect?.pathMatch).toBe('full');
