@@ -68,4 +68,35 @@ describe('ProtectedShellComponent', () => {
     expect(templatesButton?.disabled).toBe(true);
     expect(templatesButton?.getAttribute('aria-disabled')).toBe('true');
   });
+
+  it('opens and closes the mobile drawer, including Escape close', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const openButton = host.querySelector<HTMLButtonElement>('[data-testid="mobile-menu-open"]');
+    const closeButtonSelector = '[data-testid="mobile-menu-close"]';
+    const drawerSelector = '[data-testid="mobile-drawer"]';
+
+    expect(openButton).toBeTruthy();
+    if (!openButton) {
+      return;
+    }
+
+    expect(host.querySelector(drawerSelector)).toBeNull();
+
+    openButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector(drawerSelector)).toBeTruthy();
+
+    const closeButton = host.querySelector<HTMLButtonElement>(closeButtonSelector);
+    expect(closeButton).toBeTruthy();
+    closeButton?.click();
+    fixture.detectChanges();
+    expect(host.querySelector(drawerSelector)).toBeNull();
+
+    openButton.click();
+    fixture.detectChanges();
+    expect(host.querySelector(drawerSelector)).toBeTruthy();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(host.querySelector(drawerSelector)).toBeNull();
+  });
 });

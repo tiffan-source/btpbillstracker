@@ -1,12 +1,89 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-protected-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  host: {
+    '(document:keydown.escape)': 'closeMobileMenu()'
+  },
   template: `
     <div class="bg-background text-foreground lg:flex">
+      <header class="bg-sidebar text-sidebar-foreground flex items-center justify-between p-4 lg:hidden">
+        <p class="text-base font-semibold">RelanceBTP</p>
+        <button
+          type="button"
+          data-testid="mobile-menu-open"
+          class="rounded-btn border-sidebar-subtle border px-3 py-2 text-sm"
+          (click)="openMobileMenu()"
+        >
+          Menu
+        </button>
+      </header>
+
+      @if (isMobileMenuOpen()) {
+        <div class="fixed inset-0 z-20 lg:hidden">
+          <div
+            class="bg-sidebar/70 absolute inset-0"
+            role="button"
+            tabindex="0"
+            aria-label="Fermer le menu mobile"
+            (click)="closeMobileMenu()"
+            (keydown.enter)="closeMobileMenu()"
+          ></div>
+          <aside
+            data-testid="mobile-drawer"
+            class="bg-sidebar text-sidebar-foreground relative z-30 h-full w-72 p-4"
+            aria-label="Menu mobile"
+          >
+            <div class="mb-4 flex items-center justify-between">
+              <p class="text-base font-semibold">Navigation</p>
+              <button
+                type="button"
+                data-testid="mobile-menu-close"
+                class="rounded-btn border-sidebar-subtle border px-3 py-2 text-sm"
+                (click)="closeMobileMenu()"
+              >
+                Fermer
+              </button>
+            </div>
+            <nav aria-label="Navigation principale mobile" class="flex flex-col gap-2">
+              <a
+                routerLink="/dashboard"
+                routerLinkActive="bg-sidebar-hover text-sidebar-foreground"
+                [routerLinkActiveOptions]="{ exact: true }"
+                ariaCurrentWhenActive="page"
+                class="text-sidebar-muted rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground px-4 py-3 text-sm"
+                (click)="closeMobileMenu()"
+              >
+                Tableau de bord
+              </a>
+              <a
+                routerLink="/new-bill"
+                routerLinkActive="bg-sidebar-hover text-sidebar-foreground"
+                [routerLinkActiveOptions]="{ exact: true }"
+                ariaCurrentWhenActive="page"
+                class="text-sidebar-muted rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground px-4 py-3 text-sm"
+                (click)="closeMobileMenu()"
+              >
+                Ajouter une facture
+              </a>
+              <a
+                routerLink="/clients-chantiers"
+                routerLinkActive="bg-sidebar-hover text-sidebar-foreground"
+                [routerLinkActiveOptions]="{ exact: true }"
+                ariaCurrentWhenActive="page"
+                class="text-sidebar-muted rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground px-4 py-3 text-sm"
+                (click)="closeMobileMenu()"
+              >
+                Clients & Chantiers
+              </a>
+            </nav>
+          </aside>
+        </div>
+      }
+
       <aside class="bg-sidebar text-sidebar-foreground min-h-screen hidden w-64 flex-col lg:flex">
         <header class="border-sidebar-subtle flex items-center gap-3 border-b p-6">
           <div class="bg-warning flex h-10 w-10 items-center justify-center rounded-card" aria-hidden="true">
@@ -88,4 +165,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     </div>
   `
 })
-export class ProtectedShellComponent {}
+export class ProtectedShellComponent {
+  readonly isMobileMenuOpen = signal(false);
+
+  openMobileMenu(): void {
+    this.isMobileMenuOpen.set(true);
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen.set(false);
+  }
+}
