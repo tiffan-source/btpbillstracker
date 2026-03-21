@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-protected-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   template: `
     <div class="bg-background text-foreground lg:flex">
       <aside class="bg-sidebar text-sidebar-foreground min-h-screen hidden w-64 flex-col lg:flex">
@@ -22,23 +22,56 @@ import { RouterLink, RouterOutlet } from '@angular/router';
         </header>
 
         <nav aria-label="Navigation principale" class="flex flex-col gap-2 p-4">
-          <a routerLink="/dashboard" class="rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground flex items-center gap-3 px-4 py-3 text-sm">
+          <a
+            routerLink="/dashboard"
+            routerLinkActive="bg-sidebar-hover text-sidebar-foreground"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            data-testid="nav-link-dashboard"
+            class="text-sidebar-muted rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground flex items-center gap-3 px-4 py-3 text-sm"
+          >
             <span aria-hidden="true">▦</span>
             <span>Tableau de bord</span>
           </a>
-          <a routerLink="/new-bill" class="rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground flex items-center gap-3 px-4 py-3 text-sm">
+          <a
+            routerLink="/new-bill"
+            routerLinkActive="bg-sidebar-hover text-sidebar-foreground"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            data-testid="nav-link-new-bill"
+            class="text-sidebar-muted rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground flex items-center gap-3 px-4 py-3 text-sm"
+          >
             <span aria-hidden="true">⊞</span>
             <span>Ajouter une facture</span>
           </a>
-          <button type="button" class="text-sidebar-muted rounded-card flex items-center gap-3 px-4 py-3 text-left text-sm" disabled aria-disabled="true">
+          <button
+            type="button"
+            data-testid="nav-disabled-reminders"
+            class="text-sidebar-muted rounded-card flex items-center gap-3 px-4 py-3 text-left text-sm"
+            disabled
+            aria-disabled="true"
+          >
             <span aria-hidden="true">◷</span>
             <span>Planning relances</span>
           </button>
-          <button type="button" class="text-sidebar-muted rounded-card flex items-center gap-3 px-4 py-3 text-left text-sm" disabled aria-disabled="true">
+          <button
+            type="button"
+            data-testid="nav-disabled-templates"
+            class="text-sidebar-muted rounded-card flex items-center gap-3 px-4 py-3 text-left text-sm"
+            disabled
+            aria-disabled="true"
+          >
             <span aria-hidden="true">◌</span>
             <span>Modèles de messages</span>
           </button>
-          <a routerLink="/clients-chantiers" class="rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground flex items-center gap-3 px-4 py-3 text-sm">
+          <a
+            routerLink="/clients-chantiers"
+            routerLinkActive="bg-sidebar-hover text-sidebar-foreground"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            data-testid="nav-link-clients-chantiers"
+            class="text-sidebar-muted rounded-card hover:bg-sidebar-hover hover:text-sidebar-foreground flex items-center gap-3 px-4 py-3 text-sm"
+          >
             <span aria-hidden="true">◉</span>
             <span>Clients & Chantiers</span>
           </a>

@@ -1,16 +1,28 @@
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { ProtectedShellComponent } from './protected-shell.component';
+
+@Component({ template: '' })
+class DummyPageComponent {}
 
 describe('ProtectedShellComponent', () => {
   let fixture: ComponentFixture<ProtectedShellComponent>;
+  let router: Router;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProtectedShellComponent],
-      providers: [provideRouter([])]
+      providers: [
+        provideRouter([
+          { path: 'dashboard', component: DummyPageComponent },
+          { path: 'new-bill', component: DummyPageComponent },
+          { path: 'clients-chantiers', component: DummyPageComponent }
+        ])
+      ]
     }).compileComponents();
 
+    router = TestBed.inject(Router);
     fixture = TestBed.createComponent(ProtectedShellComponent);
     fixture.detectChanges();
   });
@@ -31,5 +43,29 @@ describe('ProtectedShellComponent', () => {
     expect(host.textContent).toContain('Planning relances');
     expect(host.textContent).toContain('Modèles de messages');
     expect(host.textContent).toContain('Clients & Chantiers');
+  });
+
+  it('marks current route link as active with aria-current', async () => {
+    await router.navigateByUrl('/new-bill');
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+
+    const activeLink = host.querySelector<HTMLAnchorElement>('[data-testid="nav-link-new-bill"]');
+    const inactiveLink = host.querySelector<HTMLAnchorElement>('[data-testid="nav-link-dashboard"]');
+
+    expect(activeLink?.getAttribute('aria-current')).toBe('page');
+    expect(activeLink?.className).toContain('bg-sidebar-hover');
+    expect(inactiveLink?.getAttribute('aria-current')).toBeNull();
+  });
+
+  it('exposes non-available entries as disabled buttons', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const remindersButton = host.querySelector<HTMLButtonElement>('[data-testid="nav-disabled-reminders"]');
+    const templatesButton = host.querySelector<HTMLButtonElement>('[data-testid="nav-disabled-templates"]');
+
+    expect(remindersButton?.disabled).toBe(true);
+    expect(remindersButton?.getAttribute('aria-disabled')).toBe('true');
+    expect(templatesButton?.disabled).toBe(true);
+    expect(templatesButton?.getAttribute('aria-disabled')).toBe('true');
   });
 });
