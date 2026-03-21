@@ -2,26 +2,68 @@ import { Injectable } from '@angular/core';
 import { Chantier } from '../domain/entities/chantier.entity';
 import { ChantierPersistenceError } from '../domain/errors/chantier-persistence.error';
 import { ChantierRepository } from '../domain/ports/chantier.repository';
+import { FirestoreChantierDataSource, FirestorePlainChantier } from './firestore-chantier.datasource';
 
 @Injectable({ providedIn: 'root' })
 export class FirestoreChantierRepository implements ChantierRepository {
-  /**
-   * Placeholder pour la phase bootstrap (#47).
-   * L'implémentation Firestore complète arrive sur l'issue de migration verticale chantiers.
-   */
-  async save(_chantier: Chantier): Promise<void> {
-    throw new ChantierPersistenceError('Firestore repository is not implemented yet.');
+  private readonly collectionName = 'chantiers';
+
+  constructor(private readonly dataSource: FirestoreChantierDataSource) {}
+
+  async save(chantier: Chantier): Promise<void> {
+    try {
+      await this.dataSource.saveById(chantier.id, this.toPlainChantier(chantier));
+    } catch (error: unknown) {
+      throw new ChantierPersistenceError(undefined, { collection: this.collectionName, chantierId: chantier.id }, error);
+    }
   }
 
   async list(): Promise<Chantier[]> {
-    throw new ChantierPersistenceError('Firestore repository is not implemented yet.');
+    try {
+      const snapshot = await this.dataSource.readAll();
+      return snapshot.docs.map((entry) => this.toEntity(entry.data() as FirestorePlainChantier));
+    } catch (error: unknown) {
+      throw new ChantierPersistenceError('Impossible de lire les chantiers.', { collection: this.collectionName }, error);
+    }
   }
 
-  async update(_chantier: Chantier): Promise<void> {
-    throw new ChantierPersistenceError('Firestore repository is not implemented yet.');
+  async update(chantier: Chantier): Promise<void> {
+    try {
+      const existing = await this.dataSource.readById(chantier.id);
+      if (!existing.exists()) {
+        throw new ChantierPersistenceError('Chantier introuvable pour mise à jour.', { chantierId: chantier.id });
+      }
+
+      await this.dataSource.saveById(chantier.id, this.toPlainChantier(chantier));
+    } catch (error: unknown) {
+      if (error instanceof ChantierPersistenceError) {
+        throw error;
+      }
+      throw new ChantierPersistenceError('Impossible de mettre à jour le chantier.', { collection: this.collectionName, chantierId: chantier.id }, error);
+    }
   }
 
-  async existsByName(_name: string, _excludeId?: string): Promise<boolean> {
-    throw new ChantierPersistenceError('Firestore repository is not implemented yet.');
+  async existsByName(name: string, excludeId?: string): Promise<boolean> {
+    try {
+      const normalizedName = name.trim().toLowerCase();
+      const chantiers = await this.list();
+      return chantiers.some((chantier) => chantier.name.trim().toLowerCase() === normalizedName && chantier.id !== excludeId);
+    } catch (error: unknown) {
+      if (error instanceof ChantierPersistenceError) {
+        throw error;
+      }
+      throw new ChantierPersistenceError('Impossible de vérifier l’unicité du chantier.', { collection: this.collectionName, name, excludeId }, error);
+    }
+  }
+
+  private toEntity(plain: FirestorePlainChantier): Chantier {
+    return new Chantier(plain.id, plain.name);
+  }
+
+  private toPlainChantier(chantier: Chantier): FirestorePlainChantier {
+    return {
+      id: chantier.id,
+      name: chantier.name
+    };
   }
 }
