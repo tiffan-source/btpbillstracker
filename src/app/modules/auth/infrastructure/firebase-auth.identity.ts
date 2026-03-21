@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
   User,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithPopup,
   getAuth,
   sendEmailVerification,
@@ -23,6 +24,8 @@ export abstract class FirebaseAuthGateway {
   abstract signIn(auth: Auth, email: string, password: string): Promise<{ user: User }>;
   abstract signInWithGoogle(auth: Auth): Promise<{ user: User }>;
   abstract signInWithFacebook(auth: Auth): Promise<{ user: User }>;
+  abstract requestPasswordReset(auth: Auth, email: string): Promise<void>;
+  abstract sendEmailVerificationForCurrentUser(user: User): Promise<void>;
   abstract signOut(auth: Auth): Promise<void>;
 }
 
@@ -51,6 +54,14 @@ class DefaultFirebaseAuthGateway extends FirebaseAuthGateway {
   signInWithFacebook(auth: Auth): Promise<{ user: User }> {
     const provider = new FacebookAuthProvider();
     return signInWithPopup(auth, provider);
+  }
+
+  requestPasswordReset(auth: Auth, email: string): Promise<void> {
+    return sendPasswordResetEmail(auth, email);
+  }
+
+  sendEmailVerificationForCurrentUser(user: User): Promise<void> {
+    return sendEmailVerification(user);
   }
 
   signOut(auth: Auth): Promise<void> {
@@ -117,6 +128,33 @@ export class FirebaseAuthIdentity extends AuthIdentityPort {
       return this.mapUser(result.user);
     } catch (error) {
       throw new AuthPersistenceError('Connexion Facebook impossible.', error);
+    }
+  }
+
+  /**
+   * Envoyer un email de réinitialisation de mot de passe.
+   */
+  async requestPasswordReset(email: string): Promise<void> {
+    try {
+      await this.gateway.requestPasswordReset(this.auth, email);
+    } catch (error) {
+      throw new AuthPersistenceError('Réinitialisation de mot de passe impossible.', error);
+    }
+  }
+
+  /**
+   * Renvoyer l'email de vérification pour l'utilisateur courant.
+   */
+  async sendEmailVerification(): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new AuthPersistenceError('Aucun utilisateur connecté.');
+    }
+
+    try {
+      await this.gateway.sendEmailVerificationForCurrentUser(user);
+    } catch (error) {
+      throw new AuthPersistenceError("Impossible de renvoyer l'email de vérification.", error);
     }
   }
 

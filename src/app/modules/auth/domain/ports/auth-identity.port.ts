@@ -27,6 +27,16 @@ export abstract class AuthIdentityPort {
   abstract loginWithFacebook(): Promise<AuthUser>;
 
   /**
+   * Envoyer un email de réinitialisation du mot de passe.
+   */
+  abstract requestPasswordReset(email: string): Promise<void>;
+
+  /**
+   * Renvoyer l'email de vérification pour l'utilisateur courant.
+   */
+  abstract sendEmailVerification(): Promise<void>;
+
+  /**
    * Fermer la session courante.
    */
   abstract signOut(): Promise<void>;

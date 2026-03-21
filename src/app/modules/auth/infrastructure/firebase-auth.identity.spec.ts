@@ -11,6 +11,8 @@ describe('FirebaseAuthIdentity', () => {
       signIn: vi.fn(),
       signInWithGoogle: vi.fn(),
       signInWithFacebook: vi.fn(),
+      requestPasswordReset: vi.fn(),
+      sendEmailVerificationForCurrentUser: vi.fn(),
       signOut: vi.fn()
     };
   };
@@ -86,5 +88,32 @@ describe('FirebaseAuthIdentity', () => {
 
     expect(gateway.signInWithFacebook).toHaveBeenCalled();
     expect(user.uid).toBe('facebook-u-1');
+  });
+
+  it('sends password reset email via gateway', async () => {
+    const gateway = buildGateway();
+    vi.mocked(gateway.requestPasswordReset).mockResolvedValue(undefined);
+    const identity = new FirebaseAuthIdentity(gateway);
+
+    await identity.requestPasswordReset('user@example.com');
+
+    expect(gateway.requestPasswordReset).toHaveBeenCalled();
+  });
+
+  it('resends verification for current user', async () => {
+    const currentUser = {
+      uid: 'u-1',
+      email: 'user@example.com',
+      emailVerified: false,
+      displayName: null
+    } as never;
+    const gateway = buildGateway();
+    gateway.getAuth = vi.fn().mockReturnValue({ currentUser } as never);
+    vi.mocked(gateway.sendEmailVerificationForCurrentUser).mockResolvedValue(undefined);
+    const identity = new FirebaseAuthIdentity(gateway);
+
+    await identity.sendEmailVerification();
+
+    expect(gateway.sendEmailVerificationForCurrentUser).toHaveBeenCalledWith(currentUser);
   });
 });
