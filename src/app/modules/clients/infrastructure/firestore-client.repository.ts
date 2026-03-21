@@ -79,11 +79,11 @@ export class FirestoreClientRepository implements ClientRepository {
     return {
       id: client.id,
       ownerUid,
-      name: client.name,
-      firstName: client.firstName,
-      lastName: client.lastName,
-      email: client.email,
-      phone: client.phone
+      name: client.name || '',
+      firstName: client.firstName || '',
+      lastName: client.lastName || '',
+      email: client.email || '',
+      phone: client.phone || ''
     };
   }
 

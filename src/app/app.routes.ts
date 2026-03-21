@@ -6,6 +6,12 @@ export const routes: Routes = [
   ...AUTH_ROUTES,
   {
     path: '',
+    redirectTo: 'dashboard',
+    pathMatch: 'full'
+  },
+  {
+    path: '',
+    canActivate: [authRequiredGuard],
     loadComponent: () =>
       import('./presentation/components/protected-shell/protected-shell.component').then(
         (m) => m.ProtectedShellComponent
@@ -13,7 +19,6 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
-        canActivate: [authRequiredGuard],
         loadComponent: () =>
           import('./modules/billing/presentation/components/dashboard/dashboard-page.component').then(
             (m) => m.DashboardPageComponent
@@ -36,10 +41,5 @@ export const routes: Routes = [
           )
       }
     ]
-  },
-  {
-    path: '',
-    redirectTo: 'dashboard',
-    pathMatch: 'full'
   }
 ];

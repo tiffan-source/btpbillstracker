@@ -37,7 +37,7 @@ describe('App routes', () => {
 
     expect(dashboardRoute).toBeTruthy();
     expect(dashboardRoute?.loadComponent).toBeTypeOf('function');
-    expect(dashboardRoute?.canActivate).toHaveLength(1);
+    expect(shellRoute?.canActivate).toHaveLength(1);
   });
 
   it('should keep new-bill route', () => {
