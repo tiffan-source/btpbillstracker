@@ -29,6 +29,20 @@ describe('ClientDisplayResolver', () => {
     expect(result.showsIncompleteIndicator).toBe(true);
   });
 
+  it('normalizes extra spaces in canonical fallback name', () => {
+    const resolver = new ClientDisplayResolver();
+
+    const result = resolver.resolve({
+      id: 'c-2',
+      firstName: '',
+      lastName: '',
+      name: '  Alice   Martin  '
+    });
+
+    expect(result.label).toBe('Alice Martin');
+    expect(result.showsIncompleteIndicator).toBe(true);
+  });
+
   it('returns "Client inconnu" when no usable data exists', () => {
     const resolver = new ClientDisplayResolver();
 
