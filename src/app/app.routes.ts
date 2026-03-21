@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
+import { AUTH_ROUTES } from './modules/auth/auth.routes';
 
 export const routes: Routes = [
+  ...AUTH_ROUTES,
   {
     path: 'dashboard',
     loadComponent: () =>
