@@ -66,7 +66,7 @@ export class LoginPageComponent {
   private readonly returnUrl = signal<string>('/dashboard');
 
   constructor() {
-    this.returnUrl.set(this.route.snapshot.queryParamMap.get('returnUrl') ?? '/dashboard');
+    this.returnUrl.set(this.resolveReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl')));
   }
 
   async onSubmit(): Promise<void> {
@@ -94,5 +94,9 @@ export class LoginPageComponent {
     if (ok) {
       await this.router.navigateByUrl(this.returnUrl());
     }
+  }
+
+  private resolveReturnUrl(value: string | null): string {
+    return value && value.trim().length > 0 ? value : '/dashboard';
   }
 }

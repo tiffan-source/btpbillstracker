@@ -81,4 +81,45 @@ describe('RegisterPageComponent', () => {
     expect(facadeMock.registerWithEmail).toHaveBeenCalledWith('user@example.com', 'password123');
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/new-bill');
   });
+
+  it('falls back to /dashboard when returnUrl is empty', async () => {
+    await TestBed.resetTestingModule();
+    facadeMock = {
+      error: signal<string | null>(null),
+      isSubmitting: signal(false),
+      registerWithEmail: vi.fn().mockResolvedValue(true)
+    };
+    routerMock = {
+      navigateByUrl: vi.fn().mockResolvedValue(true)
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [RegisterPageComponent],
+      providers: [
+        { provide: AuthSessionFacade, useValue: facadeMock },
+        { provide: Router, useValue: routerMock },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({ returnUrl: '' })
+            }
+          }
+        }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(RegisterPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.form.patchValue({
+      email: 'user@example.com',
+      password: 'password123',
+      confirmPassword: 'password123'
+    });
+
+    await component.onSubmit();
+
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/dashboard');
+  });
 });

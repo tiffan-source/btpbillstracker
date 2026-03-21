@@ -89,4 +89,43 @@ describe('LoginPageComponent', () => {
     expect(facadeMock.loginWithEmail).toHaveBeenCalledWith('john@doe.test', 'password123');
     expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/clients-chantiers');
   });
+
+  it('falls back to /dashboard when returnUrl is empty', async () => {
+    await TestBed.resetTestingModule();
+    facadeMock = {
+      error: signal<string | null>(null),
+      isSubmitting: signal(false),
+      loginWithEmail: vi.fn().mockResolvedValue(true),
+      loginWithGoogle: vi.fn().mockResolvedValue(false),
+      loginWithFacebook: vi.fn().mockResolvedValue(false)
+    };
+    routerMock = {
+      navigateByUrl: vi.fn().mockResolvedValue(true)
+    };
+
+    await TestBed.configureTestingModule({
+      imports: [LoginPageComponent],
+      providers: [
+        { provide: AuthSessionFacade, useValue: facadeMock },
+        { provide: Router, useValue: routerMock },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({ returnUrl: '' })
+            }
+          }
+        }
+      ]
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(LoginPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.form.patchValue({ email: 'john@doe.test', password: 'password123' });
+
+    await component.onSubmit();
+
+    expect(routerMock.navigateByUrl).toHaveBeenCalledWith('/dashboard');
+  });
 });
