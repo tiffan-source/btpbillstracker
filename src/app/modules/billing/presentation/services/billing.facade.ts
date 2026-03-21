@@ -1,10 +1,11 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, computed, signal, inject } from '@angular/core';
 import { BillStore } from '../stores/bill.store';
 import { BillPdfMemoryFile } from '../models/bill-pdf-memory-file.model';
 import { CreateEnrichedBillInput, CreateEnrichedBillUseCase } from '../../domain/usecases/create-enriched-bill.usecase';
 import { BillingInvoiceFormValue, mapInvoiceFormToCreateEnrichedBillInput } from './bill-submission.mapper';
 import { ReminderAssociationRepository } from '../../../reminders/domain/ports/reminder-association.repository';
 import { ReminderAssociation } from '../../../reminders/domain/entities/reminder-association.entity';
+import { ListClientsUseCase } from '../../../clients';
 
 export type SubmitBillInput = BillingInvoiceFormValue & {
   pdfFile?: BillPdfMemoryFile | null;
@@ -13,18 +14,36 @@ export type SubmitBillInput = BillingInvoiceFormValue & {
 @Injectable({ providedIn: 'root' })
 export class BillingFacade {
   private readonly createEnrichedBillUseCase = inject(CreateEnrichedBillUseCase);
+  private readonly listClientsUseCase = inject(ListClientsUseCase);
   private readonly store = inject(BillStore);
   private readonly reminderAssociationRepository = inject(ReminderAssociationRepository);
+  private readonly clientsState = signal<{ id: string; name: string }[]>([]);
 
   readonly isSubmitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly isSuccess = signal(false);
   readonly draftBill = this.store.draftBill;
+  readonly clients = computed(() => this.clientsState());
+  readonly isClientsLoading = signal(false);
+  readonly clientsLoadError = signal<string | null>(null);
 
-  // Mock data to satisfy UI blueprint
-  readonly clients = signal<{id: string, name: string}[]>([
+  async loadClients(): Promise<void> {
+    this.clientsLoadError.set(null);
+    this.isClientsLoading.set(true);
 
-  ]);
+    const result = await this.listClientsUseCase.execute();
+    if (result.success) {
+      const sortedClients = result.data
+        .map((client) => ({ id: client.id, name: client.name }))
+        .sort((first, second) => first.name.localeCompare(second.name, 'fr', { sensitivity: 'base' }));
+      this.clientsState.set(sortedClients);
+    } else {
+      this.clientsLoadError.set(result.error.message);
+      this.clientsState.set([]);
+    }
+
+    this.isClientsLoading.set(false);
+  }
 
   async createInvoice(formValue: SubmitBillInput): Promise<void> {
     this.isSuccess.set(false);

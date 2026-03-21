@@ -13,9 +13,11 @@ describe('NewBillComponent', () => {
       isSubmitting: signal(false),
       isSuccess: signal(false),
       error: signal(null),
+      clientsLoadError: signal(null),
       draftBill: signal(null),
       clients: signal([]),
       createInvoice: vitest.fn(),
+      loadClients: vitest.fn().mockResolvedValue(undefined),
       dismissSuccess: vitest.fn()
     };
 
@@ -29,6 +31,10 @@ describe('NewBillComponent', () => {
     fixture = TestBed.createComponent(NewBillComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  it('loads persisted clients on init', () => {
+    expect(mockFacade.loadClients).toHaveBeenCalledTimes(1);
   });
 
   it('should call createInvoice when form is populated', () => {

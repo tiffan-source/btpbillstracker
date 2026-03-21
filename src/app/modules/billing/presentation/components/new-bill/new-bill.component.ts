@@ -24,6 +24,7 @@ export class NewBillComponent {
 
   constructor() {
     this.invoiceForm.setClientMode(this.isCreatingNewClient);
+    void this.facade.loadClients();
 
     effect(() => {
       const isSuccess = this.facade.isSuccess();

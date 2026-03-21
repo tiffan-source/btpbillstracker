@@ -51,6 +51,9 @@
             @if (fieldErrorMessage(isCreatingNewClient ? 'newClientName' : 'clientId'); as errorMessage) {
               <p class="mt-2 text-sm text-danger">{{ errorMessage }}</p>
             }
+            @if (facade.clientsLoadError(); as clientsLoadError) {
+              <p class="mt-2 text-sm text-danger" role="status">{{ clientsLoadError }}</p>
+            }
           </div>
 
           <div>
