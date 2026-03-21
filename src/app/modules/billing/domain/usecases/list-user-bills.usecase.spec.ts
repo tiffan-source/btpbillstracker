@@ -72,6 +72,22 @@ describe('ListUserBillsUseCase', () => {
     expect(result.error.code).toBe('AUTH_PERSISTENCE_ERROR');
   });
 
+  it('maps unknown repository failures to UNKNOWN_ERROR', async () => {
+    const repository = new InMemoryBillRepository();
+    repository.listByOwner = vi.fn().mockRejectedValue('unexpected');
+    const currentUser = new StubCurrentUserPort(success({ uid: 'owner-1' }));
+    const useCase = new ListUserBillsUseCase(repository, currentUser);
+
+    const result = await useCase.execute();
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+
+    expect(result.error.code).toBe('UNKNOWN_ERROR');
+  });
+
   it('maps repository persistence error', async () => {
     const repository = new InMemoryBillRepository();
     repository.listByOwner = vi.fn().mockRejectedValue(new BillPersistenceError('lecture impossible'));

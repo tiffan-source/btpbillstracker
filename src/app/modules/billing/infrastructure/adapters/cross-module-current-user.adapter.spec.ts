@@ -19,6 +19,22 @@ describe('CrossModuleCurrentUserAdapter', () => {
     expect(result.data?.uid).toBe('u-1');
   });
 
+  it('maps null auth user', async () => {
+    const useCase = {
+      execute: vi.fn().mockResolvedValue(success(null))
+    } as unknown as GetCurrentUserUseCase;
+    const adapter = new CrossModuleCurrentUserAdapter(useCase);
+
+    const result = await adapter.getCurrentUser();
+
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      return;
+    }
+
+    expect(result.data).toBeNull();
+  });
+
   it('propagates auth failure', async () => {
     const useCase = {
       execute: vi.fn().mockResolvedValue(failure('AUTH_PERSISTENCE_ERROR', 'ko'))

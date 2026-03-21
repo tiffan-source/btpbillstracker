@@ -78,6 +78,22 @@ describe('FirestoreBillRepository', () => {
     expect(bills[0]?.id).toBe('b-1');
   });
 
+  it('list() uses authenticated owner scope', async () => {
+    const dataSource = createDataSource();
+    vi.mocked(dataSource.readAll).mockResolvedValue({
+      docs: [
+        { data: () => ({ id: 'b-1', ownerUid: 'owner-1', reference: 'F-2026-0001', clientId: 'c-1', status: 'VALIDATED' }) },
+        { data: () => ({ id: 'b-2', ownerUid: 'owner-2', reference: 'F-2026-0002', clientId: 'c-2', status: 'DRAFT' }) }
+      ]
+    } as never);
+    const repository = new FirestoreBillRepository(dataSource);
+
+    const bills = await repository.list();
+
+    expect(bills).toHaveLength(1);
+    expect(bills[0]?.id).toBe('b-1');
+  });
+
   it('rejects cross-owner update as not found', async () => {
     const dataSource = createDataSource();
     vi.mocked(dataSource.readById).mockResolvedValue({
