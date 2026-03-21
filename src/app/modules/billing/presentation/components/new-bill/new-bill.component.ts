@@ -66,7 +66,7 @@ export class NewBillComponent {
       this.invoiceForm.markAllAsTouched();
       return;
     }
-    this.facade.createInvoice({
+    void this.facade.requestInvoiceCreation({
       ...this.invoiceForm.getPayload(),
       pdfFile: this.selectedPdfFile
     });
@@ -108,6 +108,18 @@ export class NewBillComponent {
 
   closeSuccessModal(): void {
     this.facade.dismissSuccess();
+  }
+
+  onUseExistingClient(): void {
+    void this.facade.confirmUseExistingClient();
+  }
+
+  onCreateNewClientAnyway(): void {
+    void this.facade.confirmCreateNewClient();
+  }
+
+  closeDuplicateClientModal(): void {
+    this.facade.dismissDuplicateClientPrompt();
   }
 
   private resetFormAfterSuccess(): void {

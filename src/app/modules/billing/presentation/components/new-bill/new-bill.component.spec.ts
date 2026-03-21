@@ -14,9 +14,14 @@ describe('NewBillComponent', () => {
       isSuccess: signal(false),
       error: signal(null),
       clientsLoadError: signal(null),
+      duplicateClientPrompt: signal(null),
       draftBill: signal(null),
       clients: signal([]),
       createInvoice: vitest.fn(),
+      requestInvoiceCreation: vitest.fn(),
+      confirmUseExistingClient: vitest.fn(),
+      confirmCreateNewClient: vitest.fn(),
+      dismissDuplicateClientPrompt: vitest.fn(),
       loadClients: vitest.fn().mockResolvedValue(undefined),
       dismissSuccess: vitest.fn()
     };
@@ -37,7 +42,7 @@ describe('NewBillComponent', () => {
     expect(mockFacade.loadClients).toHaveBeenCalledTimes(1);
   });
 
-  it('should call createInvoice when form is populated', () => {
+  it('should call requestInvoiceCreation when form is populated', () => {
     component.invoiceForm.patchValue({
       clientId: 'client-1',
       amountTTC: 1500,
@@ -51,7 +56,7 @@ describe('NewBillComponent', () => {
     fixture.detectChanges();
     component.onSubmit();
 
-    expect(mockFacade.createInvoice).toHaveBeenCalledWith({
+    expect(mockFacade.requestInvoiceCreation).toHaveBeenCalledWith({
       ...component.invoiceForm.value,
       pdfFile: null
     });
@@ -121,8 +126,8 @@ describe('NewBillComponent', () => {
 
     component.onSubmit();
 
-    expect(mockFacade.createInvoice).toHaveBeenCalledTimes(1);
-    const payload = mockFacade.createInvoice.mock.calls[0][0] as Record<string, unknown>;
+    expect(mockFacade.requestInvoiceCreation).toHaveBeenCalledTimes(1);
+    const payload = mockFacade.requestInvoiceCreation.mock.calls[0][0] as Record<string, unknown>;
     expect(payload['scenario']).toBeUndefined();
   });
 
@@ -142,8 +147,8 @@ describe('NewBillComponent', () => {
 
     component.onSubmit();
 
-    expect(mockFacade.createInvoice).toHaveBeenCalledTimes(1);
-    const payload = mockFacade.createInvoice.mock.calls[0][0] as Record<string, unknown>;
+    expect(mockFacade.requestInvoiceCreation).toHaveBeenCalledTimes(1);
+    const payload = mockFacade.requestInvoiceCreation.mock.calls[0][0] as Record<string, unknown>;
     expect(payload['clientId']).toBe('c-legacy');
     expect(payload['amountTTC']).toBe(900);
     expect(payload['dueDate']).toBe('2026-07-01');
@@ -162,7 +167,7 @@ describe('NewBillComponent', () => {
     component.onSubmit();
     fixture.detectChanges();
 
-    expect(mockFacade.createInvoice).not.toHaveBeenCalled();
+    expect(mockFacade.requestInvoiceCreation).not.toHaveBeenCalled();
     expect(host.textContent).toContain('Le client est obligatoire.');
     expect(host.textContent).toContain('Le montant TTC est obligatoire.');
     expect(host.textContent).toContain("La date d'échéance est obligatoire.");
@@ -200,7 +205,7 @@ describe('NewBillComponent', () => {
 
     component.onSubmit();
 
-    expect(mockFacade.createInvoice).not.toHaveBeenCalled();
+    expect(mockFacade.requestInvoiceCreation).not.toHaveBeenCalled();
   });
 
   it('should show an accessible success modal and focus close button after success', () => {
@@ -281,9 +286,29 @@ describe('NewBillComponent', () => {
 
     component.onSubmit();
 
-    const payload = mockFacade.createInvoice.mock.calls.at(-1)?.[0] as Record<string, unknown>;
+    const payload = mockFacade.requestInvoiceCreation.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(payload['remindersAutoEnabled']).toBe(true);
     expect(payload['reminderScenarioId']).toBe('standard-reminder-scenario');
+  });
+
+  it('renders duplicate client modal and routes actions to facade', () => {
+    mockFacade.duplicateClientPrompt.set({
+      existingClientId: 'c-1',
+      existingClientName: 'Alice Martin',
+      pendingForm: { newClientName: 'Alice Martin' }
+    });
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    expect(host.querySelector('[data-testid=\"duplicate-client-use-existing\"]')).toBeTruthy();
+
+    host.querySelector<HTMLButtonElement>('[data-testid=\"duplicate-client-use-existing\"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid=\"duplicate-client-create-new\"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid=\"duplicate-client-cancel\"]')?.click();
+
+    expect(mockFacade.confirmUseExistingClient).toHaveBeenCalledTimes(1);
+    expect(mockFacade.confirmCreateNewClient).toHaveBeenCalledTimes(1);
+    expect(mockFacade.dismissDuplicateClientPrompt).toHaveBeenCalledTimes(1);
   });
 
   it('should reset the entire form after successful invoice creation', () => {

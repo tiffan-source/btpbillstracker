@@ -11,6 +11,12 @@ export type SubmitBillInput = BillingInvoiceFormValue & {
   pdfFile?: BillPdfMemoryFile | null;
 };
 
+export type DuplicateClientPrompt = {
+  existingClientId: string;
+  existingClientName: string;
+  pendingForm: SubmitBillInput;
+};
+
 @Injectable({ providedIn: 'root' })
 export class BillingFacade {
   private readonly createEnrichedBillUseCase = inject(CreateEnrichedBillUseCase);
@@ -26,6 +32,7 @@ export class BillingFacade {
   readonly clients = computed(() => this.clientsState());
   readonly isClientsLoading = signal(false);
   readonly clientsLoadError = signal<string | null>(null);
+  readonly duplicateClientPrompt = signal<DuplicateClientPrompt | null>(null);
 
   async loadClients(): Promise<void> {
     this.clientsLoadError.set(null);
@@ -52,6 +59,57 @@ export class BillingFacade {
     await this.submitNewBill(input, formValue.pdfFile ?? null);
 
     this.isSubmitting.set(false);
+  }
+
+  async requestInvoiceCreation(formValue: SubmitBillInput): Promise<void> {
+    const normalizedNewClientName = this.normalizeClientName(formValue.newClientName);
+    if (!normalizedNewClientName) {
+      await this.createInvoice(formValue);
+      return;
+    }
+
+    const matchingClient = this.clients().find(
+      (client) => this.normalizeClientName(client.name) === normalizedNewClientName
+    );
+
+    if (!matchingClient) {
+      await this.createInvoice(formValue);
+      return;
+    }
+
+    this.duplicateClientPrompt.set({
+      existingClientId: matchingClient.id,
+      existingClientName: matchingClient.name,
+      pendingForm: formValue
+    });
+  }
+
+  async confirmUseExistingClient(): Promise<void> {
+    const prompt = this.duplicateClientPrompt();
+    if (!prompt) {
+      return;
+    }
+
+    this.duplicateClientPrompt.set(null);
+    await this.createInvoice({
+      ...prompt.pendingForm,
+      clientId: prompt.existingClientId,
+      newClientName: ''
+    });
+  }
+
+  async confirmCreateNewClient(): Promise<void> {
+    const prompt = this.duplicateClientPrompt();
+    if (!prompt) {
+      return;
+    }
+
+    this.duplicateClientPrompt.set(null);
+    await this.createInvoice(prompt.pendingForm);
+  }
+
+  dismissDuplicateClientPrompt(): void {
+    this.duplicateClientPrompt.set(null);
   }
 
   async submitNewBill(input: CreateEnrichedBillInput, pdfFile: BillPdfMemoryFile | null): Promise<void> {
@@ -82,5 +140,14 @@ export class BillingFacade {
 
   dismissSuccess(): void {
     this.isSuccess.set(false);
+  }
+
+  private normalizeClientName(name: string | null | undefined): string {
+    return (name ?? '')
+      .trim()
+      .normalize('NFKD')
+      .replace(/\p{Diacritic}/gu, '')
+      .replace(/\s+/g, ' ')
+      .toLowerCase();
   }
 }
