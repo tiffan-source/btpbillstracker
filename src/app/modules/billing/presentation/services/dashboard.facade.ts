@@ -46,43 +46,10 @@ export class DashboardFacade {
   private readonly markedPaid = signal<Record<string, true>>({});
   private readonly persistedBills = signal<Bill[]>([]);
 
-  private readonly seededInvoices = signal<DashboardInvoiceViewModel[]>([
-    {
-      id: 'inv-urgent-1',
-      client: 'Marie Lambert',
-      chantier: 'Cadjehoun',
-      amountTTC: 156,
-      dueDate: '2026-03-19',
-      status: 'EN_RETARD',
-      nextReminder: '—',
-      overdueDays: 1
-    },
-    {
-      id: 'inv-2',
-      client: 'Sonia Ahouanvoébla',
-      chantier: 'Akpakpa',
-      amountTTC: 480,
-      dueDate: '2026-03-28',
-      status: 'EN_COURS',
-      nextReminder: '—',
-      overdueDays: 0
-    },
-    {
-      id: 'inv-3',
-      client: 'BTP Yovo',
-      chantier: 'Calavi',
-      amountTTC: 920,
-      dueDate: '2026-03-05',
-      status: 'PAYE',
-      nextReminder: '—',
-      overdueDays: 0
-    }
-  ]);
 
   readonly clients = signal<{ id: string; name: string }[]>([
-    { id: 'client-1', name: 'Marie Lambert' },
-    { id: 'client-2', name: 'Sonia Ahouanvoébla' }
   ]);
+  
   readonly isEditModalOpen = signal(false);
   readonly isEditSubmitting = signal(false);
   readonly editError = signal<string | null>(null);
@@ -93,9 +60,8 @@ export class DashboardFacade {
   }
 
   readonly invoices = computed(() => {
-    const base = this.seededInvoices();
     const persisted = this.persistedBills().map((bill) => this.mapBillToDashboardInvoice(bill));
-    const merged = [...persisted, ...base];
+    const merged = [...persisted];
     const paid = this.markedPaid();
 
     return merged.map((invoice) =>

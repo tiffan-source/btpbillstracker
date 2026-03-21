@@ -23,8 +23,7 @@ export class BillingFacade {
 
   // Mock data to satisfy UI blueprint
   readonly clients = signal<{id: string, name: string}[]>([
-    { id: 'client-1', name: 'Client 1' },
-    { id: 'client-2', name: 'Client 2' }
+
   ]);
 
   async createInvoice(formValue: SubmitBillInput): Promise<void> {

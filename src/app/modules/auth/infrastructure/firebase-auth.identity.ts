@@ -170,6 +170,7 @@ export class FirebaseAuthIdentity extends AuthIdentityPort {
   }
 
   async getCurrentUser(): Promise<AuthUser | null> {
+    await this.auth.authStateReady();
     return this.auth.currentUser ? this.mapUser(this.auth.currentUser) : null;
   }
 
