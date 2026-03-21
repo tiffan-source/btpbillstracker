@@ -10,6 +10,7 @@ describe('InvoiceTableComponent', () => {
     {
       id: 'i-1',
       client: 'Marie Lambert',
+      showsIncompleteClientIndicator: false,
       chantier: 'Cadjehoun',
       amountTTC: 156,
       dueDate: '2026-03-19',
@@ -19,7 +20,8 @@ describe('InvoiceTableComponent', () => {
     },
     {
       id: 'i-2',
-      client: 'Sonia',
+      client: 'Client inconnu',
+      showsIncompleteClientIndicator: true,
       chantier: 'Akpakpa',
       amountTTC: 480,
       dueDate: '2026-03-28',
@@ -66,5 +68,10 @@ describe('InvoiceTableComponent', () => {
 
     expect(paidLabeled.length).toBe(1);
   });
-});
 
+  it('shows incomplete indicator for fallback client labels', () => {
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.textContent).toContain('Client incomplet');
+  });
+});

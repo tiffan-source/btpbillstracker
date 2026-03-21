@@ -64,7 +64,17 @@
         <div class="flex flex-col gap-3">
           @for (invoice of facade.urgentInvoices(); track invoice.id) {
             <article class="grid grid-cols-1 gap-2 text-sm md:grid-cols-4">
-              <p class="font-semibold text-foreground">{{ invoice.client }}</p>
+              <p class="font-semibold text-foreground">
+                <span>{{ invoice.client }}</span>
+                @if (invoice.showsIncompleteClientIndicator) {
+                  <span
+                    class="ml-2 inline-flex rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning"
+                    title="Profil client incomplet"
+                  >
+                    Client incomplet
+                  </span>
+                }
+              </p>
               <p class="text-foreground-muted">{{ invoice.chantier }}</p>
               <p class="font-semibold text-foreground">{{ invoice.amountTTC }} €</p>
               <p class="text-danger">{{ invoice.overdueDays }}j de retard</p>

@@ -16,6 +16,7 @@ const mockDashboardFacade = {
     {
       id: 'u-1',
       client: 'Marie Lambert',
+      showsIncompleteClientIndicator: false,
       chantier: 'Cadjehoun',
       amountTTC: 156,
       dueDate: '2026-03-19',

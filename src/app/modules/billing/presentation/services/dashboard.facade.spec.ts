@@ -3,8 +3,10 @@ import { Router } from '@angular/router';
 import { Bill } from '../../domain/entities/bill.entity';
 import { BillNotFoundError } from '../../domain/errors/bill-not-found.error';
 import { BillRepository } from '../../domain/ports/bill.repository';
+import { ListClientsUseCase } from '../../../clients';
 import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
 import { UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
+import { ClientDisplayResolver } from './client-display.resolver';
 import { DashboardFacade } from './dashboard.facade';
 
 class InMemoryBillRepository implements BillRepository {
@@ -38,6 +40,11 @@ class InMemoryBillRepository implements BillRepository {
 }
 
 describe('DashboardFacade', () => {
+  const flushFacadeEffects = async (): Promise<void> => {
+    await Promise.resolve();
+    await Promise.resolve();
+  };
+
   const createListUserBillsUseCase = (repository: BillRepository): ListUserBillsUseCase =>
     ({
       execute: vi.fn().mockImplementation(async () => {
@@ -51,12 +58,35 @@ describe('DashboardFacade', () => {
       navigateByUrl: vi.fn().mockResolvedValue(true)
     }) as unknown as Router;
 
+  const createDisplayResolver = (): ClientDisplayResolver =>
+    ({
+      resolve: vi.fn().mockImplementation((profile: { id: string }) => ({
+        label: profile.id === 'client-1' ? 'Alice Martin' : profile.id === 'client-2' ? 'Bob Dupont' : 'Client inconnu',
+        showsIncompleteIndicator: profile.id !== 'client-1'
+      }))
+    }) as unknown as ClientDisplayResolver;
+
+  const createListClientsUseCase = (): ListClientsUseCase =>
+    ({
+      execute: vi.fn().mockResolvedValue(
+        {
+          success: true,
+          data: [
+            { id: 'client-1', name: 'Alice Martin', firstName: 'Alice', lastName: 'Martin' },
+            { id: 'client-2', name: 'Bob Dupont', firstName: 'Bob', lastName: 'Dupont' }
+          ]
+        }
+      )
+    }) as unknown as ListClientsUseCase;
+
   it('should expose persisted invoices and relance placeholder', async () => {
     const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -68,7 +98,7 @@ describe('DashboardFacade', () => {
     });
 
     const facade = TestBed.inject(DashboardFacade);
-    await Promise.resolve();
+    await flushFacadeEffects();
     const invoices = facade.invoices();
 
     expect(invoices.length).toBe(0);
@@ -89,6 +119,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -100,7 +132,7 @@ describe('DashboardFacade', () => {
     });
 
     const facade = TestBed.inject(DashboardFacade);
-    await Promise.resolve();
+    await flushFacadeEffects();
 
     const editable = await facade.openEditInvoice('b-1');
     expect(editable).not.toBeNull();
@@ -125,6 +157,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -135,7 +169,7 @@ describe('DashboardFacade', () => {
       ]
     });
     const facade = TestBed.inject(DashboardFacade);
-    await Promise.resolve();
+    await flushFacadeEffects();
     await facade.openEditInvoice('b-2');
 
     await facade.submitEditedInvoice({
@@ -163,6 +197,8 @@ describe('DashboardFacade', () => {
     expect(updatedInvoice?.status).toBe('PAYE');
     expect(updatedInvoice?.amountTTC).toBe(777);
     expect(updatedInvoice?.chantier).toBe('Akpakpa');
+    expect(updatedInvoice?.client).toBe('Bob Dupont');
+    expect(updatedInvoice?.showsIncompleteClientIndicator).toBe(true);
   });
 
   it('keeps modal open and exposes error when update fails', async () => {
@@ -171,6 +207,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -181,7 +219,7 @@ describe('DashboardFacade', () => {
       ]
     });
     const facade = TestBed.inject(DashboardFacade);
-    await Promise.resolve();
+    await flushFacadeEffects();
 
     facade.isEditModalOpen.set(true);
 
@@ -213,6 +251,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -245,6 +285,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -256,7 +298,7 @@ describe('DashboardFacade', () => {
     });
 
     TestBed.inject(DashboardFacade);
-    await Promise.resolve();
+    await flushFacadeEffects();
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login?returnUrl=/dashboard');
   });
@@ -279,6 +321,8 @@ describe('DashboardFacade', () => {
       providers: [
         DashboardFacade,
         { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -290,12 +334,44 @@ describe('DashboardFacade', () => {
     });
 
     const facade = TestBed.inject(DashboardFacade);
-    await Promise.resolve();
+    await flushFacadeEffects();
 
     const editable = await facade.openEditInvoice('b-owner-2');
 
     expect(editable).toBeNull();
     expect(facade.isEditModalOpen()).toBe(false);
     expect(facade.editError()).toContain('Seules les factures persistées');
+  });
+
+  it('uses display resolver to avoid exposing raw client ids', async () => {
+    const persisted = new Bill('b-3', 'F-2026-0103', 'client-1')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-3');
+
+    expect(facade.invoices()[0]?.client).toBe('Alice Martin');
+    expect(facade.invoices()[0]?.client).not.toBe('client-1');
+    expect(facade.invoices()[0]?.showsIncompleteClientIndicator).toBe(false);
   });
 });

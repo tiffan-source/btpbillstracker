@@ -1,15 +1,18 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { ListClientsUseCase } from '../../../clients';
 import { Bill, BillStatus } from '../../domain/entities/bill.entity';
 import { ListUserBillsUseCase } from '../../domain/usecases/list-user-bills.usecase';
 import { UpdateEnrichedBillInput, UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched-bill.usecase';
 import { EditBillFormValue } from '../forms/edit-bill.form';
+import { ClientDisplayResolver } from './client-display.resolver';
 
 export type DashboardInvoiceStatus = 'EN_RETARD' | 'EN_COURS' | 'PAYE';
 
 export type DashboardInvoiceViewModel = {
   id: string;
   client: string;
+  showsIncompleteClientIndicator: boolean;
   chantier: string;
   amountTTC: number;
   dueDate: string;
@@ -44,9 +47,12 @@ export type EditableInvoiceViewModel = {
 export class DashboardFacade {
   private readonly router = inject(Router);
   private readonly listUserBillsUseCase = inject(ListUserBillsUseCase);
+  private readonly listClientsUseCase = inject(ListClientsUseCase);
   private readonly updateEnrichedBillUseCase = inject(UpdateEnrichedBillUseCase);
+  private readonly clientDisplayResolver = inject(ClientDisplayResolver);
   private readonly markedPaid = signal<Record<string, true>>({});
   private readonly persistedBills = signal<Bill[]>([]);
+  private readonly clientsById = signal<Record<string, { id: string; name?: string; firstName?: string; lastName?: string }>>({});
 
   readonly isEditModalOpen = signal(false);
   readonly isEditSubmitting = signal(false);
@@ -68,17 +74,21 @@ export class DashboardFacade {
   });
 
   readonly clients = computed<{ id: string; name: string }[]>(() => {
-    const uniqueByName = new Map<string, { id: string; name: string }>();
+    const byId = new Map<string, { id: string; name: string }>();
+    const lookup = this.clientsById();
 
     for (const bill of this.persistedBills()) {
-      const name = bill.clientId.trim();
-      if (!name || uniqueByName.has(name.toLowerCase())) {
+      const id = bill.clientId.trim();
+      if (!id || byId.has(id)) {
         continue;
       }
-      uniqueByName.set(name.toLowerCase(), { id: name, name });
+      const resolved = this.clientDisplayResolver.resolve(
+        lookup[id] ?? { id }
+      );
+      byId.set(id, { id, name: resolved.label });
     }
 
-    return Array.from(uniqueByName.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   });
 
   readonly urgentInvoices = computed(() =>
@@ -189,10 +199,13 @@ export class DashboardFacade {
     const dueDate = bill.dueDate ?? new Date().toISOString().slice(0, 10);
     const overdueDays = this.computeOverdueDays(dueDate);
     const status = this.mapBillStatusForDashboard(bill.status, overdueDays);
+    const profile = this.clientsById()[bill.clientId] ?? { id: bill.clientId };
+    const resolvedClient = this.clientDisplayResolver.resolve(profile);
 
     return {
       id: bill.id,
-      client: bill.clientId || 'Client',
+      client: resolvedClient.label,
+      showsIncompleteClientIndicator: resolvedClient.showsIncompleteIndicator,
       chantier: bill.chantier ?? 'Chantier non renseigné',
       amountTTC: amount,
       dueDate,
@@ -241,19 +254,40 @@ export class DashboardFacade {
   }
 
   private async refreshPersistedInvoices(): Promise<void> {
-    const result = await this.listUserBillsUseCase.execute();
+    const [billsResult, clientsResult] = await Promise.all([
+      this.listUserBillsUseCase.execute(),
+      this.listClientsUseCase.execute()
+    ]);
 
-    if (result.success) {
-      this.persistedBills.set(result.data);
+    if (clientsResult.success) {
+      const byId = clientsResult.data.reduce<Record<string, { id: string; name?: string; firstName?: string; lastName?: string }>>(
+        (acc, client) => {
+          acc[client.id] = {
+            id: client.id,
+            name: client.name,
+            firstName: client.firstName,
+            lastName: client.lastName
+          };
+          return acc;
+        },
+        {}
+      );
+      this.clientsById.set(byId);
+    } else {
+      this.clientsById.set({});
+    }
+
+    if (billsResult.success) {
+      this.persistedBills.set(billsResult.data);
       return;
     }
 
     this.persistedBills.set([]);
-    if (result.error.code === 'AUTH_USER_NOT_FOUND' || result.error.code.startsWith('AUTH_')) {
+    if (billsResult.error.code === 'AUTH_USER_NOT_FOUND' || billsResult.error.code.startsWith('AUTH_')) {
       await this.router.navigateByUrl('/login?returnUrl=/dashboard');
       return;
     }
 
-    this.editError.set(result.error.message);
+    this.editError.set(billsResult.error.message);
   }
 }

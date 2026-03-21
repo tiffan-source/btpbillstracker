@@ -18,7 +18,17 @@
       <tbody class="divide-y divide-subtle text-sm">
         @for (invoice of invoices(); track invoice.id) {
           <tr>
-            <td class="px-4 py-3 font-semibold text-foreground">{{ invoice.client }}</td>
+            <td class="px-4 py-3 font-semibold text-foreground">
+              <span>{{ invoice.client }}</span>
+              @if (invoice.showsIncompleteClientIndicator) {
+                <span
+                  class="ml-2 inline-flex rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-warning"
+                  title="Profil client incomplet"
+                >
+                  Client incomplet
+                </span>
+              }
+            </td>
             <td class="px-4 py-3 text-foreground-muted">{{ invoice.chantier }}</td>
             <td class="px-4 py-3 font-semibold text-foreground">{{ invoice.amountTTC }} €</td>
             <td class="px-4 py-3 text-foreground">
@@ -74,4 +84,3 @@
     </table>
   </div>
 </section>
-
