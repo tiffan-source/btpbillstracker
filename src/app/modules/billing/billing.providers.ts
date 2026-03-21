@@ -1,6 +1,7 @@
 import { Provider } from '@angular/core';
 import { BillRepository } from './domain/ports/bill.repository';
 import { LocalBillRepository } from './infrastructure/repositories/local-bill.repository';
+import { FirestoreBillRepository } from './infrastructure/repositories/firestore-bill.repository';
 import { ReferenceGeneratorService } from './domain/ports/reference-generator.service';
 import { SimpleReferenceGenerator } from './infrastructure/simple-reference-generator.service';
 import { BillStore } from './presentation/stores/bill.store';
@@ -11,9 +12,16 @@ import { ClientProviderPort } from './domain/ports/client-provider.port';
 import { CrossModuleClientProviderAdapter } from './infrastructure/adapters/cross-module-client-provider.adapter';
 import { ReminderAssociationRepository } from '../reminders/domain/ports/reminder-association.repository';
 import { LocalReminderAssociationRepository } from '../reminders/infrastructure/repositories/local-reminder-association.repository';
+import { environment } from '../../../environments/environment';
+
+/**
+ * Résoudre l'implémentation de repository billing selon le feature flag de persistance.
+ */
+export const resolveBillRepositoryClass = (useFirebasePersistence: boolean) =>
+  useFirebasePersistence ? FirestoreBillRepository : LocalBillRepository;
 
 export const BILLING_PROVIDERS: Provider[] = [
-  { provide: BillRepository, useClass: LocalBillRepository },
+  { provide: BillRepository, useClass: resolveBillRepositoryClass(environment.useFirebasePersistence) },
   { provide: ReferenceGeneratorService, useClass: SimpleReferenceGenerator },
   { provide: BillStore, useClass: LocalBillStore },
   { provide: ClientProviderPort, useClass: CrossModuleClientProviderAdapter },

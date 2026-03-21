@@ -32,5 +32,17 @@ service cloud.firestore {
           || request.resource.data.ownerUid == resource.data.ownerUid
         );
     }
+
+    match /bills/{billId} {
+      allow create: if isSignedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.id == billId;
+
+      allow read, update, delete: if isOwner(resource.data.ownerUid)
+        && (
+          request.method != 'update'
+          || request.resource.data.ownerUid == resource.data.ownerUid
+        );
+    }
   }
 }
