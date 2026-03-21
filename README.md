@@ -57,3 +57,11 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Firebase security checklist (production)
+
+- Activer `useFirebasePersistence=true` uniquement avec `firebaseAuthMode='email-password'`.
+- Forcer `firestoreSecurityMode='owner-uid'` en production (bloqué au démarrage sinon).
+- Déployer les règles `firebase/firestore.rules` avant toute mise en production.
+- Vérifier que chaque document `clients`, `chantiers`, `bills` contient `ownerUid` et `id` immuables.
+- Confirmer que les routes d'écriture sont protégées pour comptes vérifiés uniquement.

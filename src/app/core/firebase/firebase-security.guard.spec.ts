@@ -40,6 +40,15 @@ describe('assertFirebaseSecurityPolicy', () => {
     );
   });
 
+  it('throws when production firebase persistence uses no auth mode', () => {
+    const env = baseEnvironment();
+    env.firebaseAuthMode = 'none';
+
+    expect(() => assertFirebaseSecurityPolicy(env)).toThrowError(
+      '[SECURITY_GUARD] Firebase persistence in production requires firebaseAuthMode=email-password.'
+    );
+  });
+
   it('does not throw when firebase persistence is disabled', () => {
     const env = baseEnvironment();
     env.useFirebasePersistence = false;
