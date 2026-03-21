@@ -1,9 +1,20 @@
 import { AuthSessionFacade } from './auth-session.facade';
+import { LoginWithFacebookUseCase } from '../../domain/usecases/login-with-facebook.usecase';
+import { LoginWithGoogleUseCase } from '../../domain/usecases/login-with-google.usecase';
 import { LoginWithEmailUseCase } from '../../domain/usecases/login-with-email.usecase';
 import { RegisterWithEmailUseCase } from '../../domain/usecases/register-with-email.usecase';
 import { success } from '../../../../core/result/result';
 
 describe('AuthSessionFacade', () => {
+  const createGoogleUseCase = () =>
+    ({
+      execute: vi.fn()
+    }) as unknown as LoginWithGoogleUseCase;
+  const createFacebookUseCase = () =>
+    ({
+      execute: vi.fn()
+    }) as unknown as LoginWithFacebookUseCase;
+
   it('exposes authentication state through signals', () => {
     const registerUseCase = {
       execute: vi.fn()
@@ -11,7 +22,7 @@ describe('AuthSessionFacade', () => {
     const loginUseCase = {
       execute: vi.fn()
     } as unknown as LoginWithEmailUseCase;
-    const facade = new AuthSessionFacade(registerUseCase, loginUseCase);
+    const facade = new AuthSessionFacade(registerUseCase, loginUseCase, createGoogleUseCase(), createFacebookUseCase());
 
     expect(facade.isAuthenticated()).toBe(false);
     expect(facade.user()).toBeNull();
@@ -34,7 +45,7 @@ describe('AuthSessionFacade', () => {
     const loginUseCase = {
       execute: vi.fn()
     } as unknown as LoginWithEmailUseCase;
-    const facade = new AuthSessionFacade(registerUseCase, loginUseCase);
+    const facade = new AuthSessionFacade(registerUseCase, loginUseCase, createGoogleUseCase(), createFacebookUseCase());
 
     const ok = await facade.registerWithEmail('new@example.com', 'Password123!');
 
@@ -56,12 +67,62 @@ describe('AuthSessionFacade', () => {
         }
       })
     } as unknown as LoginWithEmailUseCase;
-    const facade = new AuthSessionFacade(registerUseCase, loginUseCase);
+    const facade = new AuthSessionFacade(registerUseCase, loginUseCase, createGoogleUseCase(), createFacebookUseCase());
 
     const ok = await facade.loginWithEmail('user@example.com', 'Password123!');
 
     expect(ok).toBe(false);
     expect(facade.user()).toBeNull();
     expect(facade.error()).toBe("L'adresse email n'est pas encore vérifiée.");
+  });
+
+  it('sets authenticated user after successful Google login', async () => {
+    const registerUseCase = {
+      execute: vi.fn()
+    } as unknown as RegisterWithEmailUseCase;
+    const loginUseCase = {
+      execute: vi.fn()
+    } as unknown as LoginWithEmailUseCase;
+    const googleUseCase = {
+      execute: vi.fn().mockResolvedValue(
+        success({
+          uid: 'google-u-1',
+          email: 'google@example.com',
+          emailVerified: true
+        })
+      )
+    } as unknown as LoginWithGoogleUseCase;
+    const facebookUseCase = createFacebookUseCase();
+    const facade = new AuthSessionFacade(registerUseCase, loginUseCase, googleUseCase, facebookUseCase);
+
+    const ok = await facade.loginWithGoogle();
+
+    expect(ok).toBe(true);
+    expect(facade.user()?.uid).toBe('google-u-1');
+  });
+
+  it('stores explicit error when Facebook login fails', async () => {
+    const registerUseCase = {
+      execute: vi.fn()
+    } as unknown as RegisterWithEmailUseCase;
+    const loginUseCase = {
+      execute: vi.fn()
+    } as unknown as LoginWithEmailUseCase;
+    const googleUseCase = createGoogleUseCase();
+    const facebookUseCase = {
+      execute: vi.fn().mockResolvedValue({
+        success: false,
+        error: {
+          code: 'AUTH_PERSISTENCE_ERROR',
+          message: 'Connexion Facebook impossible.'
+        }
+      })
+    } as unknown as LoginWithFacebookUseCase;
+    const facade = new AuthSessionFacade(registerUseCase, loginUseCase, googleUseCase, facebookUseCase);
+
+    const ok = await facade.loginWithFacebook();
+
+    expect(ok).toBe(false);
+    expect(facade.error()).toBe('Connexion Facebook impossible.');
   });
 });

@@ -1,8 +1,11 @@
 import { Inject, Injectable, Optional } from '@angular/core';
 import {
   Auth,
+  FacebookAuthProvider,
+  GoogleAuthProvider,
   User,
   createUserWithEmailAndPassword,
+  signInWithPopup,
   getAuth,
   sendEmailVerification,
   signInWithEmailAndPassword,
@@ -18,6 +21,8 @@ export abstract class FirebaseAuthGateway {
   abstract createUser(auth: Auth, email: string, password: string): Promise<{ user: User }>;
   abstract sendVerificationEmail(user: User): Promise<void>;
   abstract signIn(auth: Auth, email: string, password: string): Promise<{ user: User }>;
+  abstract signInWithGoogle(auth: Auth): Promise<{ user: User }>;
+  abstract signInWithFacebook(auth: Auth): Promise<{ user: User }>;
   abstract signOut(auth: Auth): Promise<void>;
 }
 
@@ -36,6 +41,16 @@ class DefaultFirebaseAuthGateway extends FirebaseAuthGateway {
 
   signIn(auth: Auth, email: string, password: string): Promise<{ user: User }> {
     return signInWithEmailAndPassword(auth, email, password);
+  }
+
+  signInWithGoogle(auth: Auth): Promise<{ user: User }> {
+    const provider = new GoogleAuthProvider();
+    return signInWithPopup(auth, provider);
+  }
+
+  signInWithFacebook(auth: Auth): Promise<{ user: User }> {
+    const provider = new FacebookAuthProvider();
+    return signInWithPopup(auth, provider);
   }
 
   signOut(auth: Auth): Promise<void> {
@@ -78,6 +93,30 @@ export class FirebaseAuthIdentity extends AuthIdentityPort {
       return this.mapUser(result.user);
     } catch (error) {
       throw new AuthPersistenceError('Connexion impossible avec ces identifiants.', error);
+    }
+  }
+
+  /**
+   * Connecter un utilisateur via Google OAuth.
+   */
+  async loginWithGoogle(): Promise<AuthUser> {
+    try {
+      const result = await this.gateway.signInWithGoogle(this.auth);
+      return this.mapUser(result.user);
+    } catch (error) {
+      throw new AuthPersistenceError('Connexion Google impossible.', error);
+    }
+  }
+
+  /**
+   * Connecter un utilisateur via Facebook OAuth.
+   */
+  async loginWithFacebook(): Promise<AuthUser> {
+    try {
+      const result = await this.gateway.signInWithFacebook(this.auth);
+      return this.mapUser(result.user);
+    } catch (error) {
+      throw new AuthPersistenceError('Connexion Facebook impossible.', error);
     }
   }
 

@@ -9,6 +9,8 @@ describe('FirebaseAuthIdentity', () => {
       createUser: vi.fn(),
       sendVerificationEmail: vi.fn(),
       signIn: vi.fn(),
+      signInWithGoogle: vi.fn(),
+      signInWithFacebook: vi.fn(),
       signOut: vi.fn()
     };
   };
@@ -48,5 +50,41 @@ describe('FirebaseAuthIdentity', () => {
         password: 'Password123!'
       })
     ).rejects.toThrow(AuthPersistenceError);
+  });
+
+  it('authenticates user with Google provider', async () => {
+    const gateway = buildGateway();
+    vi.mocked(gateway.signInWithGoogle).mockResolvedValue({
+      user: {
+        uid: 'google-u-1',
+        email: 'google@example.com',
+        emailVerified: true,
+        displayName: null
+      } as never
+    });
+    const identity = new FirebaseAuthIdentity(gateway);
+
+    const user = await identity.loginWithGoogle();
+
+    expect(gateway.signInWithGoogle).toHaveBeenCalled();
+    expect(user.uid).toBe('google-u-1');
+  });
+
+  it('authenticates user with Facebook provider', async () => {
+    const gateway = buildGateway();
+    vi.mocked(gateway.signInWithFacebook).mockResolvedValue({
+      user: {
+        uid: 'facebook-u-1',
+        email: 'facebook@example.com',
+        emailVerified: true,
+        displayName: null
+      } as never
+    });
+    const identity = new FirebaseAuthIdentity(gateway);
+
+    const user = await identity.loginWithFacebook();
+
+    expect(gateway.signInWithFacebook).toHaveBeenCalled();
+    expect(user.uid).toBe('facebook-u-1');
   });
 });

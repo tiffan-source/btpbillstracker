@@ -17,6 +17,16 @@ export abstract class AuthIdentityPort {
   abstract loginWithEmail(credentials: AuthCredentials): Promise<AuthUser>;
 
   /**
+   * Authentifier un utilisateur avec Google.
+   */
+  abstract loginWithGoogle(): Promise<AuthUser>;
+
+  /**
+   * Authentifier un utilisateur avec Facebook.
+   */
+  abstract loginWithFacebook(): Promise<AuthUser>;
+
+  /**
    * Fermer la session courante.
    */
   abstract signOut(): Promise<void>;
