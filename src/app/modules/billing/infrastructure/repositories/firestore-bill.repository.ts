@@ -21,21 +21,20 @@ export class FirestoreBillRepository implements BillRepository {
   }
 
   async list(): Promise<Bill[]> {
+    const ownerUid = this.getOwnerUid();
+    return this.listByOwner(ownerUid);
+  }
+
+  async listByOwner(userId: string): Promise<Bill[]> {
     try {
-      const ownerUid = this.getOwnerUid();
       const snapshot = await this.dataSource.readAll();
       return snapshot.docs
         .map((entry) => entry.data() as FirestorePlainBill)
-        .filter((plainBill) => plainBill.ownerUid === ownerUid)
+        .filter((plainBill) => plainBill.ownerUid === userId)
         .map((plainBill) => this.toEntity(plainBill));
     } catch (error: unknown) {
       throw new BillPersistenceError('Impossible de lire les factures.', { collection: this.collectionName }, error);
     }
-  }
-
-
-  async listByOwner(userId: string): Promise<Bill[]> {
-    return this.list();
   }
 
   async update(bill: Bill): Promise<void> {

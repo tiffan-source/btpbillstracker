@@ -580,7 +580,9 @@ describe('BillingFacade', () => {
     });
 
     const { LocalBillRepository } = await import('../../infrastructure/repositories/local-bill.repository');
-    const repository = new LocalBillRepository();
+    const repository = new LocalBillRepository({
+      getCurrentUser: () => ({ uid: 'owner-1' })
+    } as never);
 
     const bill = new Bill('b-2', 'F-2026-0002', 'c-9')
       .setAmountTTC(2100)
@@ -603,6 +605,7 @@ describe('BillingFacade', () => {
     expect(parsed).toEqual([
       {
         id: 'b-2',
+        ownerUid: 'owner-1',
         reference: 'F-2026-0002',
         clientId: 'c-9',
         status: 'DRAFT',

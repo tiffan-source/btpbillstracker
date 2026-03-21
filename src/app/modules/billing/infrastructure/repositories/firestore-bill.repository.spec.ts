@@ -38,7 +38,7 @@ describe('FirestoreBillRepository', () => {
     });
   });
 
-  it('lists only bills scoped to current owner', async () => {
+  it('lists only bills scoped to requested owner', async () => {
     const dataSource = createDataSource();
     vi.mocked(dataSource.readAll).mockResolvedValue({
       docs: [
@@ -72,7 +72,7 @@ describe('FirestoreBillRepository', () => {
     } as never);
     const repository = new FirestoreBillRepository(dataSource);
 
-    const bills = await repository.list();
+    const bills = await repository.listByOwner('owner-1');
 
     expect(bills).toHaveLength(1);
     expect(bills[0]?.id).toBe('b-1');
@@ -101,6 +101,6 @@ describe('FirestoreBillRepository', () => {
     vi.mocked(dataSource.readAll).mockRejectedValue(new Error('permission denied'));
     const repository = new FirestoreBillRepository(dataSource);
 
-    await expect(repository.list()).rejects.toThrow(BillPersistenceError);
+    await expect(repository.listByOwner('owner-1')).rejects.toThrow(BillPersistenceError);
   });
 });
