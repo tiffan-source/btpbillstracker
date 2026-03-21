@@ -164,8 +164,22 @@
             [disabled]="!invoiceForm.controls.remindersAutoEnabled.value"
             class="block w-full rounded-input border border-input bg-surface text-foreground shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <option value="standard-reminder-scenario">Standard – J-3, J+3, J+10</option>
+            <option value="">Sélectionner un scénario</option>
+            @for (scenario of facade.reminderScenarios(); track scenario.id) {
+              <option [value]="scenario.id">{{ scenario.name }}</option>
+            }
           </select>
+          @if (facade.reminderScenariosLoadError(); as reminderLoadError) {
+            <p class="mt-2 text-sm text-danger" role="status">{{ reminderLoadError }}</p>
+          }
+          @if (invoiceForm.controls.remindersAutoEnabled.value && !facade.reminderScenariosLoadError() && !facade.isReminderScenariosLoading() && facade.reminderScenarios().length === 0) {
+            <p class="mt-2 text-sm text-danger" role="status">
+              Aucun scénario de relance disponible. Désactivez les relances automatiques pour continuer.
+            </p>
+          }
+          @if (fieldErrorMessage('reminderScenarioId'); as reminderFieldError) {
+            <p class="mt-2 text-sm text-danger">{{ reminderFieldError }}</p>
+          }
         </div>
 
         <div class="mt-4 bg-background rounded-card p-4 flex justify-between items-center">

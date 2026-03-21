@@ -25,6 +25,7 @@ export class NewBillComponent {
   constructor() {
     this.invoiceForm.setClientMode(this.isCreatingNewClient);
     void this.facade.loadClients();
+    void this.facade.loadReminderScenarios();
 
     effect(() => {
       const isSuccess = this.facade.isSuccess();
@@ -44,6 +45,20 @@ export class NewBillComponent {
 
       this.successModalCloseButton()?.nativeElement.focus();
     });
+
+    effect(() => {
+      if (!this.invoiceForm.controls.remindersAutoEnabled.value) {
+        return;
+      }
+      if (this.invoiceForm.controls.reminderScenarioId.value) {
+        return;
+      }
+
+      const firstScenario = this.facade.reminderScenarios()[0];
+      if (firstScenario) {
+        this.invoiceForm.controls.reminderScenarioId.setValue(firstScenario.id);
+      }
+    });
   }
 
   toggleNewClientMode(): void {
@@ -54,6 +69,10 @@ export class NewBillComponent {
 
   toggleRemindersAuto(isEnabled: boolean): void {
     this.invoiceForm.setRemindersAutoEnabled(isEnabled);
+    if (isEnabled) {
+      const firstScenario = this.facade.reminderScenarios()[0];
+      this.invoiceForm.controls.reminderScenarioId.setValue(firstScenario?.id ?? '');
+    }
   }
 
   onSubmit(): void {
@@ -135,7 +154,7 @@ export class NewBillComponent {
       type: 'Situation',
       paymentMode: 'Virement',
       remindersAutoEnabled: true,
-      reminderScenarioId: 'standard-reminder-scenario'
+      reminderScenarioId: this.facade.reminderScenarios()[0]?.id ?? ''
     });
     this.selectedPdfFile = null;
     this.invoiceForm.setClientMode(false);

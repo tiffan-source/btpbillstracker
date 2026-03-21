@@ -5,6 +5,7 @@ import { CreateEnrichedBillInput, CreateEnrichedBillUseCase } from '../../domain
 import { BillingInvoiceFormValue, mapInvoiceFormToCreateEnrichedBillInput } from './bill-submission.mapper';
 import { ReminderAssociationRepository } from '../../../reminders/domain/ports/reminder-association.repository';
 import { ReminderAssociation } from '../../../reminders/domain/entities/reminder-association.entity';
+import { ListReminderScenariosUseCase } from '../../../reminders/domain/usecases/list-reminder-scenarios.usecase';
 import { ListClientsUseCase } from '../../../clients';
 
 export type SubmitBillInput = BillingInvoiceFormValue & {
@@ -17,13 +18,20 @@ export type DuplicateClientPrompt = {
   pendingForm: SubmitBillInput;
 };
 
+export type ReminderScenarioOption = {
+  id: string;
+  name: string;
+};
+
 @Injectable({ providedIn: 'root' })
 export class BillingFacade {
   private readonly createEnrichedBillUseCase = inject(CreateEnrichedBillUseCase);
   private readonly listClientsUseCase = inject(ListClientsUseCase);
+  private readonly listReminderScenariosUseCase = inject(ListReminderScenariosUseCase);
   private readonly store = inject(BillStore);
   private readonly reminderAssociationRepository = inject(ReminderAssociationRepository);
   private readonly clientsState = signal<{ id: string; name: string }[]>([]);
+  private readonly reminderScenariosState = signal<ReminderScenarioOption[]>([]);
 
   readonly isSubmitting = signal(false);
   readonly error = signal<string | null>(null);
@@ -32,6 +40,9 @@ export class BillingFacade {
   readonly clients = computed(() => this.clientsState());
   readonly isClientsLoading = signal(false);
   readonly clientsLoadError = signal<string | null>(null);
+  readonly reminderScenarios = computed(() => this.reminderScenariosState());
+  readonly isReminderScenariosLoading = signal(false);
+  readonly reminderScenariosLoadError = signal<string | null>(null);
   readonly duplicateClientPrompt = signal<DuplicateClientPrompt | null>(null);
 
   async loadClients(): Promise<void> {
@@ -50,6 +61,24 @@ export class BillingFacade {
     }
 
     this.isClientsLoading.set(false);
+  }
+
+  async loadReminderScenarios(): Promise<void> {
+    this.reminderScenariosLoadError.set(null);
+    this.isReminderScenariosLoading.set(true);
+
+    const result = await this.listReminderScenariosUseCase.execute();
+    if (result.success) {
+      const sortedScenarios = result.data
+        .map((scenario) => ({ id: scenario.id, name: scenario.name }))
+        .sort((first, second) => first.name.localeCompare(second.name, 'fr', { sensitivity: 'base' }));
+      this.reminderScenariosState.set(sortedScenarios);
+    } else {
+      this.reminderScenariosLoadError.set(result.error.message);
+      this.reminderScenariosState.set([]);
+    }
+
+    this.isReminderScenariosLoading.set(false);
   }
 
   async createInvoice(formValue: SubmitBillInput): Promise<void> {

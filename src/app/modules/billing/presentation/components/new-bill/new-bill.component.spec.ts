@@ -14,15 +14,19 @@ describe('NewBillComponent', () => {
       isSuccess: signal(false),
       error: signal(null),
       clientsLoadError: signal(null),
+      reminderScenariosLoadError: signal(null),
       duplicateClientPrompt: signal(null),
       draftBill: signal(null),
       clients: signal([]),
+      reminderScenarios: signal([{ id: 'sc-1', name: 'Standard – J-3, J+3, J+10' }]),
+      isReminderScenariosLoading: signal(false),
       createInvoice: vitest.fn(),
       requestInvoiceCreation: vitest.fn(),
       confirmUseExistingClient: vitest.fn(),
       confirmCreateNewClient: vitest.fn(),
       dismissDuplicateClientPrompt: vitest.fn(),
       loadClients: vitest.fn().mockResolvedValue(undefined),
+      loadReminderScenarios: vitest.fn().mockResolvedValue(undefined),
       dismissSuccess: vitest.fn()
     };
 
@@ -42,6 +46,10 @@ describe('NewBillComponent', () => {
     expect(mockFacade.loadClients).toHaveBeenCalledTimes(1);
   });
 
+  it('loads reminder scenarios on init', () => {
+    expect(mockFacade.loadReminderScenarios).toHaveBeenCalledTimes(1);
+  });
+
   it('should call requestInvoiceCreation when form is populated', () => {
     component.invoiceForm.patchValue({
       clientId: 'client-1',
@@ -50,7 +58,7 @@ describe('NewBillComponent', () => {
       invoiceNumber: 'FAC-100',
       paymentMode: 'Virement',
       remindersAutoEnabled: true,
-      reminderScenarioId: 'standard-reminder-scenario'
+      reminderScenarioId: 'sc-1'
     });
 
     fixture.detectChanges();
@@ -121,7 +129,7 @@ describe('NewBillComponent', () => {
       type: 'Situation',
       paymentMode: 'Virement',
       remindersAutoEnabled: true,
-      reminderScenarioId: 'standard-reminder-scenario'
+      reminderScenarioId: 'sc-1'
     });
 
     component.onSubmit();
@@ -186,7 +194,7 @@ describe('NewBillComponent', () => {
     component.toggleRemindersAuto(true);
 
     expect(component.invoiceForm.controls.remindersAutoEnabled.value).toBe(true);
-    expect(component.invoiceForm.controls.reminderScenarioId.value).toBe('standard-reminder-scenario');
+    expect(component.invoiceForm.controls.reminderScenarioId.value).toBe('sc-1');
   });
 
   it('should block submit action while submitting', () => {
@@ -200,7 +208,7 @@ describe('NewBillComponent', () => {
       invoiceNumber: 'FAC-200',
       paymentMode: 'Virement',
       remindersAutoEnabled: true,
-      reminderScenarioId: 'standard-reminder-scenario'
+      reminderScenarioId: 'sc-1'
     });
 
     component.onSubmit();
@@ -244,7 +252,7 @@ describe('NewBillComponent', () => {
     expect(card?.className).toContain('rounded-card');
 
     const select = host.querySelector<HTMLSelectElement>('#reminderScenarioId');
-    expect(select?.value).toBe('standard-reminder-scenario');
+    expect(select?.value).toBe('sc-1');
 
     const toggle = host.querySelector<HTMLButtonElement>('[data-testid="reminder-toggle"]');
     expect(toggle).toBeTruthy();
@@ -271,7 +279,7 @@ describe('NewBillComponent', () => {
       invoiceNumber: 'FAC-100',
       paymentMode: 'Virement',
       remindersAutoEnabled: true,
-      reminderScenarioId: 'standard-reminder-scenario'
+      reminderScenarioId: 'sc-1'
     });
 
     const host = fixture.nativeElement as HTMLElement;
@@ -281,14 +289,14 @@ describe('NewBillComponent', () => {
       return;
     }
 
-    select.value = 'standard-reminder-scenario';
+    select.value = 'sc-1';
     select.dispatchEvent(new Event('change'));
 
     component.onSubmit();
 
     const payload = mockFacade.requestInvoiceCreation.mock.calls.at(-1)?.[0] as Record<string, unknown>;
     expect(payload['remindersAutoEnabled']).toBe(true);
-    expect(payload['reminderScenarioId']).toBe('standard-reminder-scenario');
+    expect(payload['reminderScenarioId']).toBe('sc-1');
   });
 
   it('renders duplicate client modal and routes actions to facade', () => {

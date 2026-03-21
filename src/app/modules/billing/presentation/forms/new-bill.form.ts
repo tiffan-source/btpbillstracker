@@ -4,7 +4,6 @@ import {
   BILL_TYPES,
   PAYMENT_MODES
 } from '../../domain/values/bill.constraints';
-import { STANDARD_REMINDER_SCENARIO_ID } from '../../../reminders/domain/values/reminder.constants';
 
 export interface NewBillFormModel {
   [key: string]: AbstractControl;
@@ -45,7 +44,7 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
       type: new FormControl(BILL_TYPES[0], { nonNullable: true, validators: [Validators.required] }),
       paymentMode: new FormControl(PAYMENT_MODES[0], { nonNullable: true, validators: [Validators.required] }),
       remindersAutoEnabled: new FormControl(true, { nonNullable: true }),
-      reminderScenarioId: new FormControl(STANDARD_REMINDER_SCENARIO_ID, { nonNullable: true, validators: [Validators.required] })
+      reminderScenarioId: new FormControl('', { nonNullable: true, validators: [Validators.required] })
     });
   }
 
@@ -67,9 +66,6 @@ export class NewBillForm extends FormGroup<NewBillFormModel> {
 
     if (isEnabled) {
       this.controls.reminderScenarioId.setValidators([Validators.required]);
-      if (!this.controls.reminderScenarioId.value) {
-        this.controls.reminderScenarioId.setValue(STANDARD_REMINDER_SCENARIO_ID);
-      }
     } else {
       this.controls.reminderScenarioId.clearValidators();
       this.controls.reminderScenarioId.setValue('');

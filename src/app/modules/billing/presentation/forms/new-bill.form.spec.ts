@@ -1,11 +1,11 @@
 import { NewBillForm } from './new-bill.form';
 
 describe('NewBillForm', () => {
-  it('defaults to reminders auto enabled with standard scenario selected', () => {
+  it('defaults to reminders auto enabled with empty scenario', () => {
     const form = new NewBillForm();
 
     expect(form.controls['remindersAutoEnabled'].value).toBe(true);
-    expect(form.controls['reminderScenarioId'].value).toBe('standard-reminder-scenario');
+    expect(form.controls['reminderScenarioId'].value).toBe('');
   });
 
   it('requires scenario id when reminders are enabled', () => {
@@ -36,6 +36,6 @@ describe('NewBillForm', () => {
     const payload = form.getPayload();
 
     expect(payload).toHaveProperty('remindersAutoEnabled', true);
-    expect(payload).toHaveProperty('reminderScenarioId', 'standard-reminder-scenario');
+    expect(payload).toHaveProperty('reminderScenarioId', '');
   });
 });

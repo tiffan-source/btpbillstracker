@@ -8,6 +8,7 @@ import { ListClientsUseCase } from '../../../clients';
 import { BillingFacade } from './billing.facade';
 import { success, failure } from '../../../../core/result/result';
 import { ReminderAssociationRepository } from '../../../reminders/domain/ports/reminder-association.repository';
+import { ListReminderScenariosUseCase } from '../../../reminders/domain/usecases/list-reminder-scenarios.usecase';
 
 class MockBillStore implements BillStore {
   draftBill = signal<BillViewModel | null>(null);
@@ -29,6 +30,9 @@ class MockBillStore implements BillStore {
 }
 
 describe('BillingFacade', () => {
+  const defaultReminderUseCase = {
+    execute: vitest.fn().mockResolvedValue(success([]))
+  };
 
   it('loads and sorts persisted clients A-Z for new bill selector', async () => {
     const mockStore = new MockBillStore();
@@ -45,7 +49,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: { execute: vitest.fn() } },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: listClientsUseCase }
+        { provide: ListClientsUseCase, useValue: listClientsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: defaultReminderUseCase }
       ]
     });
 
@@ -70,7 +75,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: { execute: vitest.fn() } },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: listClientsUseCase }
+        { provide: ListClientsUseCase, useValue: listClientsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: defaultReminderUseCase }
       ]
     });
 
@@ -102,7 +108,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } },
+        { provide: ListReminderScenariosUseCase, useValue: defaultReminderUseCase }
       ]
     });
 
@@ -177,7 +184,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: listClientsUseCase }
+        { provide: ListClientsUseCase, useValue: listClientsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -220,7 +228,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: listClientsUseCase }
+        { provide: ListClientsUseCase, useValue: listClientsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -277,7 +286,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: listClientsUseCase }
+        { provide: ListClientsUseCase, useValue: listClientsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -327,7 +337,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -376,7 +387,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -414,7 +426,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -453,7 +466,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
-        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -487,7 +501,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: mockAssociationRepository },
-        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
@@ -531,7 +546,8 @@ describe('BillingFacade', () => {
         { provide: BillStore, useValue: mockStore },
         { provide: CreateEnrichedBillUseCase, useValue: mockSubmitNewBill },
         { provide: ReminderAssociationRepository, useValue: mockAssociationRepository },
-        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
+        { provide: ListClientsUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } },
+        { provide: ListReminderScenariosUseCase, useValue: { execute: vitest.fn().mockResolvedValue(success([])) } }
       ]
     });
 
