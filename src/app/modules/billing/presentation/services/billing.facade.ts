@@ -108,6 +108,10 @@ export class BillingFacade {
   }
 
   async requestInvoiceCreation(formValue: SubmitBillInput): Promise<void> {
+    if (!this.ensureExistingClientIsAuthorized(formValue)) {
+      return;
+    }
+
     const normalizedNewClientName = this.normalizeClientName(formValue.newClientName);
     if (!normalizedNewClientName) {
       await this.createInvoice(formValue);
@@ -195,5 +199,23 @@ export class BillingFacade {
       .replace(/\p{Diacritic}/gu, '')
       .replace(/\s+/g, ' ')
       .toLowerCase();
+  }
+
+  private ensureExistingClientIsAuthorized(formValue: SubmitBillInput): boolean {
+    const hasNewClientName = !!formValue.newClientName?.trim();
+    const selectedClientId = formValue.clientId?.trim();
+
+    if (hasNewClientName || !selectedClientId) {
+      return true;
+    }
+
+    const isAuthorized = this.clients().some((client) => client.id === selectedClientId);
+    if (isAuthorized) {
+      return true;
+    }
+
+    this.error.set('Le client sélectionné n’est pas autorisé pour votre périmètre facture.');
+    this.isSuccess.set(false);
+    return false;
   }
 }

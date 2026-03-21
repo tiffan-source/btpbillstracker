@@ -118,6 +118,55 @@ describe('BillingFacade', () => {
     ]);
   });
 
+  it('blocks invoice creation when selected client is outside authorized invoice-linked set', async () => {
+    const mockStore = new MockBillStore();
+    const createEnrichedBillUseCase = {
+      execute: vitest.fn()
+    };
+    const listClientsUseCase = {
+      execute: vitest.fn().mockResolvedValue(
+        success([
+          { id: 'c-1', name: 'Client Autorise' },
+          { id: 'c-9', name: 'Client Non Autorise' }
+        ])
+      )
+    };
+    const listUserBillsUseCase = {
+      execute: vitest.fn().mockResolvedValue(success([new Bill('b-1', 'F-1', 'c-1')]))
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BillingFacade,
+        { provide: BillStore, useValue: mockStore },
+        { provide: CreateEnrichedBillUseCase, useValue: createEnrichedBillUseCase },
+        { provide: ReminderAssociationRepository, useValue: { save: vitest.fn(), findByBillId: vitest.fn() } },
+        { provide: ListClientsUseCase, useValue: listClientsUseCase },
+        { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
+        { provide: ListReminderScenariosUseCase, useValue: defaultReminderUseCase }
+      ]
+    });
+
+    const facade = TestBed.inject(BillingFacade);
+    await facade.loadClients();
+    await facade.requestInvoiceCreation({
+      clientId: 'c-9',
+      newClientName: '',
+      chantier: '',
+      amountTTC: 250,
+      dueDate: '2026-12-11',
+      invoiceNumber: 'FAC-UNAUTH',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(createEnrichedBillUseCase.execute).not.toHaveBeenCalled();
+    expect(facade.error()).toBe('Le client sélectionné n’est pas autorisé pour votre périmètre facture.');
+    expect(facade.isSuccess()).toBe(false);
+  });
+
   it('keeps bill creation available when client loading fails', async () => {
     const mockStore = new MockBillStore();
     const listClientsUseCase = {

@@ -54,6 +54,9 @@
             @if (facade.clientsLoadError(); as clientsLoadError) {
               <p class="mt-2 text-sm text-danger" role="status">{{ clientsLoadError }}</p>
             }
+            @if (facade.error(); as submitError) {
+              <p class="mt-2 text-sm text-danger" role="status">{{ submitError }}</p>
+            }
           </div>
 
           <div>
