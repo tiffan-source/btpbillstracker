@@ -222,6 +222,9 @@ export class DashboardFacade {
   private async executeEditedInvoiceSubmit(payload: EditBillFormValue): Promise<void> {
     this.editError.set(null);
     this.editSuccess.set(false);
+    if (!this.ensureAuthorizedExistingClient(payload.clientId)) {
+      return;
+    }
     this.isEditSubmitting.set(true);
 
     const chantierIdResult = await this.resolveEditedChantierId(payload);
@@ -234,7 +237,7 @@ export class DashboardFacade {
     const input: UpdateEnrichedBillInput = {
       id: payload.id,
       reference: payload.reference,
-      clientId: payload.newClientName.trim() ? payload.newClientName.trim() : payload.clientId,
+      clientId: payload.clientId.trim(),
       amountTTC: payload.amountTTC ?? 0,
       dueDate: payload.dueDate,
       externalInvoiceReference: payload.invoiceNumber,
@@ -420,5 +423,25 @@ export class DashboardFacade {
       .replace(/\p{Diacritic}/gu, '')
       .replace(/\s+/g, ' ')
       .toLowerCase();
+  }
+
+  private ensureAuthorizedExistingClient(clientId: string): boolean {
+    const selectedClientId = clientId.trim();
+    if (!selectedClientId) {
+      this.editError.set('Le client sélectionné est invalide.');
+      return false;
+    }
+
+    if (Object.keys(this.clientsById()).length === 0) {
+      return true;
+    }
+
+    const isAuthorized = !!this.clientsById()[selectedClientId];
+    if (isAuthorized) {
+      return true;
+    }
+
+    this.editError.set('Le client sélectionné n’est pas autorisé pour votre périmètre facture.');
+    return false;
   }
 }

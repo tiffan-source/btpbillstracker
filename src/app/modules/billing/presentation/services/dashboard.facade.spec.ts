@@ -231,6 +231,61 @@ describe('DashboardFacade', () => {
     expect(updatedInvoice?.showsIncompleteClientIndicator).toBe(true);
   });
 
+  it('rejects edit submit when selected existing client is outside authorized list', async () => {
+    const persisted = new Bill('b-2b', 'F-2026-0101B', 'client-2')
+      .setAmountTTC(510)
+      .setDueDate('2099-12-30')
+      .setExternalInvoiceReference('EXT-2B')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-2b');
+
+    await facade.submitEditedInvoice({
+      id: 'b-2b',
+      reference: 'F-2026-0101B',
+      clientId: 'client-outside-scope',
+      newClientName: '',
+      chantierId: 'ch-2',
+      chantierName: '',
+      shouldCreateChantier: false,
+      amountTTC: 777,
+      dueDate: '2099-12-28',
+      invoiceNumber: 'EXT-2B',
+      type: 'Solde',
+      paymentMode: 'Chèque',
+      status: 'PAID',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    expect(facade.isEditModalOpen()).toBe(true);
+    expect(facade.editSuccess()).toBe(false);
+    expect(facade.editError()).toContain('client');
+  });
+
   it('exposes chantier options only for chantier ids linked to user invoices', async () => {
     const persisted = [
       new Bill('b-1', 'F-2026-0100', 'client-1').setChantierId('ch-2'),
@@ -621,5 +676,59 @@ describe('DashboardFacade', () => {
     expect(facade.isEditModalOpen()).toBe(true);
     expect(facade.editError()).toBe('Impossible de créer le chantier.');
     expect(facade.isEditSubmitting()).toBe(false);
+  });
+
+  it('does not inject newClientName into clientId during existing-client edit submit', async () => {
+    const persisted = new Bill('b-7', 'F-2026-0107', 'client-1')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setExternalInvoiceReference('EXT-7')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-7');
+
+    await facade.submitEditedInvoice({
+      id: 'b-7',
+      reference: 'F-2026-0107',
+      clientId: 'client-1',
+      newClientName: 'Client Texte Injecte',
+      chantierId: 'ch-1',
+      chantierName: '',
+      shouldCreateChantier: false,
+      amountTTC: 150,
+      dueDate: '2099-12-29',
+      invoiceNumber: 'EXT-7-EDIT',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    const updated = (await repository.list()).find((bill) => bill.id === 'b-7');
+    expect(updated?.clientId).toBe('client-1');
   });
 });
