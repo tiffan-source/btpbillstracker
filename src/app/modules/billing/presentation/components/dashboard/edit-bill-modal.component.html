@@ -21,24 +21,37 @@
         </button>
       </header>
 
-      <form [formGroup]="form()" class="flex flex-col gap-5" (ngSubmit)="onSubmit()">
+      <form [formGroup]="form()" class="flex flex-col gap-5" (ngSubmit)="onSubmit()" (document:keydown)="onDocumentKeydown($event)">
         <input type="hidden" formControlName="id" />
         <input type="hidden" formControlName="reference" />
 
         <div class="flex flex-col gap-2">
           <label for="clientId" class="text-sm font-medium text-foreground-muted">Client</label>
-          <select id="clientId" formControlName="clientId" class="w-full rounded-input border border-input px-3 py-2">
-            @for (client of clients(); track client.id) {
-              <option [value]="client.id">{{ client.name }}</option>
+          <div class="flex gap-3">
+            @if (!isCreatingNewClient) {
+              <select id="clientId" formControlName="clientId" class="w-full rounded-input border border-input px-3 py-2">
+                @for (client of clients(); track client.id) {
+                  <option [value]="client.id">{{ client.name }}</option>
+                }
+              </select>
+            } @else {
+              <input
+                id="newClientName"
+                type="text"
+                formControlName="newClientName"
+                class="w-full rounded-input border border-input px-3 py-2"
+                placeholder="Marie Lambert"
+              />
             }
-          </select>
-          <input
-            id="newClientName"
-            type="text"
-            formControlName="newClientName"
-            class="w-full rounded-input border border-input px-3 py-2"
-            placeholder="Marie Lambert"
-          />
+            <button
+              type="button"
+              data-testid="edit-toggle-new-client-mode"
+              (click)="toggleNewClientMode()"
+              class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted shadow-sm hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 whitespace-nowrap"
+            >
+              {{ isCreatingNewClient ? 'Client existant' : '+ Nouveau' }}
+            </button>
+          </div>
         </div>
 
         <div class="flex flex-col gap-2">

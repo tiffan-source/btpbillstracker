@@ -49,6 +49,19 @@ describe('EditBillForm', () => {
     expect(form.controls.clientId.invalid).toBe(true);
   });
 
+  it('clears opposite client field when toggling client mode', () => {
+    const form = new EditBillForm();
+    form.controls.clientId.setValue('client-1');
+    form.controls.newClientName.setValue('Nouveau Client');
+
+    form.setClientMode(true);
+    expect(form.controls.clientId.value).toBe('');
+    expect(form.controls.newClientName.value).toBe('Nouveau Client');
+
+    form.setClientMode(false);
+    expect(form.controls.newClientName.value).toBe('');
+  });
+
   it('returns typed payload including status and reminder fields', () => {
     const form = new EditBillForm();
     form.patchValue({

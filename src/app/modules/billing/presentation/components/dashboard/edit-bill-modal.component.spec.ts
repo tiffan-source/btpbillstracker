@@ -52,7 +52,7 @@ describe('EditBillModalComponent', () => {
     const host = fixture.nativeElement as HTMLElement;
 
     expect(host.querySelector('#clientId')).toBeTruthy();
-    expect(host.querySelector('#newClientName')).toBeTruthy();
+    expect(host.querySelector('#newClientName')).toBeNull();
     expect(host.querySelector('#chantier')).toBeTruthy();
     expect(host.querySelector('[data-testid="edit-toggle-new-chantier-mode"]')).toBeTruthy();
     expect(host.querySelector('#amountTTC')).toBeTruthy();
@@ -63,6 +63,53 @@ describe('EditBillModalComponent', () => {
     expect(host.querySelector('#status')).toBeTruthy();
     expect(host.querySelector('#reminderScenarioId')).toBeTruthy();
     expect(host.querySelector('[data-testid="reminder-toggle"]')).toBeTruthy();
+  });
+
+  it('shows only one client input at a time and toggles to new client input', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const toggleButton = host.querySelector<HTMLButtonElement>('[data-testid="edit-toggle-new-client-mode"]');
+    expect(toggleButton).toBeTruthy();
+    if (!toggleButton) {
+      return;
+    }
+
+    expect(host.querySelector('#clientId')).toBeTruthy();
+    expect(host.querySelector('#newClientName')).toBeNull();
+
+    toggleButton.click();
+    fixture.detectChanges();
+
+    expect(host.querySelector('#clientId')).toBeNull();
+    expect(host.querySelector('#newClientName')).toBeTruthy();
+  });
+
+  it('clears opposite client value when toggling client mode in modal', () => {
+    const host = fixture.nativeElement as HTMLElement;
+    const toggleButton = host.querySelector<HTMLButtonElement>('[data-testid="edit-toggle-new-client-mode"]');
+    expect(toggleButton).toBeTruthy();
+    if (!toggleButton) {
+      return;
+    }
+
+    form.controls.clientId.setValue('client-1');
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(form.controls.clientId.value).toBe('');
+
+    const newClientInput = host.querySelector<HTMLInputElement>('#newClientName');
+    expect(newClientInput).toBeTruthy();
+    if (!newClientInput) {
+      return;
+    }
+
+    newClientInput.value = 'Client Inline';
+    newClientInput.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(form.controls.newClientName.value).toBe('Client Inline');
+
+    toggleButton.click();
+    fixture.detectChanges();
+    expect(form.controls.newClientName.value).toBe('');
   });
 
   it('renders chantier selector with provided scoped options', () => {

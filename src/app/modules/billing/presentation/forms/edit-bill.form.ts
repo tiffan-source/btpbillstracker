@@ -68,9 +68,11 @@ export class EditBillForm extends FormGroup<EditBillFormModel> {
 
   setClientMode(isNewClientMode: boolean): void {
     if (isNewClientMode) {
+      this.controls.clientId.setValue('');
       this.controls.clientId.clearValidators();
       this.controls.newClientName.setValidators([Validators.required]);
     } else {
+      this.controls.newClientName.setValue('');
       this.controls.clientId.setValidators([Validators.required]);
       this.controls.newClientName.clearValidators();
     }

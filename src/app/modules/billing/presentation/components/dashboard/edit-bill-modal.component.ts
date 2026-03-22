@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { EditBillForm } from '../../forms/edit-bill.form';
 import { BILL_TYPES, PAYMENT_MODES } from '../../../domain/values/bill.constraints';
@@ -29,14 +29,7 @@ export class EditBillModalComponent {
   readonly paymentModes = PAYMENT_MODES;
   readonly statuses: BillStatus[] = ['DRAFT', 'VALIDATED', 'PAID'];
   readonly reminderScenarioLabel = STANDARD_REMINDER_SCENARIO_NAME;
-
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    if (!this.open() || this.isSubmitting()) {
-      return;
-    }
-    this.requestClose.emit();
-  }
+  isCreatingNewClient = false;
 
   onOverlayClick(): void {
     if (this.isSubmitting()) {
@@ -72,6 +65,11 @@ export class EditBillModalComponent {
     this.form().setChantierMode(!this.form().controls.shouldCreateChantier.value);
   }
 
+  toggleNewClientMode(): void {
+    this.isCreatingNewClient = !this.isCreatingNewClient;
+    this.form().setClientMode(this.isCreatingNewClient);
+  }
+
   hasFieldError(controlName: keyof EditBillForm['controls']): boolean {
     const control = this.form().controls[controlName];
     return control.invalid;
@@ -96,5 +94,12 @@ export class EditBillModalComponent {
 
   onCloseDuplicateChantierPrompt(): void {
     this.closeDuplicateChantierPrompt.emit();
+  }
+
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || !this.open() || this.isSubmitting()) {
+      return;
+    }
+    this.requestClose.emit();
   }
 }
