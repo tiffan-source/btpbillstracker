@@ -33,6 +33,7 @@ const mockDashboardFacade = {
   clients: signal([{ id: 'client-1', name: 'Marie Lambert' }]),
   chantiers: signal([{ id: 'ch-1', name: 'Cadjehoun' }]),
   duplicateChantierPrompt: signal(null),
+  duplicateClientPrompt: signal(null),
   openEditInvoice: vitest.fn(async () => ({
     id: 'b-1',
     reference: 'F-2026-0100',
@@ -53,7 +54,10 @@ const mockDashboardFacade = {
   submitEditedInvoice: vitest.fn(async () => {}),
   confirmUseExistingChantierForEdit: vitest.fn(async () => {}),
   confirmCreateNewChantierForEdit: vitest.fn(async () => {}),
-  dismissDuplicateChantierPromptForEdit: vitest.fn()
+  dismissDuplicateChantierPromptForEdit: vitest.fn(),
+  confirmUseExistingClientForEdit: vitest.fn(async () => {}),
+  confirmCreateNewClientForEdit: vitest.fn(async () => {}),
+  dismissDuplicateClientPromptForEdit: vitest.fn()
 };
 
 describe('DashboardPageComponent', () => {
@@ -161,5 +165,15 @@ describe('DashboardPageComponent', () => {
     expect(mockDashboardFacade.confirmUseExistingChantierForEdit).toHaveBeenCalledTimes(1);
     expect(mockDashboardFacade.confirmCreateNewChantierForEdit).toHaveBeenCalledTimes(1);
     expect(mockDashboardFacade.dismissDuplicateChantierPromptForEdit).toHaveBeenCalledTimes(1);
+  });
+
+  it('should wire duplicate client modal actions in edit flow', async () => {
+    await component.useExistingClientForEdit();
+    await component.createNewClientForEdit();
+    component.closeDuplicateClientPromptForEdit();
+
+    expect(mockDashboardFacade.confirmUseExistingClientForEdit).toHaveBeenCalledTimes(1);
+    expect(mockDashboardFacade.confirmCreateNewClientForEdit).toHaveBeenCalledTimes(1);
+    expect(mockDashboardFacade.dismissDuplicateClientPromptForEdit).toHaveBeenCalledTimes(1);
   });
 });

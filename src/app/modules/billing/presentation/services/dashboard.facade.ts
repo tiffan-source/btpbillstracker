@@ -68,6 +68,7 @@ export class DashboardFacade {
   readonly editError = signal<string | null>(null);
   readonly editSuccess = signal(false);
   readonly duplicateChantierPrompt = signal<{ existingChantierId: string; existingChantierName: string } | null>(null);
+  readonly duplicateClientPrompt = signal<{ existingClientId: string; existingClientName: string } | null>(null);
   private pendingEditPayload: EditBillFormValue | null = null;
 
   constructor() {
@@ -182,11 +183,7 @@ export class DashboardFacade {
   }
 
   async submitEditedInvoice(payload: EditBillFormValue): Promise<void> {
-    if (this.isSubmittingNewChantierDuplicate(payload)) {
-      return;
-    }
-
-    await this.executeEditedInvoiceSubmit(payload);
+    await this.submitEditedInvoiceWithGuards(payload);
   }
 
   async confirmUseExistingChantierForEdit(): Promise<void> {
@@ -218,6 +215,38 @@ export class DashboardFacade {
 
   dismissDuplicateChantierPromptForEdit(): void {
     this.duplicateChantierPrompt.set(null);
+    this.pendingEditPayload = null;
+  }
+
+  async confirmUseExistingClientForEdit(): Promise<void> {
+    const prompt = this.duplicateClientPrompt();
+    if (!prompt || !this.pendingEditPayload) {
+      return;
+    }
+
+    const payload = {
+      ...this.pendingEditPayload,
+      clientId: prompt.existingClientId,
+      newClientName: ''
+    };
+    this.duplicateClientPrompt.set(null);
+    this.pendingEditPayload = null;
+    await this.submitEditedInvoiceWithGuards(payload);
+  }
+
+  async confirmCreateNewClientForEdit(): Promise<void> {
+    if (!this.pendingEditPayload) {
+      return;
+    }
+
+    const payload = this.pendingEditPayload;
+    this.duplicateClientPrompt.set(null);
+    this.pendingEditPayload = null;
+    await this.submitEditedInvoiceWithGuards(payload, { skipClientDuplicateCheck: true });
+  }
+
+  dismissDuplicateClientPromptForEdit(): void {
+    this.duplicateClientPrompt.set(null);
     this.pendingEditPayload = null;
   }
 
@@ -265,6 +294,20 @@ export class DashboardFacade {
     }
 
     this.isEditSubmitting.set(false);
+  }
+
+  private async submitEditedInvoiceWithGuards(
+    payload: EditBillFormValue,
+    options?: { skipClientDuplicateCheck?: boolean }
+  ): Promise<void> {
+    if (!options?.skipClientDuplicateCheck && this.isSubmittingNewClientDuplicate(payload)) {
+      return;
+    }
+    if (this.isSubmittingNewChantierDuplicate(payload)) {
+      return;
+    }
+
+    await this.executeEditedInvoiceSubmit(payload);
   }
 
   dismissEditSuccess(): void {
@@ -408,6 +451,43 @@ export class DashboardFacade {
       existingChantierName: duplicate.name
     });
     return true;
+  }
+
+  private isSubmittingNewClientDuplicate(payload: EditBillFormValue): boolean {
+    const newClientName = payload.newClientName.trim();
+    if (!newClientName) {
+      return false;
+    }
+
+    const normalized = this.normalizeName(newClientName);
+    const duplicate = this.authorizedClientsForEdit().find((client) => this.normalizeName(client.name) === normalized);
+    if (!duplicate) {
+      return false;
+    }
+
+    this.pendingEditPayload = payload;
+    this.duplicateClientPrompt.set({
+      existingClientId: duplicate.id,
+      existingClientName: duplicate.name
+    });
+    return true;
+  }
+
+  private authorizedClientsForEdit(): { id: string; name: string }[] {
+    const merged = new Map<string, { id: string; name: string }>();
+    for (const client of this.clients()) {
+      merged.set(client.id, client);
+    }
+    for (const profile of Object.values(this.clientsById())) {
+      if (merged.has(profile.id)) {
+        continue;
+      }
+      merged.set(profile.id, {
+        id: profile.id,
+        name: this.clientDisplayResolver.resolve(profile).label
+      });
+    }
+    return Array.from(merged.values());
   }
 
   private async resolveEditedChantierId(payload: EditBillFormValue) {

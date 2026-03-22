@@ -235,3 +235,49 @@
     </div>
   </div>
 }
+
+@if (duplicateClientPrompt(); as duplicatePrompt) {
+  <div class="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/50 px-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="duplicate-client-modal-title"
+      aria-describedby="duplicate-client-modal-description"
+      class="w-full max-w-lg rounded-card bg-surface p-6 shadow-lg"
+    >
+      <h2 id="duplicate-client-modal-title" class="text-lg font-bold text-foreground">
+        Client similaire detecte
+      </h2>
+      <p id="duplicate-client-modal-description" class="mt-2 text-sm text-foreground-muted">
+        Un client existant "{{ duplicatePrompt.existingClientName }}" semble correspondre.
+        Voulez-vous utiliser ce client existant ou creer un nouveau client ?
+      </p>
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <button
+          data-testid="edit-duplicate-client-cancel"
+          type="button"
+          (click)="onCloseDuplicateClientPrompt()"
+          class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Annuler
+        </button>
+        <button
+          data-testid="edit-duplicate-client-use-existing"
+          type="button"
+          (click)="onUseExistingClient()"
+          class="inline-flex items-center rounded-btn border border-input bg-background px-4 py-2 text-sm font-medium text-foreground-muted hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Utiliser le client existant
+        </button>
+        <button
+          data-testid="edit-duplicate-client-create-new"
+          type="button"
+          (click)="onCreateNewClientAnyway()"
+          class="inline-flex items-center rounded-btn bg-primary px-4 py-2 text-sm font-medium text-primary-content hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          Creer un nouveau client
+        </button>
+      </div>
+    </div>
+  </div>
+}

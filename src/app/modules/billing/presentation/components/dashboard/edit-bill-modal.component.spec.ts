@@ -36,6 +36,7 @@ describe('EditBillModalComponent', () => {
     fixture.componentRef.setInput('clients', [{ id: 'client-1', name: 'Marie Lambert' }]);
     fixture.componentRef.setInput('chantiers', [{ id: 'ch-1', name: 'Cadjehoun' }]);
     fixture.componentRef.setInput('duplicateChantierPrompt', null);
+    fixture.componentRef.setInput('duplicateClientPrompt', null);
     fixture.detectChanges();
   });
 
@@ -180,6 +181,26 @@ describe('EditBillModalComponent', () => {
     host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-chantier-use-existing"]')?.click();
     host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-chantier-create-new"]')?.click();
     host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-chantier-cancel"]')?.click();
+
+    expect(useExistingSpy).toHaveBeenCalledTimes(1);
+    expect(createNewSpy).toHaveBeenCalledTimes(1);
+    expect(closeSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders duplicate client modal and emits corresponding actions', () => {
+    const useExistingSpy = vitest.fn();
+    const createNewSpy = vitest.fn();
+    const closeSpy = vitest.fn();
+    component.useExistingClient.subscribe(useExistingSpy);
+    component.createNewClient.subscribe(createNewSpy);
+    component.closeDuplicateClientPrompt.subscribe(closeSpy);
+    fixture.componentRef.setInput('duplicateClientPrompt', { existingClientName: 'Alice Martin' });
+    fixture.detectChanges();
+
+    const host = fixture.nativeElement as HTMLElement;
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-client-use-existing"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-client-create-new"]')?.click();
+    host.querySelector<HTMLButtonElement>('[data-testid="edit-duplicate-client-cancel"]')?.click();
 
     expect(useExistingSpy).toHaveBeenCalledTimes(1);
     expect(createNewSpy).toHaveBeenCalledTimes(1);

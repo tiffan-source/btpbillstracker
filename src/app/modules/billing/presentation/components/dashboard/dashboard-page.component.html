@@ -97,11 +97,15 @@
       [clients]="facade.clients()"
       [chantiers]="facade.chantiers()"
       [duplicateChantierPrompt]="facade.duplicateChantierPrompt()"
+      [duplicateClientPrompt]="facade.duplicateClientPrompt()"
       (requestClose)="closeEditModal()"
       (save)="saveEditInvoice()"
       (useExistingChantier)="useExistingChantierForEdit()"
       (createNewChantier)="createNewChantierForEdit()"
       (closeDuplicateChantierPrompt)="closeDuplicateChantierPromptForEdit()"
+      (useExistingClient)="useExistingClientForEdit()"
+      (createNewClient)="createNewClientForEdit()"
+      (closeDuplicateClientPrompt)="closeDuplicateClientPromptForEdit()"
     />
   </div>
 </div>

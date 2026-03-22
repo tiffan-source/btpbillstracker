@@ -18,12 +18,16 @@ export class EditBillModalComponent {
   readonly chantiers = input<{ id: string; name: string }[]>([]);
   readonly form = input.required<EditBillForm>();
   readonly duplicateChantierPrompt = input<{ existingChantierName: string } | null>(null);
+  readonly duplicateClientPrompt = input<{ existingClientName: string } | null>(null);
 
   readonly requestClose = output<void>();
   readonly save = output<void>();
   readonly useExistingChantier = output<void>();
   readonly createNewChantier = output<void>();
   readonly closeDuplicateChantierPrompt = output<void>();
+  readonly useExistingClient = output<void>();
+  readonly createNewClient = output<void>();
+  readonly closeDuplicateClientPrompt = output<void>();
 
   readonly billTypes = BILL_TYPES;
   readonly paymentModes = PAYMENT_MODES;
@@ -94,6 +98,18 @@ export class EditBillModalComponent {
 
   onCloseDuplicateChantierPrompt(): void {
     this.closeDuplicateChantierPrompt.emit();
+  }
+
+  onUseExistingClient(): void {
+    this.useExistingClient.emit();
+  }
+
+  onCreateNewClientAnyway(): void {
+    this.createNewClient.emit();
+  }
+
+  onCloseDuplicateClientPrompt(): void {
+    this.closeDuplicateClientPrompt.emit();
   }
 
   onDocumentKeydown(event: KeyboardEvent): void {

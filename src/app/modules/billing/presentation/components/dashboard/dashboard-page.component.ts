@@ -51,4 +51,16 @@ export class DashboardPageComponent {
   closeDuplicateChantierPromptForEdit(): void {
     this.facade.dismissDuplicateChantierPromptForEdit();
   }
+
+  async useExistingClientForEdit(): Promise<void> {
+    await this.facade.confirmUseExistingClientForEdit();
+  }
+
+  async createNewClientForEdit(): Promise<void> {
+    await this.facade.confirmCreateNewClientForEdit();
+  }
+
+  closeDuplicateClientPromptForEdit(): void {
+    this.facade.dismissDuplicateClientPromptForEdit();
+  }
 }

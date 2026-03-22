@@ -585,6 +585,185 @@ describe('DashboardFacade', () => {
     expect(facade.isEditSubmitting()).toBe(false);
   });
 
+  it('opens duplicate client prompt with normalized name matching during edit submit', async () => {
+    const persisted = new Bill('b-4c', 'F-2026-0104C', 'client-2')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-4c');
+
+    await facade.submitEditedInvoice({
+      id: 'b-4c',
+      reference: 'F-2026-0104C',
+      clientId: 'client-2',
+      newClientName: '  álIce   mARTin ',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
+      amountTTC: 100,
+      dueDate: '2099-12-30',
+      invoiceNumber: 'EXT-4C',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    const updated = (await repository.list()).find((bill) => bill.id === 'b-4c');
+    expect(facade.duplicateClientPrompt()).toEqual({
+      existingClientId: 'client-1',
+      existingClientName: 'Alice Martin'
+    });
+    expect(updated?.clientId).toBe('client-2');
+    expect(facade.isEditSubmitting()).toBe(false);
+  });
+
+  it('uses existing client on confirmation and updates bill clientId', async () => {
+    const persisted = new Bill('b-4d', 'F-2026-0104D', 'client-2')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-4d');
+
+    await facade.submitEditedInvoice({
+      id: 'b-4d',
+      reference: 'F-2026-0104D',
+      clientId: 'client-2',
+      newClientName: ' alice martin ',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
+      amountTTC: 100,
+      dueDate: '2099-12-30',
+      invoiceNumber: 'EXT-4D',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    await facade.confirmUseExistingClientForEdit();
+    const updated = (await repository.list()).find((bill) => bill.id === 'b-4d');
+
+    expect(facade.duplicateClientPrompt()).toBeNull();
+    expect(updated?.clientId).toBe('client-1');
+    expect(facade.isEditModalOpen()).toBe(false);
+  });
+
+  it('creates a new client on duplicate client confirmation and updates bill with created id', async () => {
+    const persisted = new Bill('b-4e', 'F-2026-0104E', 'client-2')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+    const clientProviderPort = {
+      resolveClient: vi.fn().mockImplementation(async ({ isNewClient, clientIdOrName }) => ({
+        success: true,
+        data: isNewClient ? `created-${clientIdOrName}` : clientIdOrName
+      }))
+    } as unknown as ClientProviderPort;
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: clientProviderPort },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-4e');
+
+    await facade.submitEditedInvoice({
+      id: 'b-4e',
+      reference: 'F-2026-0104E',
+      clientId: 'client-2',
+      newClientName: 'alice martin',
+      chantierId: '',
+      chantierName: '',
+      shouldCreateChantier: false,
+      amountTTC: 100,
+      dueDate: '2099-12-30',
+      invoiceNumber: 'EXT-4E',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    await facade.confirmCreateNewClientForEdit();
+    const updated = (await repository.list()).find((bill) => bill.id === 'b-4e');
+
+    expect(clientProviderPort.resolveClient).toHaveBeenCalledWith({
+      isNewClient: true,
+      clientIdOrName: 'alice martin'
+    });
+    expect(facade.duplicateClientPrompt()).toBeNull();
+    expect(updated?.clientId).toBe('created-alice martin');
+    expect(facade.isEditModalOpen()).toBe(false);
+  });
+
   it('uses existing chantier on confirmation and updates bill chantierId', async () => {
     const persisted = new Bill('b-5', 'F-2026-0105', 'client-2')
       .setAmountTTC(100)
