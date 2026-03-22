@@ -10,6 +10,7 @@ import { UpdateEnrichedBillUseCase } from '../../domain/usecases/update-enriched
 import { ClientDisplayResolver } from './client-display.resolver';
 import { DashboardFacade } from './dashboard.facade';
 import { ResolveChantierIdPort } from '../../domain/ports/resolve-chantier-id.port';
+import { ClientProviderPort } from '../../domain/ports/client-provider.port';
 
 class InMemoryBillRepository implements BillRepository {
   private readonly bills = new Map<string, Bill>();
@@ -101,6 +102,14 @@ describe('DashboardFacade', () => {
       }))
     }) as unknown as ResolveChantierIdPort;
 
+  const createClientProviderPort = (): ClientProviderPort =>
+    ({
+      resolveClient: vi.fn().mockImplementation(async ({ isNewClient, clientIdOrName }) => ({
+        success: true,
+        data: isNewClient ? `created-${clientIdOrName}` : clientIdOrName
+      }))
+    }) as unknown as ClientProviderPort;
+
   it('should expose persisted invoices and relance placeholder', async () => {
     const repository = new InMemoryBillRepository();
     TestBed.configureTestingModule({
@@ -111,6 +120,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -147,6 +157,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -187,6 +198,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -249,6 +261,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -305,6 +318,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: createRouter() },
         {
@@ -334,6 +348,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -382,6 +397,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -418,6 +434,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -456,6 +473,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: listUserBillsUseCase },
         { provide: Router, useValue: router },
         {
@@ -491,6 +509,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -526,6 +545,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -581,6 +601,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -641,6 +662,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: resolveChantierIdPort },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -678,7 +700,7 @@ describe('DashboardFacade', () => {
     expect(facade.isEditSubmitting()).toBe(false);
   });
 
-  it('does not inject newClientName into clientId during existing-client edit submit', async () => {
+  it('keeps selected existing client id when no new client name is provided', async () => {
     const persisted = new Bill('b-7', 'F-2026-0107', 'client-1')
       .setAmountTTC(100)
       .setDueDate('2099-12-30')
@@ -696,6 +718,7 @@ describe('DashboardFacade', () => {
         { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
         { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
         { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
         { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
         { provide: Router, useValue: createRouter() },
         {
@@ -714,7 +737,7 @@ describe('DashboardFacade', () => {
       id: 'b-7',
       reference: 'F-2026-0107',
       clientId: 'client-1',
-      newClientName: 'Client Texte Injecte',
+      newClientName: '',
       chantierId: 'ch-1',
       chantierName: '',
       shouldCreateChantier: false,
@@ -730,5 +753,139 @@ describe('DashboardFacade', () => {
 
     const updated = (await repository.list()).find((bill) => bill.id === 'b-7');
     expect(updated?.clientId).toBe('client-1');
+  });
+
+  it('creates a new client on edit when newClientName is provided and updates bill with resolved client id', async () => {
+    const persisted = new Bill('b-8', 'F-2026-0108', 'client-1')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setExternalInvoiceReference('EXT-8')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+    const clientProviderPort = {
+      resolveClient: vi.fn().mockResolvedValue({ success: true, data: 'client-created-1' })
+    } as unknown as ClientProviderPort;
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
+        { provide: ClientProviderPort, useValue: clientProviderPort },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-8');
+
+    await facade.submitEditedInvoice({
+      id: 'b-8',
+      reference: 'F-2026-0108',
+      clientId: '',
+      newClientName: 'Client Created',
+      chantierId: 'ch-1',
+      chantierName: '',
+      shouldCreateChantier: false,
+      amountTTC: 150,
+      dueDate: '2099-12-29',
+      invoiceNumber: 'EXT-8-EDIT',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    const updated = (await repository.list()).find((bill) => bill.id === 'b-8');
+    expect(clientProviderPort.resolveClient).toHaveBeenCalledWith({
+      isNewClient: true,
+      clientIdOrName: 'Client Created'
+    });
+    expect(updated?.clientId).toBe('client-created-1');
+    expect(facade.isEditModalOpen()).toBe(false);
+    expect(facade.editSuccess()).toBe(true);
+  });
+
+  it('keeps edit modal open with clear error when new client resolution fails', async () => {
+    const persisted = new Bill('b-9', 'F-2026-0109', 'client-1')
+      .setAmountTTC(100)
+      .setDueDate('2099-12-30')
+      .setExternalInvoiceReference('EXT-9')
+      .setType('Situation')
+      .setPaymentMode('Virement')
+      .setStatus('VALIDATED');
+    const repository = new InMemoryBillRepository([persisted]);
+    const clientProviderPort = {
+      resolveClient: vi.fn().mockResolvedValue({
+        success: false,
+        error: { code: 'CLIENT_RESOLUTION_ERROR', message: 'Impossible de créer le client.' }
+      })
+    } as unknown as ClientProviderPort;
+
+    TestBed.configureTestingModule({
+      providers: [
+        DashboardFacade,
+        { provide: BillRepository, useValue: repository },
+        { provide: ClientDisplayResolver, useValue: createDisplayResolver() },
+        { provide: ListClientsUseCase, useValue: createListClientsUseCase() },
+        { provide: ListChantiersUseCase, useValue: createListChantiersUseCase() },
+        { provide: ResolveChantierIdPort, useValue: createResolveChantierIdPort() },
+        { provide: ClientProviderPort, useValue: createClientProviderPort() },
+        { provide: ClientProviderPort, useValue: clientProviderPort },
+        { provide: ListUserBillsUseCase, useValue: createListUserBillsUseCase(repository) },
+        { provide: Router, useValue: createRouter() },
+        {
+          provide: UpdateEnrichedBillUseCase,
+          useFactory: (repo: BillRepository) => new UpdateEnrichedBillUseCase(repo),
+          deps: [BillRepository]
+        }
+      ]
+    });
+
+    const facade = TestBed.inject(DashboardFacade);
+    await flushFacadeEffects();
+    await facade.openEditInvoice('b-9');
+
+    await facade.submitEditedInvoice({
+      id: 'b-9',
+      reference: 'F-2026-0109',
+      clientId: '',
+      newClientName: 'Client Failing',
+      chantierId: 'ch-1',
+      chantierName: '',
+      shouldCreateChantier: false,
+      amountTTC: 150,
+      dueDate: '2099-12-29',
+      invoiceNumber: 'EXT-9-EDIT',
+      type: 'Situation',
+      paymentMode: 'Virement',
+      status: 'VALIDATED',
+      remindersAutoEnabled: false,
+      reminderScenarioId: ''
+    });
+
+    const updated = (await repository.list()).find((bill) => bill.id === 'b-9');
+    expect(clientProviderPort.resolveClient).toHaveBeenCalledWith({
+      isNewClient: true,
+      clientIdOrName: 'Client Failing'
+    });
+    expect(updated?.clientId).toBe('client-1');
+    expect(facade.isEditModalOpen()).toBe(true);
+    expect(facade.editSuccess()).toBe(false);
+    expect(facade.editError()).toBe('Impossible de créer le client.');
   });
 });

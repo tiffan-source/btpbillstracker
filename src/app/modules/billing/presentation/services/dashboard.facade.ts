@@ -8,6 +8,7 @@ import { UpdateEnrichedBillInput, UpdateEnrichedBillUseCase } from '../../domain
 import { EditBillFormValue } from '../forms/edit-bill.form';
 import { ClientDisplayResolver } from './client-display.resolver';
 import { ResolveChantierIdPort } from '../../domain/ports/resolve-chantier-id.port';
+import { ClientProviderPort } from '../../domain/ports/client-provider.port';
 
 export type DashboardInvoiceStatus = 'EN_RETARD' | 'EN_COURS' | 'PAYE';
 
@@ -55,6 +56,7 @@ export class DashboardFacade {
   private readonly listChantiersUseCase = inject(ListChantiersUseCase);
   private readonly updateEnrichedBillUseCase = inject(UpdateEnrichedBillUseCase);
   private readonly resolveChantierIdPort = inject(ResolveChantierIdPort);
+  private readonly clientProviderPort = inject(ClientProviderPort);
   private readonly clientDisplayResolver = inject(ClientDisplayResolver);
   private readonly markedPaid = signal<Record<string, true>>({});
   private readonly persistedBills = signal<Bill[]>([]);
@@ -222,7 +224,10 @@ export class DashboardFacade {
   private async executeEditedInvoiceSubmit(payload: EditBillFormValue): Promise<void> {
     this.editError.set(null);
     this.editSuccess.set(false);
-    if (!this.ensureAuthorizedExistingClient(payload.clientId)) {
+
+    const resolvedClientId = await this.resolveEditedClientId(payload);
+    if (!resolvedClientId.success) {
+      this.editError.set(resolvedClientId.error.message);
       return;
     }
     this.isEditSubmitting.set(true);
@@ -237,7 +242,7 @@ export class DashboardFacade {
     const input: UpdateEnrichedBillInput = {
       id: payload.id,
       reference: payload.reference,
-      clientId: payload.clientId.trim(),
+      clientId: resolvedClientId.data,
       amountTTC: payload.amountTTC ?? 0,
       dueDate: payload.dueDate,
       externalInvoiceReference: payload.invoiceNumber,
@@ -414,6 +419,31 @@ export class DashboardFacade {
       return { success: false as const, error: { code: 'CHANTIER_NAME_REQUIRED', message: 'Le nom du chantier est obligatoire.' } };
     }
     return this.resolveChantierIdPort.execute({ chantierName });
+  }
+
+  private async resolveEditedClientId(payload: EditBillFormValue) {
+    const newClientName = payload.newClientName.trim();
+    if (newClientName) {
+      return this.clientProviderPort.resolveClient({
+        isNewClient: true,
+        clientIdOrName: newClientName
+      });
+    }
+
+    if (!this.ensureAuthorizedExistingClient(payload.clientId)) {
+      return {
+        success: false as const,
+        error: {
+          code: 'CLIENT_NOT_AUTHORIZED',
+          message: this.editError() ?? 'Le client sélectionné n’est pas autorisé pour votre périmètre facture.'
+        }
+      };
+    }
+
+    return {
+      success: true as const,
+      data: payload.clientId.trim()
+    };
   }
 
   private normalizeName(value: string): string {
