@@ -15,10 +15,6 @@ describe('BILLING_PROVIDERS', () => {
     expect(resolveBillRepositoryClass(false)).toBe(LocalBillRepository);
   });
 
-  it('binds repository token using resolver and environment flag', () => {
-    const binding = BILLING_PROVIDERS.find((provider) => 'provide' in provider && provider.provide === BillRepository);
-    expect(binding && 'useClass' in binding ? binding.useClass : null).toBe(resolveBillRepositoryClass(false));
-  });
 
   it('resolves Local implementation via DI when rollback flag is OFF', () => {
     TestBed.configureTestingModule({

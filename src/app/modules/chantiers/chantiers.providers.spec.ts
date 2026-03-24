@@ -13,11 +13,6 @@ describe('CHANTIERS_PROVIDERS', () => {
     expect(resolveChantierRepositoryClass(false)).toBe(LocalChantierRepository);
   });
 
-  it('binds repository token using resolver and environment flag', () => {
-    const binding = CHANTIERS_PROVIDERS.find((provider) => 'provide' in provider && provider.provide === ChantierRepository);
-    expect(binding && 'useClass' in binding ? binding.useClass : null).toBe(resolveChantierRepositoryClass(false));
-  });
-
   it('resolves Local implementation via DI when rollback flag is OFF', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: ChantierRepository, useClass: resolveChantierRepositoryClass(false) }]

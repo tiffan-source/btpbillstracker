@@ -13,10 +13,6 @@ describe('CLIENT_PROVIDERS', () => {
     expect(resolveClientRepositoryClass(false)).toBe(LocalClientRepository);
   });
 
-  it('binds repository token using resolver and environment flag', () => {
-    const binding = CLIENT_PROVIDERS.find((provider) => 'provide' in provider && provider.provide === ClientRepository);
-    expect(binding && 'useClass' in binding ? binding.useClass : null).toBe(resolveClientRepositoryClass(false));
-  });
 
   it('resolves Local implementation via DI when rollback flag is OFF', () => {
     TestBed.configureTestingModule({

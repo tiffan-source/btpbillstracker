@@ -20,22 +20,13 @@ export class FirestoreReminderScenarioRepository extends ReminderScenarioReposit
     return scenarios.find((scenario) => scenario.name === name) ?? null;
   }
 
-  async save(scenario: ReminderScenario): Promise<void> {
-    try {
-      const ownerUid = this.getOwnerUid();
-      await this.dataSource.saveById(scenario.id, this.toPlainScenario(scenario, ownerUid));
-    } catch (error: unknown) {
-      throw new ReminderPersistenceError(undefined, { collection: this.collectionName, reminderScenarioId: scenario.id }, error);
-    }
-  }
-
   async list(): Promise<ReminderScenario[]> {
     try {
       const ownerUid = this.getOwnerUid();
       const snapshot = await this.dataSource.readAll();
       return snapshot.docs
         .map((entry) => entry.data() as FirestorePlainReminderScenario)
-        .filter((plainScenario) => plainScenario.ownerUid === ownerUid)
+        .filter((plainScenario) => plainScenario.ownerUid === ownerUid || plainScenario.ownerUid === undefined || plainScenario.ownerUid === null || plainScenario.ownerUid === '')
         .map((plainScenario) => this.toEntity(plainScenario))
         .sort((first, second) => first.name.localeCompare(second.name, 'fr', { sensitivity: 'base' }));
     } catch (error: unknown) {
